@@ -13,7 +13,7 @@ Board game tiếng Việt để cả hội **ngồi chung một phòng, mỗi ng
 | 💣 Bom Xịt | 2–5 | `B` |
 | 🐺 Ma Sói (máy làm quản trò) | 5–16 | `M` |
 | 🏙️ Cờ Tỷ Phú | 2–6 | `P` |
-| 🤠 Loạn Đả Viễn Tây | 4–7 | `W` |
+| 🤠 Loạn Đả Viễn Tây | 4–8 | `W` |
 
 Luật chi tiết và các quyết định thiết kế nằm trong [docs/THIET-KE.md](docs/THIET-KE.md).
 

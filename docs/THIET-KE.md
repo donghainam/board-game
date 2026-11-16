@@ -536,15 +536,19 @@ Chủ bàn có nút "Bỏ lượt hộ": tự gieo xúc xắc và đi cho ngư�
 
 ## Thiết kế đợt 4 – phần 2: Loạn Đả Viễn Tây
 
-Mã phòng bắt đầu bằng `W` · 4–7 người · có vai trò bí mật + chức năng (nhân vật) công khai
+Mã phòng bắt đầu bằng `W` · 4–8 người · có vai trò bí mật + chức năng (nhân vật) công khai
 
 ### Vai trò
 | Số người | Cảnh sát trưởng | Phó cảnh sát | Băng cướp | Kẻ phản bội |
 |---|---|---|---|---|
-| 4 | 1 | 0 | 2 | 1 |
+| 4 | 1 | 1 | 2 | 0 |
 | 5 | 1 | 1 | 2 | 1 |
 | 6 | 1 | 1 | 3 | 1 |
 | 7 | 1 | 2 | 3 | 1 |
+| 8 | 1 | 2 | 3 | 2 |
+
+- Bảng trên là **mặc định**. Ở sảnh chờ cả bàn thấy số lượng từng vai; **chủ phòng bấm +/− để chỉnh** Phó / Băng cướp / Kẻ phản bội (Cảnh sát trưởng luôn đúng 1). Tổng số vai phải bằng số người mới bắt đầu được; có nút "Về mặc định".
+- Tối đa 8 người vì có 16 chức năng, mỗi người được chia 2 để chọn.
 
 - **Cảnh sát trưởng** lộ mặt ngay từ đầu và đi trước. Các vai khác được giữ bí mật; ai chết thì lật vai.
 - **Máu:** theo chức năng (3 hoặc 4), Cảnh sát trưởng +1. Máu cũng là số lá tối đa được giữ trên tay khi kết thúc lượt.

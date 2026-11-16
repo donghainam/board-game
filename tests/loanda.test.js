@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildDeck, validate, start, apply, viewFor, forceSkip, distance, CHARS } from '../loanda/engine.js';
+import { buildDeck, validate, start, apply, viewFor, forceSkip, distance, CHARS, defaultRoles } from '../loanda/engine.js';
 
 let n = 1000;
 const C = (t, s = 2) => ({ t, s, id: n++ }); // mặc định chất ♣
@@ -22,7 +22,7 @@ const P = (s, id) => s.players.find((p) => p.id === id);
 test('bộ bài, chia vai, chọn chức năng rồi mới chia bài', () => {
   assert.equal(buildDeck().length, 126);
   assert.ok(Object.values(Object.groupBy(buildDeck(), (c) => c.t)).every((g) => g.length >= 3), "mọi loại ít nhất 3 lá");
-  assert.equal(validate(['a', 'b', 'c']), 'Cần 4–7 người.');
+  assert.equal(validate(['a', 'b', 'c']), 'Cần 4–8 người.');
   let s = start(['a', 'b', 'c', 'd', 'e'], {}, Math.random);
   assert.deepEqual(s.players.map((p) => p.role).sort(), ['cst', 'cuop', 'cuop', 'phanboi', 'pho']);
   assert.equal(s.phase, 'pick');
@@ -545,3 +545,21 @@ test('Trang bị dùng 1 lần: Súng giấu, Bình nước, Dao găm, Xe thồ,
   assert.equal(P(s, 'A').eq.length, 0);
 });
 const take1 = (s, id, cid) => { const h = P(s, id).hand; return h.splice(h.findIndex((c) => c.id === cid), 1)[0]; };
+
+test('Vai: mặc định theo số người, chủ phòng chỉnh tay (tổng phải bằng số người), tối đa 8 người', () => {
+  assert.deepEqual(defaultRoles(4), { pho: 1, cuop: 2, phanboi: 0 });
+  assert.deepEqual(defaultRoles(5), { pho: 1, cuop: 2, phanboi: 1 });
+  assert.deepEqual(defaultRoles(8), { pho: 2, cuop: 3, phanboi: 2 });
+  const ids8 = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+  assert.equal(validate(ids8), undefined);
+  assert.equal(validate([...ids8, 'i']), 'Cần 4–8 người.');
+  const s8 = start(ids8, {}, Math.random);
+  assert.equal(new Set(s8.players.flatMap((p) => p.offer)).size, 16, '8 người chia đủ 16 chức năng khác nhau');
+  const ids = ['a', 'b', 'c', 'd', 'e'];
+  const config = { roles: { pho: 0, cuop: 3, phanboi: 1 } };
+  assert.equal(validate(ids, config), undefined);
+  assert.equal(validate(ids, { roles: { pho: 0, cuop: 2, phanboi: 1 } }), 'Tổng số vai (4) phải bằng số người (5).');
+  assert.equal(validate(ids, { roles: { pho: -1, cuop: 4, phanboi: 1 } }), 'Số vai không hợp lệ.');
+  const s = start(ids, { config }, Math.random);
+  assert.deepEqual(s.players.map((p) => p.role).sort(), ['cst', 'cuop', 'cuop', 'cuop', 'phanboi']);
+});

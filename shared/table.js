@@ -35,10 +35,11 @@ export async function runTable({
 
   function payload(id) {
     const now = Date.now();
-    if (!state) return { t: 'lobby', scores, now };
+    const base = { scores, now, ...(setup?.public ? { config } : {}) }; // setup.public: cả bàn xem được cài đặt ở sảnh chờ
+    if (!state) return { t: 'lobby', ...base };
     const v = engine.viewFor(state, id);
-    if (v) return { t: 'view', view: v, scores, now };
-    return state.winner ? { t: 'lobby', scores, now } : { t: 'wait', scores, now };
+    if (v) return { t: 'view', view: v, ...base };
+    return { t: state.winner ? 'lobby' : 'wait', ...base };
   }
 
   function setState(next) {
@@ -145,14 +146,18 @@ export async function runTable({
     parts.push(roomInfo(session, { canKick: true }), scoreBoard(screen.scores || {}));
     if (isHost) {
       const n = players().length;
-      if (setup) parts.push(setup.render(config, (c) => { config = c; sync(); }));
+      if (setup) parts.push(setup.render(config, (c) => { config = c; sync(); }, { players: n }));
       if (bot) parts.push(el('button', { class: 'btn', disabled: session.seats.length >= maxSeats, onclick: () => session.addBot() }, '🤖 Thêm bot'));
       parts.push(el('button', { class: 'btn btn-primary', disabled: !canStart(), onclick: startRound }, result ? 'Ván mới' : 'Bắt đầu'),
         el('p', { class: 'muted' }, minPlayers === maxPlayers
           ? `Cần ${minPlayers} người online (đang có ${n}).`
           : `Cần ${minPlayers}–${maxPlayers} người online (đang có ${n}).`),
         el('button', { class: 'btn', onclick: () => confirm('Đóng phòng? Bảng điểm sẽ mất.') && session.closeRoom() }, 'Đóng phòng'));
-    } else parts.push(el('p', { class: 'muted', style: 'text-align:center' }, 'Chờ chủ bàn bắt đầu ván…'));
+    } else {
+      // Người chơi khác chỉ xem cài đặt (set = null), không chỉnh được
+      if (setup?.public && screen.config !== undefined) parts.push(setup.render(screen.config, null, { players: players().length }));
+      parts.push(el('p', { class: 'muted', style: 'text-align:center' }, 'Chờ chủ bàn bắt đầu ván…'));
+    }
     return parts;
   }
 

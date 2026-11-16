@@ -14,11 +14,26 @@ const COUNTS = { // mọi loại ít nhất 3 lá
 };
 const NAME = { ban: 'Bắn', ne: 'Né', lach: 'Lách người', mu: 'Mũ rộng vành' };
 const ROLES = {
-  4: ['cst', 'phanboi', 'cuop', 'cuop'],
+  4: ['cst', 'pho', 'cuop', 'cuop'],
   5: ['cst', 'pho', 'phanboi', 'cuop', 'cuop'],
   6: ['cst', 'pho', 'phanboi', 'cuop', 'cuop', 'cuop'],
   7: ['cst', 'pho', 'pho', 'phanboi', 'cuop', 'cuop', 'cuop'],
+  8: ['cst', 'pho', 'pho', 'phanboi', 'phanboi', 'cuop', 'cuop', 'cuop'],
 };
+export const MAX_PLAYERS = 8; // 16 chức năng, mỗi người được chia 2 để chọn
+// Số vai mặc định theo số người (Cảnh sát trưởng luôn 1, không tính ở đây).
+export function defaultRoles(n) {
+  const r = ROLES[Math.min(MAX_PLAYERS, Math.max(4, n))];
+  const c = (k) => r.filter((x) => x === k).length;
+  return { pho: c('pho'), cuop: c('cuop'), phanboi: c('phanboi') };
+}
+const okCount = (x) => Number.isInteger(x) && x >= 0 && x <= MAX_PLAYERS;
+// config.roles: số vai chủ phòng tự chỉnh {pho, cuop, phanboi}; null = mặc định theo số người.
+function roleList(n, config) {
+  const c = config?.roles;
+  if (!c) return ROLES[n];
+  return ['cst', ...['pho', 'cuop', 'phanboi'].flatMap((k) => Array(c[k]).fill(k))];
+}
 // 16 chức năng: mỗi người được chia 2, chọn giữ 1, công khai khi cả bàn chọn xong.
 export const CHARS = {
   gapthoi: { name: 'Gã gặp thời', hp: 4, text: 'Bốc đầu lượt: lật lá thứ 2 cho cả bàn xem, ra ♥/♦ thì bốc thêm 1 lá.' },
@@ -46,12 +61,18 @@ export function buildDeck() {
   return d.map((c, id) => ({ ...c, id, s: id % 4 }));
 }
 
-export function validate(ids) {
-  return ROLES[ids.length] ? undefined : 'Cần 4–7 người.';
+export function validate(ids, config) {
+  const n = ids.length;
+  if (!ROLES[n]) return `Cần 4–${MAX_PLAYERS} người.`;
+  const c = config?.roles;
+  if (!c) return undefined;
+  if (!['pho', 'cuop', 'phanboi'].every((k) => okCount(c[k]))) return 'Số vai không hợp lệ.';
+  const total = 1 + c.pho + c.cuop + c.phanboi;
+  return total === n ? undefined : `Tổng số vai (${total}) phải bằng số người (${n}).`;
 }
 
 export function start(ids, ctx = {}, rng = Math.random) {
-  const order = shuffle(ROLES[ids.length].slice(1), rng);
+  const order = shuffle(roleList(ids.length, ctx.config).slice(1), rng);
   const sheriff = Math.floor(rng() * ids.length); // Cảnh sát trưởng ngẫu nhiên, lộ mặt, đi trước
   const chars = shuffle(Object.keys(CHARS), rng);
   const players = ids.map((id, i) => ({

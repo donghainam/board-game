@@ -1,6 +1,6 @@
 import { el } from '../shared/lobby.js';
 import { runTable } from '../shared/table.js';
-import { validate, start, apply, viewFor, forceSkip, nextTimer, onTimer, CHARS, ONESHOT } from './engine.js';
+import { validate, start, apply, viewFor, forceSkip, nextTimer, onTimer, CHARS, ONESHOT, defaultRoles, MAX_PLAYERS } from './engine.js';
 import { botAction } from './bot.js';
 import { art, CARD, EQUIP } from './art.js';
 import { roundTable, sideLayout } from '../shared/roundtable.js';
@@ -313,8 +313,31 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
     pops.length ? el('div', { class: 'ov-pop' }, pops) : null))] })];
 }
 
+// Sảnh chờ: số lượng từng vai (cả bàn xem, chỉ chủ phòng chỉnh). Mặc định theo số người; chỉnh tay thì tổng phải bằng số người.
+function setupPanel(config, set, { players: n }) {
+  const def = defaultRoles(n);
+  const roles = config?.roles || def;
+  const total = 1 + roles.pho + roles.cuop + roles.phanboi;
+  const change = (k, d) => set({ ...config, roles: { ...roles, [k]: Math.max(0, Math.min(MAX_PLAYERS, roles[k] + d)) } });
+  const row = (k, count, fixed) => el('div', { class: 'row', style: 'justify-content:space-between;flex-wrap:nowrap' },
+    el('span', {}, `${ROLE[k][0]} ${ROLE[k][1]}`),
+    el('div', { class: 'row', style: 'gap:6px;flex-wrap:nowrap' },
+      set && !fixed ? el('button', { class: 'btn btn-small', 'aria-label': `Bớt ${ROLE[k][1]}`, disabled: count <= 0, onclick: () => change(k, -1) }, '−') : null,
+      el('b', { style: 'min-width:1.5em;text-align:center' }, String(count)),
+      set && !fixed ? el('button', { class: 'btn btn-small', 'aria-label': `Thêm ${ROLE[k][1]}`, onclick: () => change(k, 1) }, '+') : null,
+      fixed && set ? el('small', { class: 'muted' }, 'cố định') : null));
+  const ok = total === n;
+  return el('div', { class: 'card-tile stack', style: 'gap:8px' },
+    el('h3', { style: 'margin:0' }, `🎭 Vai trong ván${config?.roles ? ' (chủ phòng chỉnh)' : ' (mặc định)'}`),
+    row('cst', 1, true), row('pho', roles.pho), row('cuop', roles.cuop), row('phanboi', roles.phanboi),
+    el('div', { style: ok ? 'color:var(--muted)' : 'color:var(--danger);font-weight:700' }, `Tổng ${total} vai · ${n} người${ok ? '' : ' – phải bằng nhau mới bắt đầu được'}`),
+    !roles.cuop && !roles.phanboi ? el('small', { style: 'color:var(--danger)' }, 'Không có Băng cướp / Kẻ phản bội: Phe Luật thắng ngay khi có người gục đầu tiên.') : null,
+    set && config?.roles ? el('button', { class: 'btn btn-small', style: 'align-self:flex-start', onclick: () => set({ ...config, roles: null }) }, '↺ Về mặc định') : null);
+}
+
 runTable({
-  gameCode: 'W', minPlayers: 4, maxPlayers: 7,
+  gameCode: 'W', minPlayers: 4, maxPlayers: MAX_PLAYERS,
+  setup: { initial: { roles: null }, render: setupPanel, public: true },
   engine: { validate, start, apply: (s, id, a) => apply(s, id, a), viewFor, forceSkip: (s, stuck) => forceSkip(s, Math.random, stuck), nextTimer, onTimer },
   renderTable,
   bot: botAction,
