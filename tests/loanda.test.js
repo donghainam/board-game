@@ -404,3 +404,15 @@ test('review: chọn xong thì không còn hiện lá được chia; bỏ qua ch
   assert.equal(P(f, 'b').char, P(s, 'b').offer[0]);
   assert.equal(P(f, 'c').char, null);
 });
+
+test('phản ứng (đấu tay đôi, né, chịu đòn) hiện lên giữa bàn và nhật ký', () => {
+  let s = mk(R4);
+  const [d] = give(s, 'A', C('duel'));
+  const [b] = give(s, 'B', C('ban'));
+  s = A(s, 'A', { type: 'play', card: d.id, target: 'B' });
+  s = A(s, 'B', { type: 'respond', card: b.id });
+  assert.deepEqual(viewFor(s, 'A').lastPlay, { by: 'B', card: { t: 'ban', s: b.s }, target: 'A' });
+  assert.match(s.log.at(-1), /B đánh Bắn/);
+  s = A(s, 'A', { type: 'respond' });
+  assert.match(s.log.at(-1), /A mất 1 máu/);
+});

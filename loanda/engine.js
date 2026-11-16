@@ -249,6 +249,7 @@ function settle(s, rng) {
 
 function takeHit(s, pi, rng) {
   const pd = s.pending; // damage() có thể kết thúc ván và xoá s.pending
+  log(s, `${s.players[pi].id} mất 1 máu`);
   damage(s, pi, 1, rng);
   if (s.pending !== pd) return;
   if (pd.kind === 'duel') s.pending = null; else { pd.queue.shift(); delete pd.left; }
@@ -301,6 +302,10 @@ export function apply(state, id, action, rng = Math.random) {
       const c = p.hand.find((x) => x.id === action.card);
       if (!c || !counts(p, c, need)) return fail(need === 'ne' ? 'Cần lá Né.' : 'Cần lá Bắn.');
       s.discard.push(take(p.hand, c.id));
+      // Cho cả bàn thấy lá vừa đánh để phản ứng (đấu tay đôi: chỉ về đối thủ; còn lại: chỉ về người ra đòn).
+      const foe = pd.kind === 'duel' ? (id === pd.a ? pd.b : pd.a) : pd.from;
+      s.lastPlay = { by: id, card: { t: c.t, s: c.s }, target: foe };
+      log(s, `${id} đánh ${c.t === 'ban' ? 'Bắn' : 'Né'}${pd.kind === 'duel' ? ' (đấu tay đôi)' : ''}`);
       if (pd.kind === 'duel') pd.turnOf = pd.turnOf === pd.a ? pd.b : pd.a;
       else if (need === 'ne') dodged(s, pi, rng);
       else pd.queue.shift();

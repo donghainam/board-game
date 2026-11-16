@@ -118,8 +118,7 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
     msg ? el('div', { class: 'msg' }, msg) : null,
     v.lastFlip ? el('div', { class: 'msg' }, `🃏 ${who(v.lastFlip.by)} lật (${v.lastFlip.why}): ${CARD[v.lastFlip.card.t]?.[0]} ${SUIT[v.lastFlip.card.s]}`) : null,
   ];
-  const arrow = v.phase === 'react' && pd ? (pd.kind === 'ban' || pd.kind === 'duel' ? { from: pd.from, to: pd.responder === pd.from ? pd.b : pd.responder } : null)
-    : lp?.target ? { from: lp.by, to: lp.target } : null;
+  const arrow = lp?.target ? { from: lp.by, to: lp.target } : null; // luôn theo lá vừa đánh (kể cả lá đáp trả)
   const main = [roleCard, roundTable({ order: v.players.map((p) => p.id), me, seat, seatAttrs, center, arrow })];
 
   // Chọn lá của mục tiêu cho Cướp/Phá
