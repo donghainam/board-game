@@ -23,11 +23,38 @@ let healMode = false;  // Ông lang vườn đang chọn 2 lá để hồi máu
 const charName = (c) => CHARS[c]?.name || '';
 let lastRound = null; // đổi ván thì che thẻ vai lại
 
+// Chạm giữ lá bài ~0,45 giây: hiện khung nghĩa lá ở đáy màn hình; nhả tay thì ẩn, và cú bấm đó không tính.
+let tip = null;
+const hideTip = () => { tip?.remove(); tip = null; };
+function holdToExplain(t) {
+  let timer = null, shown = false;
+  const stop = () => { clearTimeout(timer); if (shown) setTimeout(hideTip, 900); };
+  return {
+    shown: () => shown,
+    onpointerdown: () => {
+      shown = false;
+      timer = setTimeout(() => {
+        shown = true; hideTip();
+        tip = el('div', { class: 'ac-tip', role: 'status' }, art(t), el('div', {}, el('b', {}, CARD[t]?.[0] || '?'), el('small', {}, CARD[t]?.[1] || '')));
+        document.body.append(tip);
+      }, 450);
+    },
+    onpointerup: stop, onpointerleave: stop, onpointercancel: stop,
+    oncontextmenu: (e) => e.preventDefault(),
+  };
+}
+
 // Lá bài có minh hoạ: c = {t, s}; attrs: {sel, disabled, onclick, style, big}
-const acard = (c, attrs = {}) => el(attrs.onclick ? 'button' : 'div', {
-  class: 'ac' + (EQUIP.has(c.t) ? ' eq' : '') + (attrs.big ? ' big' : '') + (attrs.sel ? ' sel' : ''), disabled: attrs.disabled, onclick: attrs.onclick, style: attrs.style,
-  title: CARD[c.t]?.[1], 'aria-label': CARD[c.t]?.[0],
-}, el('span', { class: 'su' + (c.s <= 1 ? ' r' : '') }, SUIT[c.s] ?? ''), art(c.t), el('span', { class: 't' }, CARD[c.t]?.[0] || '?'));
+const acard = (c, attrs = {}) => {
+  const { shown, ...hold } = holdToExplain(c.t);
+  const live = attrs.onclick && !attrs.disabled; // lá bị khoá dùng div (nút disabled không nhận chạm giữ)
+  return el(live ? 'button' : 'div', {
+    class: 'ac' + (EQUIP.has(c.t) ? ' eq' : '') + (attrs.big ? ' big' : '') + (attrs.sel ? ' sel' : ''), style: attrs.style,
+    onclick: live ? (e) => { if (!shown()) attrs.onclick(e); } : undefined, ...hold,
+    title: CARD[c.t]?.[1], 'aria-label': CARD[c.t]?.[0],
+  }, el('span', { class: 'su' + (c.s <= 1 ? ' r' : '') }, SUIT[c.s] ?? ''), art(c.t), el('span', { class: 't' }, CARD[c.t]?.[0] || '?'));
+};
+let wasMine = false; // để rung máy đúng lúc vừa tới lượt mình
 
 function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
   const who = (id) => (id === me ? 'Bạn' : nameOf(id));
@@ -49,7 +76,7 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
   const r = v.me.role;
 
   // Thẻ vai (che mặc định, trừ Cảnh sát trưởng vốn công khai)
-  const roleCard = el('div', { class: 'card-tile stack', style: 'gap:4px;text-align:center' },
+  const roleCard = el('div', { class: 'card-tile rolebar' },
     showRole || r === 'cst'
       ? [el('b', {}, `${ROLE[r][0]} ${ROLE[r][1]}`), el('small', { class: 'muted' }, GOAL[r])]
       : el('div', { class: 'muted' }, 'Vai của bạn đang được che.'),
@@ -132,7 +159,8 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
     v.lastFlip ? el('div', { class: 'msg' }, `🃏 ${who(v.lastFlip.by)} lật (${v.lastFlip.why}): ${CARD[v.lastFlip.card.t]?.[0]} ${SUIT[v.lastFlip.card.s]}`) : null,
   ];
   const arrow = lp?.target ? { from: lp.by, to: lp.target } : null; // luôn theo lá vừa đánh (kể cả lá đáp trả)
-  const main = [roleCard, roundTable({ order: v.players.map((p) => p.id), me, seat, seatAttrs, center, arrow })];
+  const table = roundTable({ order: v.players.map((p) => p.id), me, seat, seatAttrs, center, arrow });
+  const main = [roleCard];
 
   // Chọn lá của mục tiêu cho Cướp/Phá
   if (card && target && PICK_CARD.includes(card.t)) {
@@ -211,7 +239,7 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
     if (!canHeal) healMode = false;
     const picking = discarding || healMode;
     const mid = (hand.length - 1) / 2;
-    main.push(el('div', { class: 'fan' }, hand.map((c, i) => acard(c, {
+    main.push(el('div', { class: 'fan', style: `--n:${hand.length}` }, hand.map((c, i) => acard(c, {
       sel: picking ? picks.has(c.id) : sel === c.id || extra === c.id,
       disabled: !(myTurn || picking || v.docOffer) || pending,
       style: `transform: rotate(${(i - mid) * Math.min(6, 30 / hand.length)}deg) translateY(${Math.abs(i - mid) * 3}px)`,
@@ -247,7 +275,14 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
 
   if (v.log.length) main.push(el('details', {}, el('summary', { class: 'muted' }, 'Nhật ký'),
     el('ul', {}, v.log.map((t) => el('li', {}, v.players.reduce((x, p) => x.split(p.id).join(who(p.id)), t))))));
-  return [sideLayout({ left, right, main })];
+
+  const mineNow = !!(v.me.alive && !v.winner && (actor || v.docOffer || v.store?.turn === me));
+  if (mineNow && !wasMine) navigator.vibrate?.(200); // iPhone (Safari) không hỗ trợ rung: bỏ qua
+  wasMine = mineNow;
+
+  // Khít màn hình: bàn tròn co giãn theo chỗ trống; dọc: bàn trên, điều khiển dưới; ngang: trái / phải
+  return [sideLayout({ left, right, main: [el('div', { class: 'lz' }, el('div', { class: 'lz-in' },
+    el('div', { class: 'lz-table' }, table), el('div', { class: 'lz-ctrl stack' }, main)))] })];
 }
 
 runTable({

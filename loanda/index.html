@@ -27,6 +27,66 @@
   .wc.eq { border-style:dashed; }
   .react { background:#7a1f1f; color:#fff; border-radius:14px; padding:12px; }
   .react .btn { border-color:#fff; }
+
+  /* ---- Khít màn hình: không cuộn trang; bàn tròn co theo chỗ còn trống ---- */
+  html, body { height:100%; overflow:hidden; }
+  main.wrap { height:100dvh; box-sizing:border-box; display:flex; flex-direction:column; gap:8px;
+              padding:8px 12px calc(6px + env(safe-area-inset-bottom)); }
+  #app { flex:1; min-height:0; overflow:auto; gap:8px; }
+  #app:has(.lz) { overflow:hidden; display:flex; flex-direction:column; }
+  #app .rt-layout { flex:1; min-height:0; grid-template-rows:minmax(0,1fr); gap:10px; }
+  #app .rt-main { display:flex; flex-direction:column; min-height:0; gap:8px; }
+  @media (min-width:1024px) { #app .rt-side { position:static; max-height:none; min-height:0; } }
+  .lz { flex:1; min-height:0; container-type:size; }
+  .lz-in { height:100%; display:flex; flex-direction:column; gap:8px; }
+  .lz-table { flex:1 1 0; min-height:0; container-type:size; display:flex; justify-content:center; align-items:center; }
+  .lz-table .rt-stage { width:min(100cqw, 84cqh, 640px); max-width:none; margin:0; container-type:inline-size; }
+  .lz-ctrl { flex:none; max-height:70%; overflow:auto; gap:6px; }
+  /* Màn hình ngang (máy tính, điện thoại xoay ngang): bàn bên trái, điều khiển bên phải */
+  @container (orientation: landscape) and (min-width: 560px) {
+    .lz-in { flex-direction:row; }
+    .lz-table { flex:1 1 56%; min-width:0; }
+    .lz-ctrl { flex:1 1 44%; max-height:none; min-width:0; justify-content:center; }
+  }
+  .lz-ctrl > * { flex-shrink:0; } /* không ép dẹt bài trên tay; thiếu chỗ thì khung điều khiển tự cuộn */
+  /* Điện thoại xoay ngang (màn thấp): dồn nút cho bàn tròn rộng chỗ, không ẩn phần nào */
+  @media (orientation: landscape) and (max-height: 500px) {
+    main.wrap { padding:4px 10px calc(4px + env(safe-area-inset-bottom)); gap:4px; }
+    .top { font-size:13px; }
+    #app .rt-main { position:relative; }
+    #app .rt-toggles { position:absolute; top:0; left:0; width:55%; z-index:5; pointer-events:none; }
+    #app .rt-toggles .btn { pointer-events:auto; padding:4px 10px; }
+    #app > .btn-small:last-child { position:fixed; left:10px; bottom:calc(6px + env(safe-area-inset-bottom)); z-index:5; }
+    .lz-table .rt-stage { width:min(100cqw, 86cqh, 640px); }
+  }
+  /* Ghế, chữ, lá giữa bàn co theo cỡ bàn */
+  .lz .rt-seat { width:clamp(62px, 24cqw, 118px); }
+  .lz .rt-av { width:clamp(28px, 10cqw, 58px); height:clamp(28px, 10cqw, 58px); font-size:clamp(14px, 4.6cqw, 26px); border-width:2px; }
+  .lz .rt-nm { font-size:clamp(10px, 2.4cqw, 12.5px); }
+  .lz .rt-sub { font-size:clamp(8.5px, 2cqw, 11px); }
+  .lz .rt-eq { width:clamp(14px, 4cqw, 22px); height:clamp(14px, 4cqw, 22px); }
+  .lz .rt-eq svg { width:80%; height:80%; }
+  .lz .rt-center { gap:4px; padding:4%; }
+  .lz .rt-center .ac { width:clamp(34px, 11cqw, 66px); }
+  .lz .rt-center .ac.big { width:clamp(42px, 15cqw, 96px); }
+  .lz .rt-center .ac .t { font-size:clamp(6px, 1.6cqw, 9.5px); }
+  .lz .rt-center .msg { font-size:clamp(9.5px, 2.2cqw, 12.5px); padding:2px 8px; }
+  .lz .fan { padding:14px 4px 10px; overflow-y:hidden; justify-content:safe center; scrollbar-width:none; }
+  /* Nhiều bài thì xếp chồng sát hơn cho vừa bề ngang (--n: số lá) */
+  .lz-ctrl { container-type:inline-size; }
+  .lz .fan > * { margin-left:clamp(-46px, calc((100cqw - 40px - var(--n) * 66px) / max(1, var(--n) - 1)), -14px); }
+  .lz .fan > *:first-child { margin-left:0; }
+  .rolebar { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:4px 10px; padding:6px 10px; text-align:center; }
+  .rolebar small { font-size:12px; }
+  .lz .actions .btn { border-radius:12px; padding:8px 12px; line-height:1.2; }
+  .lz .card-tile { padding:10px 12px; }
+  /* Chạm giữ lá bài để xem nghĩa */
+  .ac { -webkit-touch-callout:none; user-select:none; -webkit-user-select:none; }
+  .ac-tip { position:fixed; left:50%; bottom:calc(16px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:60;
+            width:min(92vw, 360px); background:#f4e6c8; color:#3b2a17; border:2px solid #8a6431; border-radius:12px;
+            padding:10px 12px; box-shadow:0 8px 24px #000a; display:flex; gap:10px; align-items:center; pointer-events:none; }
+  .ac-tip svg { width:44px; height:44px; flex:none; }
+  .ac-tip b { display:block; }
 </style>
 </head>
 <body>
