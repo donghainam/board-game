@@ -54,9 +54,9 @@
     main.wrap { padding:4px 10px calc(4px + env(safe-area-inset-bottom)); gap:4px; }
     .top { font-size:13px; }
     #app .rt-main { position:relative; }
-    #app .rt-toggles { position:absolute; top:0; left:0; width:55%; z-index:5; pointer-events:none; }
+    #app .rt-toggles { position:absolute; bottom:0; left:0; width:55%; z-index:5; pointer-events:none; } /* góc trên bàn dành cho ô Vai / Nhật ký */
     #app .rt-toggles .btn { pointer-events:auto; padding:4px 10px; }
-    #app > .btn-small:last-child { position:fixed; left:10px; bottom:calc(6px + env(safe-area-inset-bottom)); z-index:5; }
+    #app > .btn-small:last-child { position:fixed; right:10px; top:4px; z-index:5; padding:3px 10px; }
     .lz-table .rt-stage { width:min(100cqw, 86cqh, 640px); }
   }
   /* Ghế, chữ, lá giữa bàn co theo cỡ bàn */
@@ -76,6 +76,23 @@
   .lz-ctrl { container-type:inline-size; }
   .lz .fan > * { margin-left:clamp(-46px, calc((100cqw - 40px - var(--n) * 66px) / max(1, var(--n) - 1)), -14px); }
   .lz .fan > *:first-child { margin-left:0; }
+  /* Ô nổi mờ trên bàn: vai (góc phải, thu gọn được), nhật ký (góc trái, xổ xuống) */
+  .lz-table { position:relative; }
+  .ov { position:absolute; top:0; z-index:4; max-width:min(42%, 240px); pointer-events:none; /* chữ cho chạm xuyên xuống ghế bên dưới */ font-size:12px; line-height:1.35; color:var(--text);
+        background:rgb(28 22 16 / .62); -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px);
+        border:1px solid rgb(255 255 255 / .14); border-radius:12px; padding:6px 8px; }
+  .ov-r { right:0; display:flex; flex-direction:column; gap:4px; padding-right:26px; }
+  .ov-l { left:0; padding:0; }
+  .ov-btn { font:inherit; font-weight:700; color:var(--text); background:rgb(28 22 16 / .62); border:1px solid rgb(255 255 255 / .14);
+            border-radius:12px; padding:5px 10px; cursor:pointer; }
+  .ov-l .ov-btn { background:none; border:0; }
+  .ov-l ul { margin:0; padding:0 10px 8px 22px; max-height:min(55cqh, 260px); overflow:auto; }
+  .ov-l li { margin:2px 0; }
+  .ov button, .ov ul { pointer-events:auto; }
+  .ov-x { position:absolute; top:2px; right:4px; width:22px; height:22px; border-radius:6px; border:0; background:rgb(255 255 255 / .12);
+          color:var(--text); font:inherit; font-weight:800; cursor:pointer; }
+  .ov-r .btn { align-self:flex-start; padding:3px 10px; font-size:12px; }
+  .ov-r small { font-size:11.5px; }
   .rolebar { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:4px 10px; padding:6px 10px; text-align:center; }
   .rolebar small { font-size:12px; }
   .lz .actions .btn { border-radius:12px; padding:8px 12px; line-height:1.2; }

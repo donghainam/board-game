@@ -18,6 +18,8 @@ let sel = null;       // id lá đang chọn (trên tay, hoặc trang bị dùng
 let extra = null;     // lá bỏ kèm cho Rượu mạnh / Ẩu đả
 let target = null;    // người đang chọn cho Cướp/Phá
 let showRole = false;
+let roleMin = false;   // ô vai trên bàn đang thu gọn
+let logOpen = false;   // nhật ký đang xổ xuống
 let picks = new Set(); // lá chọn để bỏ khi thừa bài
 let healMode = false;  // Ông lang vườn đang chọn 2 lá để hồi máu
 const charName = (c) => CHARS[c]?.name || '';
@@ -160,7 +162,17 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
   ];
   const arrow = lp?.target ? { from: lp.by, to: lp.target } : null; // luôn theo lá vừa đánh (kể cả lá đáp trả)
   const table = roundTable({ order: v.players.map((p) => p.id), me, seat, seatAttrs, center, arrow });
-  const main = [roleCard];
+  const main = [];
+  // Ô vai nổi mờ ở góc phải bàn (thu gọn được) + nhật ký xổ xuống ở góc trái: vẫn nhìn thấy bàn bên dưới
+  const roleBox = roleMin
+    ? el('button', { class: 'ov ov-r ov-btn', onclick: () => { roleMin = false; rerender(); } }, '🎭 Vai ▾')
+    : el('div', { class: 'ov ov-r' },
+      el('button', { class: 'ov-x', 'aria-label': 'Thu gọn', onclick: () => { roleMin = true; rerender(); } }, '–'),
+      [...roleCard.childNodes]);
+  const lines = v.log.map((t) => v.players.reduce((x, p) => x.split(p.id).join(who(p.id)), t));
+  const logBox = el('div', { class: 'ov ov-l' + (logOpen ? ' open' : '') },
+    el('button', { class: 'ov-btn', onclick: () => { logOpen = !logOpen; rerender(); } }, `📜 Nhật ký ${logOpen ? '▴' : '▾'}`),
+    logOpen ? el('ul', {}, lines.length ? lines.map((t) => el('li', {}, t)) : el('li', { class: 'muted' }, 'Chưa có gì.')) : null);
 
   // Chọn lá của mục tiêu cho Cướp/Phá
   if (card && target && PICK_CARD.includes(card.t)) {
@@ -273,16 +285,13 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
     if (card) main.push(el('small', { class: 'muted', style: 'text-align:center' }, `${CARD[card.t][0]}: ${CARD[card.t][1]}`));
   }
 
-  if (v.log.length) main.push(el('details', {}, el('summary', { class: 'muted' }, 'Nhật ký'),
-    el('ul', {}, v.log.map((t) => el('li', {}, v.players.reduce((x, p) => x.split(p.id).join(who(p.id)), t))))));
-
   const mineNow = !!(v.me.alive && !v.winner && (actor || v.docOffer || v.store?.turn === me));
   if (mineNow && !wasMine) navigator.vibrate?.(200); // iPhone (Safari) không hỗ trợ rung: bỏ qua
   wasMine = mineNow;
 
   // Khít màn hình: bàn tròn co giãn theo chỗ trống; dọc: bàn trên, điều khiển dưới; ngang: trái / phải
   return [sideLayout({ left, right, main: [el('div', { class: 'lz' }, el('div', { class: 'lz-in' },
-    el('div', { class: 'lz-table' }, table), el('div', { class: 'lz-ctrl stack' }, main)))] })];
+    el('div', { class: 'lz-table' }, table, logBox, roleBox), el('div', { class: 'lz-ctrl stack' }, main)))] })];
 }
 
 runTable({
