@@ -25,25 +25,39 @@ let healMode = false;  // Ông lang vườn đang chọn 2 lá để hồi máu
 const charName = (c) => CHARS[c]?.name || '';
 let lastRound = null; // đổi ván thì che thẻ vai lại
 
-// Chạm giữ lá bài ~0,45 giây: hiện khung nghĩa lá ở đáy màn hình; nhả tay thì ẩn, và cú bấm đó không tính.
-let tip = null;
-const hideTip = () => { tip?.remove(); tip = null; };
+// Khung nghĩa lá ở đáy màn hình. hideAfter: tự ẩn sau bấy nhiêu ms (null = giữ tới khi gọi hideTipSoon).
+let tip = null, tipTimer = null;
+function showTip(t, hideAfter = null) {
+  clearTimeout(tipTimer); tip?.remove();
+  tip = el('div', { class: 'ac-tip', role: 'status' }, art(t), el('div', {}, el('b', {}, CARD[t]?.[0] || '?'), el('small', {}, CARD[t]?.[1] || '')));
+  document.body.append(tip);
+  if (hideAfter) tipTimer = setTimeout(() => { tip?.remove(); tip = null; }, hideAfter);
+}
+const hideTipSoon = () => { clearTimeout(tipTimer); tipTimer = setTimeout(() => { tip?.remove(); tip = null; }, 900); };
+
+// Chạm giữ ~0,45 giây: hiện nghĩa lá; nhả tay thì ẩn, và cú bấm đi kèm không tính.
 function holdToExplain(t) {
   let timer = null, shown = false;
-  const stop = () => { clearTimeout(timer); if (shown) setTimeout(hideTip, 900); };
+  const stop = () => { clearTimeout(timer); if (shown) hideTipSoon(); };
   return {
     shown: () => shown,
-    onpointerdown: () => {
-      shown = false;
-      timer = setTimeout(() => {
-        shown = true; hideTip();
-        tip = el('div', { class: 'ac-tip', role: 'status' }, art(t), el('div', {}, el('b', {}, CARD[t]?.[0] || '?'), el('small', {}, CARD[t]?.[1] || '')));
-        document.body.append(tip);
-      }, 450);
-    },
+    onpointerdown: () => { shown = false; timer = setTimeout(() => { shown = true; showTip(t); }, 450); },
     onpointerup: stop, onpointerleave: stop, onpointercancel: stop,
     oncontextmenu: (e) => e.preventDefault(),
   };
+}
+
+// Trang bị trước mặt mỗi người (hình nhỏ dưới ghế): chạm giữ để xem nghĩa;
+// chạm nhanh cũng xem được, trừ khi ghế đang chọn làm mục tiêu (khi đó chạm = chọn người).
+function eqIcon(c, seatPickable) {
+  const { shown, ...hold } = holdToExplain(c.t);
+  return el('span', {
+    class: 'rt-eq', title: `${CARD[c.t]?.[0]}: ${CARD[c.t]?.[1]}`, 'aria-label': CARD[c.t]?.[0], ...hold,
+    onclick: (e) => {
+      if (shown()) { e.stopPropagation(); e.preventDefault(); return; }
+      if (!seatPickable) { e.stopPropagation(); showTip(c.t, 2200); }
+    },
+  }, art(c.t));
 }
 
 // Lá bài có minh hoạ: c = {t, s}; attrs: {sel, disabled, onclick, style, big}
@@ -126,7 +140,7 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
       el('div', { style: 'font-size:11px;letter-spacing:-1px' }, p.alive ? '❤️'.repeat(p.hp) + '🤍'.repeat(Math.max(0, p.max - p.hp)) : (p.role ? ROLE[p.role][1] : '')),
       p.char ? el('div', { class: 'rt-sub' }, `🎭 ${charName(p.char)}`, p.dist ? ` · cách ${p.dist}` : '') : null,
       // trang bị hiện bằng hình nhỏ (xem nghĩa ở bảng Lá bài) để ghế không cao quá đè lên phần dưới
-      p.eq.length ? el('div', {}, p.eq.map((c) => el('span', { class: 'rt-eq', title: `${CARD[c.t]?.[0]}: ${CARD[c.t]?.[1]}`, 'aria-label': CARD[c.t]?.[0] }, art(c.t)))) : null,
+      p.eq.length ? el('div', {}, p.eq.map((c) => eqIcon(c, canPick(p)))) : null,
     ];
   };
   const seatAttrs = (id) => {
@@ -289,7 +303,8 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
   }
 
   const mineNow = !!(v.me.alive && !v.winner && (actor || v.docOffer || v.store?.turn === me));
-  if (mineNow && !wasMine) navigator.vibrate?.(200); // iPhone (Safari) không hỗ trợ rung: bỏ qua
+  // iPhone (Safari) không hỗ trợ rung; Chrome chỉ cho rung sau khi người dùng đã chạm vào trang
+  if (mineNow && !wasMine && navigator.userActivation?.hasBeenActive !== false) navigator.vibrate?.(200);
   wasMine = mineNow;
 
   // Khít màn hình: bàn tròn co giãn theo chỗ trống; dọc: bàn trên, điều khiển dưới; ngang: trái / phải
