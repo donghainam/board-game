@@ -4,7 +4,7 @@ import { mountLobby, roomInfo, el, toast, store } from './lobby.js';
 
 export async function runTable({
   gameCode, minPlayers, maxPlayers, maxSeats = maxPlayers,
-  engine, pickPlayers = (ids) => ids, renderTable, resultOf, setup = null,
+  engine, pickPlayers = (ids) => ids, renderTable, resultOf, setup = null, bot = null,
 }) {
   const root = document.getElementById('app');
   const net = document.getElementById('net');
@@ -39,6 +39,24 @@ export async function runTable({
     state = next;
     sync();
     schedule();
+    driveBots();
+  }
+
+  // Bot: host tự đánh thay các ghế bot, mỗi bước cách nhau một chút cho người thật kịp nhìn.
+  let botTimer = null;
+  function driveBots() {
+    clearTimeout(botTimer);
+    if (!bot || !state || state.winner) return;
+    const bots = session.seats.filter((s) => s.bot).map((s) => s.id);
+    const due = bots.find((b) => { const v = engine.viewFor(state, b); return v && (v.turn === b || v.waitingOn?.includes(b)); });
+    if (!due) return;
+    botTimer = setTimeout(() => {
+      if (!state || state.winner) return;
+      const v = engine.viewFor(state, due);
+      let r;
+      try { r = engine.apply(state, due, bot(v)); } catch { r = { ok: false }; }
+      setState(r.ok ? r.state : engine.forceSkip(state, [due])); // hành động lỗi thì cho bỏ qua lượt bot
+    }, 900);
   }
 
   // Hẹn giờ do engine yêu cầu (vd cửa sổ Chặn 3 giây); chỉ host chạy.
@@ -117,6 +135,7 @@ export async function runTable({
     if (isHost) {
       const n = players().length;
       if (setup) parts.push(setup.render(config, (c) => { config = c; sync(); }));
+      if (bot) parts.push(el('button', { class: 'btn', disabled: session.seats.length >= maxSeats, onclick: () => session.addBot() }, '🤖 Thêm bot'));
       parts.push(el('button', { class: 'btn btn-primary', disabled: !canStart(), onclick: startRound }, result ? 'Ván mới' : 'Bắt đầu'),
         el('p', { class: 'muted' }, minPlayers === maxPlayers
           ? `Cần ${minPlayers} người online (đang có ${n}).`
@@ -163,6 +182,7 @@ export async function runTable({
     session.onSeats(sync);
     sync();
     schedule();
+    driveBots();
   } else {
     session.client.onStatus((s) => {
       net.textContent = { connecting: 'đang kết nối…', connected: '● đã kết nối', reconnecting: 'mất kết nối, đang nối lại…', closed: '' }[s];

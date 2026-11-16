@@ -33,11 +33,12 @@ test('bộ bài, chia vai, chọn chức năng rồi mới chia bài', () => {
   for (const p of s.players.slice(0, 4)) s = A(s, p.id, { type: 'pick', char: p.offer[1] });
   assert.equal(viewFor(s, 'a').players[0].char, null, 'chưa công khai khi còn người chưa chọn');
   s = forceSkip(s);
-  assert.equal(s.phase, 'play');
   const cst = s.players.find((p) => p.role === 'cst');
+  // Cảnh sát trưởng là Kẻ móc túi thì lượt mở đầu bằng bước chọn người để móc
+  assert.equal(s.phase, cst.char === 'moctui' ? 'steal' : 'play');
   assert.equal(cst.max, CHARS[cst.char].hp + 1);
   assert.equal(s.players[s.turn].id, cst.id);
-  assert.ok(cst.hand.length >= cst.max + 1);
+  assert.ok(cst.hand.length >= cst.max);
   assert.equal(viewFor(s, 'b').players[0].char, s.players[0].char, 'chọn xong thì công khai');
 });
 

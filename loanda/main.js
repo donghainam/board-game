@@ -1,6 +1,7 @@
 import { el } from '../shared/lobby.js';
 import { runTable } from '../shared/table.js';
 import { validate, start, apply, viewFor, forceSkip, CHARS } from './engine.js';
+import { botAction } from './bot.js';
 
 const CARD = {
   ban: ['🔫', 'Bắn'], ne: ['🌀', 'Né'], bangbo: ['🩹', 'Băng bó'], ruou: ['🍻', 'Rượu mừng'], cuop: ['🤏', 'Cướp'], pha: ['💥', 'Phá'],
@@ -162,7 +163,7 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
   }
 
   if (v.log.length) out.push(el('details', {}, el('summary', { class: 'muted' }, 'Nhật ký'),
-    el('ul', {}, v.log.map((t) => el('li', {}, t.replace(/\b[0-9a-f]{32}\b/g, (id) => who(id)))))));
+    el('ul', {}, v.log.map((t) => el('li', {}, v.players.reduce((x, p) => x.split(p.id).join(who(p.id)), t))))));
   return out;
 }
 
@@ -170,6 +171,7 @@ runTable({
   gameCode: 'W', minPlayers: 4, maxPlayers: 7,
   engine: { validate, start, apply: (s, id, a) => apply(s, id, a), viewFor, forceSkip: (s, stuck) => forceSkip(s, Math.random, stuck) },
   renderTable,
+  bot: botAction,
   resultOf: (v, nameOf) => ({
     title: { luat: '⭐ Phe Luật thắng!', cuop: '🦹 Băng cướp thắng!', phanboi: '🐍 Kẻ phản bội thắng!' }[v.winTeam],
     reason: `Người thắng: ${[].concat(v.winner).map(nameOf).join(', ')}`,

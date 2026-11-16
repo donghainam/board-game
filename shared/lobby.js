@@ -109,10 +109,10 @@ export async function mountLobby(root, { gameCode, maxPlayers }) {
     history.replaceState(null, '', location.pathname);
     let saved = null;
     try { saved = JSON.parse(store.get('bg.seats.' + pick.code)); } catch {}
-    session.seats = (saved || [{ id: me.id, name }]).map((s) => ({ ...s, online: s.id === me.id }));
+    session.seats = (saved || [{ id: me.id, name }]).map((s) => ({ ...s, online: s.id === me.id || !!s.bot }));
     const h = session.host;
     const publish = () => {
-      store.set('bg.seats.' + pick.code, JSON.stringify(session.seats.map(({ id, name }) => ({ id, name }))));
+      store.set('bg.seats.' + pick.code, JSON.stringify(session.seats.map(({ id, name, bot }) => ({ id, name, bot }))));
       h.broadcast({ t: 'seats', seats: session.seats });
       changed();
     };
@@ -135,6 +135,13 @@ export async function mountLobby(root, { gameCode, maxPlayers }) {
       session.seats = session.seats.filter((s) => s.id !== pid);
       h.send(pid, { t: 'kicked' });
       setTimeout(() => h.drop(pid), 500);
+      publish();
+    };
+    // Ghế bot: máy chủ bàn tự đánh thay (game nào có bot mới dùng).
+    session.addBot = () => {
+      if (session.seats.length >= maxPlayers) return;
+      const n = session.seats.filter((s) => s.bot).length + 1;
+      session.seats.push({ id: 'bot-' + makeCode('x').slice(1) + n, name: `🤖 Bot ${n}`, online: true, bot: true });
       publish();
     };
     session.closeRoom = () => {
