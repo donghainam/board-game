@@ -20,7 +20,8 @@ const give = (s, id, ...cards) => { s.players.find((p) => p.id === id).hand.push
 const P = (s, id) => s.players.find((p) => p.id === id);
 
 test('bộ bài, chia vai, chọn chức năng rồi mới chia bài', () => {
-  assert.equal(buildDeck().length, 77);
+  assert.equal(buildDeck().length, 126);
+  assert.ok(Object.values(Object.groupBy(buildDeck(), (c) => c.t)).every((g) => g.length >= 3), "mọi loại ít nhất 3 lá");
   assert.equal(validate(['a', 'b', 'c']), 'Cần 4–7 người.');
   let s = start(['a', 'b', 'c', 'd', 'e'], {}, Math.random);
   assert.deepEqual(s.players.map((p) => p.role).sort(), ['cst', 'cuop', 'cuop', 'phanboi', 'pho']);
@@ -460,3 +461,85 @@ test('phản ứng (đấu tay đôi, né, chịu đòn) hiện lên giữa bàn
   s = A(s, 'A', { type: 'respond' });
   assert.match(s.log.at(-1), /A mất 1 máu/);
 });
+
+test('Băng bó dùng cả ngoài lượt; Rượu mừng chọn cả bàn hoặc riêng mình', () => {
+  let s = mk(R4);
+  P(s, 'B').hp = 2;
+  const [bb] = give(s, 'B', C('bangbo'));
+  s = A(s, 'B', { type: 'play', card: bb.id }); // đang là lượt A
+  assert.equal(P(s, 'B').hp, 3);
+  let r = mk(R4);
+  P(r, 'A').hp = 3; P(r, 'B').hp = 2;
+  const [w1, w2] = give(r, 'A', C('ruou'), C('ruou'));
+  r = A(r, 'A', { type: 'play', card: w1.id, self: true });
+  assert.deepEqual([P(r, 'A').hp, P(r, 'B').hp], [4, 2]);
+  r = A(r, 'A', { type: 'play', card: w2.id });
+  assert.deepEqual([P(r, 'A').hp, P(r, 'B').hp], [5, 3]);
+  NO(r, 'B', { type: 'play', card: give(r, 'B', C('ruou'))[0].id }); // không dùng ngoài lượt
+});
+
+test('Đấm, Lách người, Rượu mạnh, Ẩu đả', () => {
+  let s = mk(R4);
+  const [d1, d2] = give(s, 'A', C('dam'), C('dam'));
+  NO(s, 'A', { type: 'play', card: d1.id, target: 'C' }); // khoảng cách 2
+  const [l] = give(s, 'B', C('lach'));
+  s = A(s, 'A', { type: 'play', card: d1.id, target: 'B' });
+  s = A(s, 'B', { type: 'respond', card: l.id });
+  assert.equal(P(s, 'B').hand.length, 1, 'Lách người: né rồi bốc 1');
+  s = A(A(s, 'A', { type: 'play', card: d2.id, target: 'B' }), 'B', { type: 'respond' });
+  assert.equal(P(s, 'B').hp, 3, 'Đấm không tính giới hạn Bắn, bị trúng mất 1 máu');
+  let r = mk(R4);
+  P(r, 'C').hp = 2;
+  const [rm, x] = give(r, 'A', C('ruoumanh'), C('ne'));
+  NO(r, 'A', { type: 'play', card: rm.id, target: 'C' }); // thiếu lá bỏ kèm
+  r = A(r, 'A', { type: 'play', card: rm.id, target: 'C', extra: x.id });
+  assert.equal(P(r, 'C').hp, 3);
+  assert.equal(P(r, 'A').hand.length, 0);
+  let a = mk(R4);
+  const [ad, y] = give(a, 'A', C('audai'), C('ne'));
+  give(a, 'B', C('ne')); give(a, 'C', C('ne'), C('ne'));
+  a = A(a, 'A', { type: 'play', card: ad.id, extra: y.id });
+  assert.deepEqual(['A', 'B', 'C', 'D'].map((id) => P(a, id).hand.length), [0, 0, 1, 0]);
+});
+
+test('Chợ phiên: mỗi người lần lượt lấy 1 lá, người cuối nhận lá còn lại', () => {
+  let s = mk(R4);
+  const [cp] = give(s, 'A', C('chophien'));
+  s = A(s, 'A', { type: 'play', card: cp.id });
+  assert.equal(s.phase, 'store');
+  assert.equal(viewFor(s, 'C').store.cards.length, 4);
+  assert.equal(viewFor(s, 'C').turn, 'A');
+  NO(s, 'B', { type: 'store', card: s.store.cards[0].id });
+  for (const id of ['A', 'B', 'C']) s = A(s, id, { type: 'store', card: s.store.cards[0].id });
+  assert.equal(s.phase, 'play');
+  assert.deepEqual(['A', 'B', 'C', 'D'].map((id) => P(s, id).hand.length), [1, 1, 1, 1]);
+  let f = mk(R4);
+  f = A(f, 'A', { type: 'play', card: give(f, 'A', C('chophien'))[0].id });
+  f = forceSkip(f, rng0, ['A']);
+  assert.equal(f.store.queue[0], 'B', 'bỏ qua người offline: tự lấy lá đầu');
+});
+
+test('Trang bị dùng 1 lần: Súng giấu, Bình nước, Dao găm, Xe thồ, Mũ rộng vành', () => {
+  let s = mk(R4);
+  P(s, 'A').hp = 4;
+  const eq = give(s, 'A', C('sunggiau'), C('binhnuoc'), C('dao'), C('xetho'));
+  for (const c of eq) s = A(s, 'A', { type: 'play', card: c.id });
+  assert.equal(P(s, 'A').eq.length, 4);
+  s = A(s, 'A', { type: 'use', card: eq[1].id });
+  assert.equal(P(s, 'A').hp, 5);
+  NO(s, 'A', { type: 'use', card: eq[0].id, target: 'C' }); // khoảng cách 2
+  const [mu] = give(s, 'B', C('mu'));
+  s.players[1].eq.push(take1(s, 'B', mu.id));
+  s = A(s, 'A', { type: 'use', card: eq[0].id, target: 'B' });
+  assert.equal(P(s, 'A').hand.length, 1, 'Súng giấu: bốc 1 lá');
+  s = A(s, 'B', { type: 'respond', card: mu.id });
+  assert.equal(P(s, 'B').hp, 4, 'Mũ rộng vành né được');
+  assert.equal(P(s, 'B').eq.length, 0);
+  s = A(A(s, 'A', { type: 'use', card: eq[2].id, target: 'B' }), 'B', { type: 'respond' });
+  assert.equal(P(s, 'B').hp, 3, 'Dao găm trúng');
+  give(s, 'D', C('ne'));
+  s = A(s, 'A', { type: 'use', card: eq[3].id, target: 'D', which: 'hand' });
+  assert.equal(P(s, 'D').hand.length, 0);
+  assert.equal(P(s, 'A').eq.length, 0);
+});
+const take1 = (s, id, cid) => { const h = P(s, id).hand; return h.splice(h.findIndex((c) => c.id === cid), 1)[0]; };

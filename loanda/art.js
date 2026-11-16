@@ -13,6 +13,16 @@ const ART = {
   phuckich: `<path d="M10 54L50 14" ${S}/><path d="M50 14l-10 2 8 8z" fill="#3b2a17"/><path d="M20 58L56 22" ${S} opacity=".6"/><path d="M8 40c6-10 14-10 20 0" fill="#7c9a5a" ${S}/>`,
   tiepte: `<rect x="10" y="22" width="44" height="30" rx="2" fill="#c98a4b" ${S}/><path d="M10 32h44M32 22v30M18 22l6-8h16l6 8" fill="none" ${S}/>`,
   tieptelon: `<rect x="8" y="24" width="34" height="20" rx="3" fill="#6d4c41" ${S}/><rect x="42" y="18" width="14" height="26" rx="2" fill="#6d4c41" ${S}/><circle cx="18" cy="48" r="5" fill="#3b2a17"/><circle cx="34" cy="48" r="5" fill="#3b2a17"/><circle cx="50" cy="48" r="5" fill="#3b2a17"/><path d="M14 24v-8h6v8" fill="#3b2a17"/>`,
+  chophien: `<path d="M8 24h48l-4-10H12z" fill="#e8590c" ${S}/><path d="M12 24v28h40V24" fill="#f4e6c8" ${S}/><rect x="18" y="34" width="10" height="18" fill="#a1683a" ${S}/><rect x="34" y="32" width="12" height="10" fill="#90caf9" ${S}/>`,
+  dam: `<path d="M14 30c0-6 4-8 8-8h18c6 0 10 4 10 10v8c0 8-6 12-14 12H24c-6 0-10-4-10-10z" fill="#e9c49a" ${S}/><path d="M24 22v10M32 22v10M40 22v10" ${S}/><path d="M52 18l6-6M54 28h8M52 38l6 6" ${S}/>`,
+  lach: `<circle cx="38" cy="14" r="5" fill="#e9c49a" ${S}/><path d="M36 20l-6 14 8 6-4 14M30 34l-10 4M38 26l10 4" fill="none" ${S}/><path d="M6 22h16M4 32h12M8 42h10" ${S} opacity=".6"/>`,
+  ruoumanh: `<path d="M26 8h12v10l6 8v28H20V26l6-8z" fill="#7b4b2a" ${S}/><rect x="22" y="32" width="20" height="12" fill="#f4e6c8" ${S}/><path d="M28 38h8" ${S}/>`,
+  audai: `<circle cx="32" cy="32" r="18" fill="#d9c09a" ${S}/><path d="M18 18l-8-8M46 18l8-8M18 46l-8 8M46 46l8 8M32 14V6M32 50v8" ${S}/><path d="M24 28l6 4-6 4M40 28l-6 4 6 4" fill="none" ${S}/>`,
+  sunggiau: `<path d="M14 30h26l4-4h8v8h-8l-2 3H32l-4 11h-7l2-11h-9z" fill="#5f6b73" ${S}/><path d="M8 50c8-8 18-8 26 0" fill="none" ${S} opacity=".6"/>`,
+  binhnuoc: `<ellipse cx="32" cy="38" rx="18" ry="16" fill="#8d6e63" ${S}/><rect x="28" y="12" width="8" height="10" fill="#c9b48f" ${S}/><path d="M16 34h32" ${S}/><path d="M22 18l-8 6M42 18l8 6" ${S}/>`,
+  mu: `<ellipse cx="32" cy="42" rx="28" ry="8" fill="#a1683a" ${S}/><path d="M18 42c0-14 4-24 14-24s14 10 14 24" fill="#8d5a2b" ${S}/><path d="M19 36h26" stroke="#3b2a17" stroke-width="4"/>`,
+  xetho: `<path d="M8 22c8-10 40-10 48 0v18H8z" fill="#f4e6c8" ${S}/><path d="M8 40h48" ${S}/><circle cx="18" cy="48" r="7" fill="#a1683a" ${S}/><circle cx="46" cy="48" r="7" fill="#a1683a" ${S}/>`,
+  dao: `<path d="M10 54l26-26 6 6-26 26z" fill="#6d4c41" ${S}/><path d="M36 28l18-20 2 2-14 24z" fill="#cfd8dc" ${S}/>`,
   sung2: gun(2), sung3: gun(3), sung4: gun(4), sung5: gun(5),
   lienthanh: `<path d="M6 24h40v14H6z" fill="#9e9e9e" ${S}/><circle cx="18" cy="31" r="4" fill="#3b2a17"/><circle cx="30" cy="31" r="4" fill="#3b2a17"/><path d="M46 28h12M46 34h12M20 38l-4 14h8l4-14" ${S} fill="none"/>`,
   ngua: `<path d="M20 54V36c0-12 8-22 20-24l4 6 6 2-2 8-8 2-6 10v14z" fill="#a1683a" ${S}/><circle cx="42" cy="22" r="2" fill="#3b2a17"/><path d="M30 14c-4 2-8 8-8 14" ${S} fill="none"/>`,
@@ -25,8 +35,8 @@ const ART = {
 export const CARD = {
   ban: ['Bắn', 'Bắn 1 người trong tầm. Họ phải Né hoặc mất 1 máu. Mỗi lượt 1 lần.'],
   ne: ['Né', 'Chỉ đánh khi bị bắn / bắn loạt: tránh được 1 phát.'],
-  bangbo: ['Băng bó', 'Hồi 1 máu. Hết máu mà còn lá này thì tự dùng để sống.'],
-  ruou: ['Rượu mừng', 'Mọi người còn sống hồi 1 máu.'],
+  bangbo: ['Băng bó', 'Hồi 1 máu, dùng bất kỳ lúc nào (cả lượt người khác). Hết máu mà còn lá này thì tự dùng để sống.'],
+  ruou: ['Rượu mừng', 'Trong lượt mình, chọn: mọi người còn sống hồi 1 máu, hoặc riêng mình hồi 1 máu.'],
   cuop: ['Cướp', 'Lấy 1 lá của người ở khoảng cách 1 (trên tay hoặc trang bị).'],
   pha: ['Phá', 'Bỏ 1 lá của bất kỳ ai (trên tay hoặc trang bị).'],
   duel: ['Đấu tay đôi', 'Thách 1 người: hai bên lần lượt đánh Bắn, ai hết thì mất 1 máu.'],
@@ -34,6 +44,11 @@ export const CARD = {
   phuckich: ['Phục kích', 'Mọi người khác phải đánh Bắn hoặc mất 1 máu.'],
   tiepte: ['Tiếp tế', 'Bốc thêm 2 lá.'],
   tieptelon: ['Tiếp tế lớn', 'Bốc thêm 3 lá.'],
+  chophien: ['Chợ phiên', 'Lật số lá bằng số người còn sống; lần lượt từ bạn, mỗi người lấy 1 lá.'],
+  dam: ['Đấm', 'Đánh 1 người ở khoảng cách 1: họ phải Né hoặc mất 1 máu. Không tính lượt Bắn.'],
+  lach: ['Lách người', 'Dùng như Né, rồi bốc thêm 1 lá.'],
+  ruoumanh: ['Rượu mạnh', 'Bỏ kèm 1 lá trên tay: 1 người tự chọn (cả bạn) hồi 1 máu.'],
+  audai: ['Ẩu đả', 'Bỏ kèm 1 lá trên tay: mỗi người khác mất ngẫu nhiên 1 lá trên tay.'],
   sung2: ['Súng ngắn', 'Trang bị: tầm bắn 2.'], sung3: ['Súng trường', 'Trang bị: tầm bắn 3.'],
   sung4: ['Súng săn', 'Trang bị: tầm bắn 4.'], sung5: ['Súng xa', 'Trang bị: tầm bắn 5.'],
   lienthanh: ['Liên thanh', 'Trang bị: tầm 1, bắn không giới hạn mỗi lượt.'],
@@ -41,9 +56,14 @@ export const CARD = {
   ongnhom: ['Ống nhòm', 'Trang bị: bạn nhìn người khác gần lại 1.'],
   thung: ['Thùng gỗ', 'Trang bị: bị bắn thì lật bài, ra ♥ là né được.'],
   tu: ['Nhà tù', 'Đặt lên người khác (trừ Cảnh sát trưởng): đầu lượt lật ra ♥ mới thoát, không thì mất lượt.'],
+  sunggiau: ['Súng giấu', 'Trang bị 1 lần: bỏ đi để bắn 1 người ở khoảng cách 1 và bốc 1 lá.'],
+  binhnuoc: ['Bình nước', 'Trang bị 1 lần: bỏ đi để hồi 1 máu (trong lượt mình).'],
+  mu: ['Mũ rộng vành', 'Trang bị 1 lần: bị bắn thì bỏ đi để né 1 phát.'],
+  xetho: ['Xe thồ', 'Trang bị 1 lần: bỏ đi để lấy 1 lá của bất kỳ ai, không kể khoảng cách.'],
+  dao: ['Dao găm', 'Trang bị 1 lần: bỏ đi để đánh 1 người trong tầm súng (Né hoặc mất 1 máu). Không tính lượt Bắn.'],
   no: ['Thuốc nổ', 'Đặt trước mặt: đầu lượt lật ra ♠ thì nổ mất 3 máu, không thì chuyền sang người kế.'],
 };
-export const EQUIP = new Set(['sung2', 'sung3', 'sung4', 'sung5', 'lienthanh', 'ngua', 'ongnhom', 'thung', 'tu', 'no']);
+export const EQUIP = new Set(['sung2', 'sung3', 'sung4', 'sung5', 'lienthanh', 'ngua', 'ongnhom', 'thung', 'tu', 'no', 'sunggiau', 'binhnuoc', 'mu', 'xetho', 'dao']);
 
 // Nút/khung SVG từ chuỗi tĩnh (không chứa dữ liệu người chơi).
 export function art(t) {

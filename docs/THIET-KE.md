@@ -595,32 +595,49 @@ Mã phòng bắt đầu bằng `W` · 4–7 người · có vai trò bí mật +
 - **Ngựa** (trang bị): người khác nhìn mình xa thêm 1.
 - **Ống nhòm** (trang bị): mình nhìn người khác gần lại 1.
 
-### Bộ bài (khoảng 70 lá; tên gọi và số lượng: em tự quyết)
-**Lá dùng ngay:**
+### Bộ bài (126 lá; mọi loại ít nhất 3 lá; tên gọi: em tự quyết)
+Viền nâu = lá đánh ngay, chỉ trong lượt mình (trừ **Né**, **Lách người**, **Băng bó** dùng được ngoài lượt).
+Viền xanh dương = trang bị, đặt ra trước mặt rồi mới có tác dụng.
+
+**Lá dùng ngay (viền nâu):**
 | Lá | Số lượng | Tác dụng |
 |---|---|---|
 | Bắn | 22 | Bắn 1 người trong tầm. Người đó phải đánh **Né**, nếu không thì mất 1 máu. |
 | Né | 12 | Chỉ đánh khi bị Bắn hoặc bị Bắn loạt. |
-| Băng bó | 6 | Hồi 1 máu, không vượt quá máu tối đa. |
-| Rượu mừng | 1 | Mọi người còn sống hồi 1 máu. |
+| Băng bó | 6 | Hồi 1 máu, **dùng bất kỳ lúc nào** (cả lượt người khác). |
+| Rượu mừng | 3 | Trong lượt mình, chọn: mọi người còn sống hồi 1 máu, **hoặc** riêng mình hồi 1 máu. |
 | Cướp | 4 | Lấy 1 lá của người ở khoảng cách 1: hoặc 1 lá ngẫu nhiên trên tay, hoặc 1 trang bị tự chọn. |
 | Phá | 4 | Bỏ 1 lá của bất kỳ ai: hoặc 1 lá ngẫu nhiên trên tay, hoặc 1 trang bị tự chọn. |
 | Đấu tay đôi | 3 | Thách 1 người bất kỳ. Hai bên lần lượt đánh Bắn, người đối thủ đánh trước. Ai không đánh được thì mất 1 máu. |
-| Bắn loạt | 1 | Mọi người khác phải đánh Né, nếu không thì mất 1 máu. |
-| Phục kích | 2 | Mọi người khác phải đánh Bắn, nếu không thì mất 1 máu. |
+| Bắn loạt | 3 | Mọi người khác phải đánh Né, nếu không thì mất 1 máu. |
+| Phục kích | 3 | Mọi người khác phải đánh Bắn, nếu không thì mất 1 máu. |
 | Tiếp tế | 3 | Bốc thêm 2 lá. |
-| Tiếp tế lớn | 1 | Bốc thêm 3 lá. |
+| Tiếp tế lớn | 3 | Bốc thêm 3 lá. |
+| Chợ phiên | 3 | Lật số lá bằng số người còn sống. Lần lượt từ người đánh, mỗi người lấy 1 lá; người cuối nhận lá còn lại. |
+| Đấm | 3 | Đánh 1 người ở khoảng cách 1: Né hoặc mất 1 máu. Không tính vào giới hạn Bắn. |
+| Lách người | 3 | Dùng như Né, rồi bốc thêm 1 lá. |
+| Rượu mạnh | 3 | Bỏ kèm 1 lá trên tay: 1 người tự chọn (kể cả mình) hồi 1 máu. |
+| Ẩu đả | 3 | Bỏ kèm 1 lá trên tay: mỗi người khác mất ngẫu nhiên 1 lá trên tay. |
 
-**Trang bị (đặt trước mặt; mỗi loại chỉ đặt được 1 lá; có súng mới thì súng cũ bị bỏ):**
+**Trang bị (viền xanh dương; mỗi loại chỉ đặt được 1 lá; có súng mới thì súng cũ bị bỏ):**
 | Lá | Số lượng | Tác dụng |
 |---|---|---|
-| Súng ngắn / Súng trường / Súng săn / Súng xa | 3 / 2 / 1 / 1 | Tầm bắn lần lượt 2 / 3 / 4 / 5 |
-| Súng liên thanh | 2 | Tầm bắn 1, mỗi lượt đánh Bắn không giới hạn |
-| Ngựa | 2 | Người khác nhìn mình xa thêm 1 |
-| Ống nhòm | 1 | Mình nhìn người khác gần lại 1 |
-| Thùng gỗ | 2 | Khi bị Bắn, lật bài: ra ♥ thì coi như đã Né |
+| Súng ngắn / Súng trường / Súng săn / Súng xa | 3 mỗi loại | Tầm bắn lần lượt 2 / 3 / 4 / 5 |
+| Súng liên thanh | 3 | Tầm bắn 1, mỗi lượt đánh Bắn không giới hạn |
+| Ngựa | 3 | Người khác nhìn mình xa thêm 1 |
+| Ống nhòm | 3 | Mình nhìn người khác gần lại 1 |
+| Thùng gỗ | 3 | Khi bị Bắn, lật bài: ra ♥ thì coi như đã Né |
 | Nhà tù | 3 | Đặt lên 1 người khác (trừ Cảnh sát trưởng). Đầu lượt người đó lật bài: ra ♥ thì thoát, ngược lại thì **mất lượt**. Lật xong thì bỏ lá Nhà tù. |
-| Thuốc nổ | 1 | Đặt trước mặt mình. Đầu lượt của người đang giữ, lật bài: ra ♠ thì **nổ, mất 3 máu**; ngược lại thì chuyền sang người kế tiếp. |
+| Thuốc nổ | 3 | Đặt trước mặt mình. Đầu lượt của người đang giữ, lật bài: ra ♠ thì **nổ, mất 3 máu**; ngược lại thì chuyền sang người kế tiếp. |
+
+**Trang bị dùng 1 lần (viền xanh dương; đặt ra rồi dùng được ngay, bỏ đi để kích hoạt; người khác Cướp/Phá được):**
+| Lá | Số lượng | Tác dụng |
+|---|---|---|
+| Súng giấu | 3 | Bắn 1 người ở khoảng cách 1 (Né hoặc mất 1 máu), rồi bốc 1 lá. Không tính giới hạn Bắn. |
+| Bình nước | 3 | Hồi 1 máu (trong lượt mình). |
+| Mũ rộng vành | 3 | Khi bị Bắn / Bắn loạt / Đấm: bỏ đi để né 1 phát. |
+| Xe thồ | 3 | Lấy 1 lá của bất kỳ ai, không kể khoảng cách. |
+| Dao găm | 3 | Đánh 1 người trong tầm súng (Né hoặc mất 1 máu). Không tính giới hạn Bắn. |
 
 ### Phản ứng (khi bị Bắn, Bắn loạt, Phục kích, Đấu tay đôi)
 - Máy chờ người bị nhắm bấm "Né", "Bắn" (khi Phục kích hoặc Đấu tay đôi) hoặc "Chịu".

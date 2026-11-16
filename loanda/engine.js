@@ -3,11 +3,16 @@
 import { shuffle, fail } from '../shared/util.js';
 
 export const GUN_RANGE = { sung2: 2, sung3: 3, sung4: 4, sung5: 5, lienthanh: 1 };
-const EQUIP = ['sung2', 'sung3', 'sung4', 'sung5', 'lienthanh', 'ngua', 'ongnhom', 'thung', 'tu', 'no'];
-const COUNTS = {
-  ban: 22, ne: 12, bangbo: 6, ruou: 1, cuop: 4, pha: 4, duel: 3, loat: 1, phuckich: 2, tiepte: 3, tieptelon: 1,
-  sung2: 3, sung3: 2, sung4: 1, sung5: 1, lienthanh: 2, ngua: 2, ongnhom: 1, thung: 2, tu: 3, no: 1,
+// Trang bị dùng 1 lần: đặt ra trước mặt, bỏ đi để kích hoạt (Mũ rộng vành chỉ dùng khi bị bắn).
+export const ONESHOT = ['sunggiau', 'binhnuoc', 'mu', 'xetho', 'dao'];
+const EQUIP = ['sung2', 'sung3', 'sung4', 'sung5', 'lienthanh', 'ngua', 'ongnhom', 'thung', 'tu', 'no', ...ONESHOT];
+const COUNTS = { // mọi loại ít nhất 3 lá
+  ban: 22, ne: 12, bangbo: 6, ruou: 3, cuop: 4, pha: 4, duel: 3, loat: 3, phuckich: 3, tiepte: 3, tieptelon: 3,
+  chophien: 3, dam: 3, lach: 3, ruoumanh: 3, audai: 3,
+  sung2: 3, sung3: 3, sung4: 3, sung5: 3, lienthanh: 3, ngua: 3, ongnhom: 3, thung: 3, tu: 3, no: 3,
+  sunggiau: 3, binhnuoc: 3, mu: 3, xetho: 3, dao: 3,
 };
+const NAME = { ban: 'Bắn', ne: 'Né', lach: 'Lách người', mu: 'Mũ rộng vành' };
 const ROLES = {
   4: ['cst', 'phanboi', 'cuop', 'cuop'],
   5: ['cst', 'pho', 'phanboi', 'cuop', 'cuop'],
@@ -275,10 +280,23 @@ function startPending(s, pd, rng) {
 }
 
 // Lá này dùng được như loại `need` không (Cô nàng hai súng: Bắn ↔ Né).
-const counts = (p, c, need) => (need === 'ne' && is(p, 'khonglo') ? false : c.t === need) || (!is(p, 'khonglo') && is(p, 'haisung') && ((need === 'ne' && c.t === 'ban') || (need === 'ban' && c.t === 'ne')));
+const counts = (p, c, need) => {
+  if (is(p, 'khonglo')) return need === 'ban' && c.t === 'ban'; // Gã khổng lồ: không dùng Né / Lách người
+  if (c.t === need || (need === 'ne' && c.t === 'lach')) return true;
+  return is(p, 'haisung') && ((need === 'ne' && c.t === 'ban') || (need === 'ban' && c.t === 'ne'));
+};
 
 // ---------- Hành động ----------
 const take = (arr, id) => { const k = arr.findIndex((c) => c.id === id); return k < 0 ? null : arr.splice(k, 1)[0]; };
+// Lấy 1 lá của người khác: 'hand' = ngẫu nhiên trên tay, hoặc id 1 trang bị.
+const grab = (tp, which, rng) => (which === 'hand'
+  ? (tp.hand.length ? tp.hand.splice(Math.floor(rng() * tp.hand.length), 1)[0] : null)
+  : take(tp.eq, which));
+// Đang bỏ bài thừa mà hồi máu / bớt bài đủ mức thì xong lượt luôn.
+function discardDone(s, pi, rng) {
+  const p = s.players[pi];
+  if (s.phase === 'discard' && s.turn === pi && p.hand.length <= handLimit(p)) endTurn(s, rng);
+}
 const done = (s, rng) => { wanderers(s, rng); return { ok: true, state: s }; };
 
 export function apply(state, id, action, rng = Math.random, now = Date.now()) {
@@ -307,7 +325,7 @@ export function apply(state, id, action, rng = Math.random, now = Date.now()) {
     s.discard.push(take(p.hand, action.card));
     p.hp = Math.min(p.max, p.hp + 1);
     log(s, `${id} hồi máu theo (Bác sĩ làng)`);
-    if (s.phase === 'discard' && s.turn === pi && p.hand.length <= handLimit(p)) endTurn(s, rng);
+    discardDone(s, pi, rng);
     return done(s, rng);
   }
 
@@ -318,7 +336,31 @@ export function apply(state, id, action, rng = Math.random, now = Date.now()) {
     if (p.hp >= p.max) return fail('Máu đang đầy.');
     ids.forEach((x) => s.discard.push(take(p.hand, x)));
     heal(s, p, 1);
-    if (s.phase === 'discard' && s.turn === pi && p.hand.length <= handLimit(p)) endTurn(s, rng); // hết thừa bài → xong lượt
+    discardDone(s, pi, rng);
+    return done(s, rng);
+  }
+
+  // Băng bó: hồi 1 máu bất kỳ lúc nào, kể cả trong lượt người khác.
+  if (type === 'play' && p.hand.find((c) => c.id === action.card)?.t === 'bangbo') {
+    if (p.hp >= p.max) return fail('Máu đang đầy.');
+    const c = take(p.hand, action.card);
+    s.discard.push(c);
+    heal(s, p, 1);
+    s.lastPlay = { by: id, card: { t: c.t, s: c.s }, target: null };
+    log(s, `${id} dùng Băng bó`);
+    discardDone(s, pi, rng);
+    return done(s, rng);
+  }
+
+  // Chợ phiên: lần lượt mỗi người lấy 1 lá trên quầy; người cuối nhận lá còn lại.
+  if (s.phase === 'store') {
+    if (type !== 'store' || s.store.queue[0] !== id) return fail('Đang chờ người khác chọn ở Chợ phiên.');
+    const c = take(s.store.cards, action.card);
+    if (!c) return fail('Chọn 1 lá trên quầy.');
+    p.hand.push(c);
+    s.store.queue.shift();
+    if (s.store.queue.length === 1) s.players[idx(s, s.store.queue.shift())].hand.push(s.store.cards.pop());
+    if (!s.store.queue.length) { s.store = null; s.phase = 'play'; }
     return done(s, rng);
   }
 
@@ -327,13 +369,15 @@ export function apply(state, id, action, rng = Math.random, now = Date.now()) {
     const pd = s.pending;
     const need = pd.kind === 'duel' ? 'ban' : pd.need;
     if (action.card != null) {
-      const c = p.hand.find((x) => x.id === action.card);
-      if (!c || !counts(p, c, need)) return fail(need === 'ne' ? 'Cần lá Né.' : 'Cần lá Bắn.');
-      s.discard.push(take(p.hand, c.id));
+      const hat = need === 'ne' && p.eq.find((x) => x.id === action.card && x.t === 'mu');
+      const c = hat || p.hand.find((x) => x.id === action.card);
+      if (!c || !(hat || counts(p, c, need))) return fail(need === 'ne' ? 'Cần lá Né.' : 'Cần lá Bắn.');
+      s.discard.push(take(hat ? p.eq : p.hand, c.id));
+      if (c.t === 'lach') draw(s, pi, 1, rng);
       // Cho cả bàn thấy lá vừa đánh để phản ứng (đấu tay đôi: chỉ về đối thủ; còn lại: chỉ về người ra đòn).
       const foe = pd.kind === 'duel' ? (id === pd.a ? pd.b : pd.a) : pd.from;
       s.lastPlay = { by: id, card: { t: c.t, s: c.s }, target: foe };
-      log(s, `${id} đánh ${c.t === 'ban' ? 'Bắn' : 'Né'}${pd.kind === 'duel' ? ' (đấu tay đôi)' : ''}`);
+      log(s, `${id} đánh ${NAME[c.t]}${pd.kind === 'duel' ? ' (đấu tay đôi)' : ''}`);
       if (pd.kind === 'duel') pd.turnOf = pd.turnOf === pd.a ? pd.b : pd.a;
       else if (need === 'ne') dodged(s, pi, rng);
       else pd.queue.shift();
@@ -384,6 +428,33 @@ export function apply(state, id, action, rng = Math.random, now = Date.now()) {
     log(s, `${id} liều mạng: mất 1 máu, bốc 2 lá`);
     return done(s, rng);
   }
+  if (type === 'use') {
+    const c = p.eq.find((x) => x.id === action.card && ONESHOT.includes(x.t));
+    if (!c) return fail('Bạn không có trang bị này.');
+    if (c.t === 'mu') return fail('Mũ rộng vành chỉ dùng khi bị bắn.');
+    const ti = typeof action.target === 'string' ? idx(s, action.target) : -1;
+    const tp = s.players[ti];
+    const ok = tp && tp.alive && ti !== pi;
+    if (c.t === 'binhnuoc' && p.hp >= p.max) return fail('Máu đang đầy.');
+    if (c.t === 'sunggiau' && (!ok || distance(s, pi, ti) > 1)) return fail('Súng giấu chỉ bắn người ở khoảng cách 1.');
+    if (c.t === 'dao' && (!ok || distance(s, pi, ti) > rangeOf(p))) return fail('Ngoài tầm.');
+    if (c.t === 'xetho' && !ok) return fail('Chọn người.');
+    s.discard.push(take(p.eq, c.id));
+    s.lastPlay = { by: id, card: { t: c.t, s: c.s }, target: ok ? tp.id : null };
+    if (c.t === 'binhnuoc') { heal(s, p, 1); log(s, `${id} uống Bình nước`); }
+    if (c.t === 'xetho') {
+      const got = grab(tp, action.which, rng);
+      if (!got) return fail('Chọn 1 lá trên tay hoặc 1 trang bị.');
+      p.hand.push(got);
+      log(s, `${id} dùng Xe thồ lấy 1 lá của ${tp.id}`);
+    }
+    if (c.t === 'sunggiau' || c.t === 'dao') {
+      if (c.t === 'sunggiau') draw(s, pi, 1, rng);
+      log(s, `${id} ${c.t === 'dao' ? 'phóng dao vào' : 'bắn lén'} ${tp.id}`);
+      startPending(s, { kind: 'ban', how: c.t === 'dao' ? 'phóng dao vào' : 'bắn lén', from: id, queue: [tp.id], need: 'ne' }, rng);
+    }
+    return done(s, rng);
+  }
   if (type !== 'play') return fail('Thao tác không hợp lệ.');
   const card = p.hand.find((c) => c.id === action.card);
   if (!card) return fail('Bạn không có lá này.');
@@ -403,26 +474,51 @@ export function apply(state, id, action, rng = Math.random, now = Date.now()) {
       log(s, `${id} bắn ${tp.id}`);
       startPending(s, { kind: 'ban', from: id, queue: [tp.id], need: 'ne', need2: is(p, 'thep') ? 2 : 1 }, rng);
       break;
-    case 'ne': return fail('Chỉ đánh Né khi bị bắn.');
-    case 'bangbo':
-      if (p.hp >= p.max) return fail('Máu đang đầy.');
-      use(); heal(s, p, 1);
+    case 'ne': case 'lach': return fail('Chỉ đánh lá này khi bị bắn.');
+    case 'ruou': // chọn: cả bàn hồi 1 máu, hoặc riêng mình hồi 1 máu
+      if (action.self) {
+        if (p.hp >= p.max) return fail('Máu đang đầy.');
+        use(); heal(s, p, 1);
+        log(s, `${id} uống Rượu mừng một mình`);
+      } else {
+        use(); s.players.forEach((x) => { if (x.alive) heal(s, x, 1); });
+        log(s, `${id} mời cả làng Rượu mừng`);
+      }
       break;
-    case 'ruou':
-      use(); s.players.forEach((x) => { if (x.alive) heal(s, x, 1); });
-      log(s, `${id} mời cả làng Rượu mừng`);
+    case 'dam':
+      if (!needTarget() || distance(s, pi, ti) > 1) return fail('Chỉ đấm được người ở khoảng cách 1.');
+      use();
+      log(s, `${id} đấm ${tp.id}`);
+      startPending(s, { kind: 'ban', how: 'đấm', from: id, queue: [tp.id], need: 'ne' }, rng);
       break;
+    case 'ruoumanh': case 'audai': {
+      const ex = action.extra !== card.id && p.hand.find((c) => c.id === action.extra);
+      if (!ex) return fail('Chọn thêm 1 lá trên tay để bỏ kèm.');
+      if (t === 'ruoumanh' && (!tp || !tp.alive || tp.hp >= tp.max)) return fail('Chọn người đang mất máu.');
+      use(); s.discard.push(take(p.hand, ex.id));
+      if (t === 'ruoumanh') { heal(s, tp, 1); log(s, `${id} mời ${tp.id} Rượu mạnh`); } else {
+        s.players.forEach((q, i) => { if (i !== pi && q.alive && q.hand.length) s.discard.push(grab(q, 'hand', rng)); });
+        log(s, `${id} gây Ẩu đả: mỗi người mất 1 lá trên tay`);
+      }
+      break;
+    }
+    case 'chophien': {
+      use();
+      const seats = aliveIdx(s);
+      const k = seats.indexOf(pi);
+      const queue = [...seats.slice(k), ...seats.slice(0, k)].map((i) => s.players[i].id);
+      const cards = [];
+      for (let n = 0; n < queue.length; n++) { refill(s, rng); const c = s.deck.pop(); if (c) cards.push(c); }
+      log(s, `${id} mở Chợ phiên`);
+      if (cards.length) { s.store = { cards, queue: queue.slice(0, cards.length) }; s.phase = 'store'; }
+      break;
+    }
     case 'cuop': case 'pha': {
       if (!needTarget()) return fail('Chọn người.');
       if (t === 'cuop' && distance(s, pi, ti) > 1) return fail('Ngoài tầm cướp.');
-      let got;
-      if (action.which === 'hand') {
-        if (!tp.hand.length) return fail('Người đó không còn bài trên tay.');
-        got = tp.hand.splice(Math.floor(rng() * tp.hand.length), 1)[0];
-      } else {
-        got = take(tp.eq, action.which);
-        if (!got) return fail('Chọn 1 lá trên tay hoặc 1 trang bị.');
-      }
+      if (action.which === 'hand' && !tp.hand.length) return fail('Người đó không còn bài trên tay.');
+      const got = grab(tp, action.which, rng);
+      if (!got) return fail('Chọn 1 lá trên tay hoặc 1 trang bị.');
       use();
       if (t === 'cuop') p.hand.push(got); else s.discard.push(got);
       log(s, `${id} ${t === 'cuop' ? 'cướp' : 'phá'} 1 lá của ${tp.id}`);
@@ -488,6 +584,7 @@ export function forceSkip(state, rng = Math.random, stuck = null) {
     return s;
   }
   if (s.phase === 'steal' || s.phase === 'scout') { drawPhase(s, s.turn, rng, null); return s; }
+  if (s.phase === 'store') return apply(s, s.store.queue[0], { type: 'store', card: s.store.cards[0].id }, rng).state;
   const p = s.players[s.turn];
   while (p.hand.length > handLimit(p)) s.discard.push(p.hand.pop());
   endTurn(s, rng);
@@ -514,11 +611,12 @@ export function viewFor(s, id) {
       role: reveal(p) ? p.role : null, dist: me.alive && p.alive && !picking ? distance(s, mi, i) : null,
       char: picking ? null : p.char, picked: !!p.char, // chức năng chỉ công khai khi cả bàn chọn xong
     })),
-    turn: picking ? null : s.phase === 'react' ? responder(s) : s.players[s.turn].id,
+    turn: picking ? null : s.phase === 'react' ? responder(s) : s.phase === 'store' ? s.store.queue[0] : s.players[s.turn].id,
     turnPlayer: s.players[s.turn].id,
     waitingOn: picking ? s.players.filter((p) => !p.char).map((p) => p.id) : undefined,
     phase: s.phase, bangUsed: s.bangUsed, deckCount: s.deck.length,
-    pending: s.pending && { kind: s.pending.kind, from: s.pending.from, need: s.pending.need, a: s.pending.a, b: s.pending.b, responder: responder(s), left: s.pending.left ?? s.pending.need2 ?? 1 },
+    store: s.store ? { cards: s.store.cards, turn: s.store.queue[0] } : null,
+    pending: s.pending && { kind: s.pending.kind, how: s.pending.how, from: s.pending.from, need: s.pending.need, a: s.pending.a, b: s.pending.b, responder: responder(s), left: s.pending.left ?? s.pending.need2 ?? 1 },
     lastFlip: s.lastFlip, lastPlay: s.lastPlay || null, log: s.log,
     scout: s.phase === 'scout' && s.turn === mi ? (({ t, s: su }) => ({ t, s: su }))(s.deck.at(-1)) : null,
     docOffer: s.docOffer?.id === id ? true : null, winner: s.winner, winTeam: s.winTeam,

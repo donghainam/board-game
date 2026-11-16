@@ -16,12 +16,16 @@ export function botAction(v) {
   if (v.phase === 'pick') return { type: 'pick', char: me.offer[0] };
   if (v.phase === 'steal') return { type: 'steal', target: null };
   if (v.phase === 'scout') return { type: 'scout', bottom: false };
+  if (v.phase === 'store') return { type: 'store', card: v.store.cards[0].id };
   if (v.phase === 'react') {
     const pd = v.pending;
     const need = pd.kind === 'duel' ? 'ban' : pd.need;
     const swap = me.char === 'haisung' ? { ne: 'ban', ban: 'ne' }[need] : null;
-    const c = need === 'ne' && me.char === 'khonglo' ? null : me.hand.find((x) => x.t === need) || me.hand.find((x) => x.t === swap);
-    return c ? { type: 'respond', card: c.id } : { type: 'respond' };
+    const c = need === 'ne' && me.char === 'khonglo' ? null
+      : me.hand.find((x) => x.t === need) || (need === 'ne' && me.hand.find((x) => x.t === 'lach')) || me.hand.find((x) => x.t === swap);
+    const hat = need === 'ne' && v.players.find((p) => p.id === me.id).eq.find((x) => x.t === 'mu');
+    const use = c || hat;
+    return use ? { type: 'respond', card: use.id } : { type: 'respond' };
   }
   const self = v.players.find((p) => p.id === me.id);
   if (v.phase === 'discard') return { type: 'discard', cards: me.hand.slice(0, me.hand.length - me.handLimit).map((c) => c.id) };
@@ -30,10 +34,18 @@ export function botAction(v) {
   const play = (c, target) => ({ type: 'play', card: c.id, ...(target ? { target } : {}) });
   const equipped = (pred) => self.eq.some(pred);
   if (self.hp < self.max && H('bangbo')) return play(H('bangbo'));
-  for (const t of ['tiepte', 'tieptelon']) if (H(t)) return play(H(t));
+  for (const t of ['tiepte', 'tieptelon', 'chophien']) if (H(t)) return play(H(t));
   const gun = me.hand.find((c) => GUN_RANGE[c.t]);
   if (gun && !equipped((c) => GUN_RANGE[c.t])) return play(gun);
-  for (const t of ['ngua', 'ongnhom', 'thung']) if (H(t) && !equipped((c) => c.t === t)) return play(H(t));
+  for (const t of ['ngua', 'ongnhom', 'thung', 'sunggiau', 'binhnuoc', 'mu', 'xetho', 'dao']) if (H(t) && !equipped((c) => c.t === t)) return play(H(t));
+  const E = (t) => self.eq.find((c) => c.t === t);
+  const use = (c, target) => ({ type: 'use', card: c.id, ...(target ? { target } : {}) });
+  if (self.hp < self.max && E('binhnuoc')) return use(E('binhnuoc'));
+  const near = enemies(v).find((p) => p.dist === 1);
+  if (near && H('dam')) return play(H('dam'), near.id);
+  if (near && E('sunggiau')) return use(E('sunggiau'), near.id);
+  const inRange = enemies(v).find((p) => p.dist && p.dist <= me.range);
+  if (inRange && E('dao')) return use(E('dao'), inRange.id);
   const free = (p) => me.char === 'laoluyen' && p.dist === 1;
   {
     const shot = me.hand.find((c) => c.t === 'ban' || (c.t === 'ne' && me.char === 'haisung'));
