@@ -97,12 +97,17 @@ export async function mountLobby(root, { gameCode, maxPlayers }) {
     root.replaceChildren(el('p', { class: 'muted' }, 'Đang mở phòng…'));
     let secrets = {};
     try { secrets = JSON.parse(store.get('bg.secrets.' + pick.code)) || {}; } catch {}
-    try { session.host = await hostRoom(pick.code, { hostId: me.id, secrets }); } catch (e) {
+    const giveUp = () => { store.set('bg.hosting.' + gameCode, null); location.replace(location.pathname); };
+    const onRetry = (n) => root.replaceChildren(el('div', { class: 'card-tile stack' },
+      el('p', {}, `Đang mở lại phòng ${pick.code} (thử lần ${n})…`),
+      el('p', { class: 'muted' }, 'Mã phòng này đang bị giữ: có thể phòng vẫn mở ở tab/máy khác, hoặc vừa tải lại trang (máy chủ cần ~1 phút để nhả mã).'),
+      el('button', { class: 'btn', onclick: giveUp }, 'Bỏ phòng này, tạo phòng mới')));
+    try { session.host = await hostRoom(pick.code, { hostId: me.id, secrets, onRetry }); } catch (e) {
       // Giữ bg.hosting: lỗi có thể chỉ tạm thời (broker chập chờn, tab host khác còn mở).
       root.replaceChildren(el('div', { class: 'card-tile stack' },
         el('p', {}, `Chưa mở lại được phòng ${pick.code} (${e.type || e.message}). Nếu phòng đang mở ở tab khác, hãy đóng tab đó.`),
         el('button', { class: 'btn btn-primary', onclick: () => location.reload() }, 'Thử lại'),
-        el('button', { class: 'btn', onclick: () => { store.set('bg.hosting.' + gameCode, null); location.replace(location.pathname); } }, 'Bỏ phòng này, tạo phòng mới')));
+        el('button', { class: 'btn', onclick: giveUp }, 'Bỏ phòng này, tạo phòng mới')));
       throw e;
     }
     store.set('bg.hosting.' + gameCode, pick.code);

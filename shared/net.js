@@ -26,13 +26,15 @@ const isObj = (d) => d && typeof d === 'object' && !Array.isArray(d);
 // Heartbeat: PeerJS không báo 'close' khi máy kia tắt đột ngột (khoá màn hình, mất Wi-Fi).
 const HB_EVERY = 3000, HB_DEAD = 9000;
 
-function openPeer(id) {
+function openPeer(id, timeoutMs) {
   return new Promise((resolve, reject) => {
     const peer = new window.Peer(id);
     // Chỉ huỷ peer khi lỗi xảy ra TRƯỚC lúc mở; sau đó lỗi mạng để 'disconnected' → reconnect lo.
-    const fail = (e) => { peer.destroy(); reject(e); };
+    const fail = (e) => { clearTimeout(t); peer.off?.('error', fail); peer.destroy(); reject(e); };
+    // Broker im lặng (mạng chặn, server không trả lời) thì không được treo mãi.
+    const t = setTimeout(() => fail({ type: 'timeout' }), timeoutMs);
     peer.once('error', fail);
-    peer.once('open', () => { peer.off('error', fail); resolve(peer); });
+    peer.once('open', () => { clearTimeout(t); peer.off('error', fail); resolve(peer); });
   });
 }
 
@@ -48,14 +50,16 @@ export function getSecret() {
 }
 
 // secrets: object playerId → secret, lobby tự lưu lại; ghế đã có chủ thì phải đúng secret mới vào được.
-export async function hostRoom(code, { hostId = null, secrets = {} } = {}) {
+// onRetry(n): báo cho giao diện biết đang thử lại lần n (mã phòng đang bị giữ).
+export async function hostRoom(code, { hostId = null, secrets = {}, onRetry = () => {}, retryDelay = 3000, openTimeout = 15000 } = {}) {
   let peer;
   const deadline = Date.now() + 60000;
-  for (;;) {
-    try { peer = await openPeer(PREFIX + code); break; } catch (e) {
-      // Host vừa tải lại trang: broker còn giữ id cũ một lúc → thử lại.
+  for (let n = 1; ; n++) {
+    try { peer = await openPeer(PREFIX + code, openTimeout); break; } catch (e) {
+      // Host vừa tải lại trang / phòng còn mở ở tab khác: broker còn giữ id → thử lại.
       if (e.type !== 'unavailable-id' || Date.now() > deadline) throw e;
-      await new Promise((r) => setTimeout(r, 3000));
+      onRetry(n);
+      await new Promise((r) => setTimeout(r, retryDelay));
     }
   }
   const conns = new Map();

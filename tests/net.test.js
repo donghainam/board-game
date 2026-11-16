@@ -62,3 +62,23 @@ test('không ai giả được playerId của người khác hoặc của host',
   assert.deepEqual(hellos, ['A', 'A']);
   } finally { h.close(); }
 });
+
+test('mở phòng: báo tiến độ khi mã đang bị giữ, và không treo khi broker im lặng', async () => {
+  // Lần đầu báo mã bị giữ, lần sau mở được
+  let calls = 0;
+  class Busy extends EventEmitter {
+    constructor(id) { super(); this.id = id; this.destroyed = false; FakePeer.last = this;
+      const n = calls++; setTimeout(() => (n === 0 ? this.emit('error', { type: 'unavailable-id' }) : this.emit('open', id)), 0); }
+    destroy() { this.destroyed = true; }
+  }
+  globalThis.window.Peer = Busy;
+  const tries = [];
+  const h = await hostRoom('TBUSY', { onRetry: (n) => tries.push(n), retryDelay: 10 });
+  h.close();
+  assert.deepEqual(tries, [1]);
+  // Broker không trả lời gì → bị từ chối sau thời gian chờ, không treo
+  class Silent extends EventEmitter { constructor() { super(); } destroy() {} }
+  globalThis.window.Peer = Silent;
+  await assert.rejects(hostRoom('TSILN', { openTimeout: 30 }), (e) => e.type === 'timeout');
+  globalThis.window.Peer = FakePeer;
+});
