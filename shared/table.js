@@ -14,6 +14,17 @@ export async function runTable({
   const nameOf = (id) => session.seats.find((s) => s.id === id)?.name || 'Người chơi';
   const online = (id) => !!session.seats.find((s) => s.id === id)?.online;
 
+  // Menu ⚙️ của chủ phòng ở góc phải thanh tiêu đề (tạo 1 lần, chỉ ẩn/hiện, để vẽ lại không làm đóng menu)
+  const hostMenu = isHost && net ? el('details', { class: 'host-menu', hidden: true },
+    el('summary', { title: 'Tuỳ chọn chủ phòng', 'aria-label': 'Tuỳ chọn chủ phòng' }, '⚙️'),
+    el('div', { class: 'host-menu-body' },
+      // Lối thoát khi người chơi bỏ đi hẳn (vd Cờ tướng không có bỏ lượt hộ): huỷ ván, không tính điểm.
+      el('button', { class: 'btn btn-small', onclick: () => {
+        hostMenu.open = false;
+        if (state && confirm('Huỷ ván này? Không ai được tính thắng.')) { state = null; sync(); }
+      } }, 'Huỷ ván'))) : null;
+  if (hostMenu) { const right = el('span', { class: 'row', style: 'gap:6px;flex-wrap:nowrap' }); net.replaceWith(right); right.append(net, hostMenu); }
+
   let screen = { t: 'lobby', scores: {} };
   let pending = false; // đã gửi nước đi, chờ host trả lời → chặn bấm 2 lần
   let offset = 0; // giờ host − giờ máy này, để đồng hồ đếm ngược không lệch giữa các điện thoại
@@ -164,12 +175,9 @@ export async function runTable({
         ? el('button', { class: 'btn', onclick: () => { state && setState(engine.forceSkip(state, stuck)); } },
           v.turn ? `Bỏ lượt hộ ${nameOf(v.turn)} (đang offline)` : `Bỏ qua người đang offline (${stuck.map(nameOf).join(', ')})`)
         : null;
-      // Lối thoát khi người chơi bỏ đi hẳn (vd Cờ tướng không có bỏ lượt hộ): huỷ ván, không tính điểm.
-      const cancel = isHost
-        ? el('button', { class: 'btn btn-small', style: 'align-self:center', onclick: () => { if (confirm('Huỷ ván này? Không ai được tính thắng.')) { state = null; sync(); } } }, 'Huỷ ván')
-        : null;
-      parts = [...renderTable(v, api), skip, cancel];
+      parts = [...renderTable(v, api), skip];
     } else parts = lobbyScreen(screen.t === 'view' ? screen.view : null);
+    if (hostMenu) { hostMenu.hidden = !(screen.t === 'view' && !screen.view.winner); if (hostMenu.hidden) hostMenu.open = false; }
     root.replaceChildren(...parts.filter(Boolean));
   }
 

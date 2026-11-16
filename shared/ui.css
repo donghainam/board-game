@@ -57,6 +57,12 @@ h1, h2, h3 { line-height: 1.2; margin: 0 0 8px; }
 /* Khung trang game dùng chung */
 .top { display:flex; justify-content:space-between; align-items:center; gap:8px; }
 .top a { color: var(--muted); text-decoration: none; }
+.host-menu { position:relative; }
+.host-menu > summary { list-style:none; cursor:pointer; font-size:18px; line-height:1; padding:4px 6px; border-radius:8px; user-select:none; }
+.host-menu > summary::-webkit-details-marker { display:none; }
+.host-menu[open] > summary { background: var(--surface-2); }
+.host-menu-body { position:absolute; right:0; top:calc(100% + 6px); z-index:70; background: var(--surface); border:1px solid var(--line);
+                  border-radius:12px; padding:8px; box-shadow: var(--shadow); white-space:nowrap; }
 .net { font-size: 13px; }
 .status { font-weight:700; text-align:center; }
 .status.me { color: var(--accent); }

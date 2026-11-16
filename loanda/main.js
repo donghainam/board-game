@@ -52,7 +52,7 @@ function holdToExplain(t) {
 function eqIcon(c, seatPickable) {
   const { shown, ...hold } = holdToExplain(c.t);
   return el('span', {
-    class: 'rt-eq', title: `${CARD[c.t]?.[0]}: ${CARD[c.t]?.[1]}`, 'aria-label': CARD[c.t]?.[0], ...hold,
+    class: 'rt-eq', role: 'button', tabindex: 0, title: `${CARD[c.t]?.[0]}: ${CARD[c.t]?.[1]}`, 'aria-label': CARD[c.t]?.[0], ...hold,
     onclick: (e) => {
       if (shown()) { e.stopPropagation(); e.preventDefault(); return; }
       if (!seatPickable) { e.stopPropagation(); showTip(c.t, 2200); }
@@ -244,7 +244,7 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
       pd.left > 1 ? el('div', {}, `Đòn của Tay súng thép: cần ${pd.left} lá Né nữa`) : null,
       el('div', { class: 'actions' },
         el('button', { class: 'btn btn-primary', disabled: !mine || pending, onclick: () => send({ type: 'respond', card: mine.id }) }, mine ? `Đánh ${CARD[mine.t][0]}` : `Không có lá ${CARD[need][0]}`),
-        hat ? el('button', { class: 'btn', disabled: pending, onclick: () => send({ type: 'respond', card: hat.id }) }, '🎩 Dùng Mũ rộng vành') : null,
+        hat ? el('button', { class: 'btn', disabled: pending, onclick: () => send({ type: 'respond', card: hat.id }) }, '🎩 Mũ rộng vành') : null,
         el('button', { class: 'btn', disabled: pending, onclick: () => send({ type: 'respond' }) }, 'Chịu mất 1 máu'))));
   }
 

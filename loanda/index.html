@@ -47,7 +47,7 @@
     .lz-in { flex-direction:row; }
     .lz-table { flex:1 1 56%; min-width:0; }
     .lz-ctrl { flex:1 1 44%; height:auto; min-width:0; justify-content:center; }
-    .lz-in .ov-pop { left:auto; right:0; bottom:auto; top:50%; transform:translateY(-50%); width:min(calc(44% - 8px), 340px); max-height:100%; }
+    .lz-in .ov-pop { left:auto; right:0; bottom:auto; top:50%; transform:translateY(-50%); width:min(calc(44% - 8px), 300px); max-height:100%; }
   }
   .lz-ctrl > * { flex-shrink:0; } /* không ép dẹt bài trên tay; thiếu chỗ thì khung điều khiển tự cuộn */
   /* Điện thoại xoay ngang (màn thấp): dồn nút cho bàn tròn rộng chỗ, không ẩn phần nào */
@@ -57,7 +57,6 @@
     #app .rt-main { position:relative; }
     #app .rt-toggles { position:absolute; bottom:0; left:0; width:55%; z-index:5; pointer-events:none; } /* góc trên bàn dành cho ô Vai / Nhật ký */
     #app .rt-toggles .btn { pointer-events:auto; padding:4px 10px; }
-    #app > .btn-small:last-child { position:fixed; right:10px; top:4px; z-index:5; padding:3px 10px; }
     .lz-table .rt-stage { width:min(100cqw, 86cqh, 640px); }
   }
   /* Ghế, chữ, lá giữa bàn co theo cỡ bàn */
@@ -92,14 +91,14 @@
   button.ov, .ov button, .ov ul { pointer-events:auto; } /* nút "🎭 Vai ▾" (thu gọn) cũng phải bấm được */
   /* Khung hành động nổi đè lên vùng điều khiển (dọc: đáy màn hình; ngang: cột phải): bàn giữ nguyên cỡ, không bị che */
   .lz-in { position:relative; }
-  .ov-pop { position:absolute; left:50%; bottom:0; transform:translateX(-50%); z-index:6; width:min(100%, 380px); max-height:55%;
-            overflow:auto; display:flex; flex-direction:column; gap:6px; font-size:13px; }
+  .ov-pop { position:absolute; left:50%; bottom:0; transform:translateX(-50%); z-index:6; width:min(100%, 330px); max-height:50%;
+            overflow:auto; display:flex; flex-direction:column; gap:5px; font-size:12.5px; }
   .ov-pop .card-tile { background:rgb(28 22 16 / .84); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px);
-                       box-shadow:0 8px 24px #0009; padding:8px 10px; gap:6px; }
-  .ov-pop .actions { gap:6px; }
-  .ov-pop .actions .btn { padding:6px 10px; font-size:13px; min-height:0; }
-  .ov-pop .ac { width:54px; }
-  .ov-pop .ac .t { font-size:8px; }
+                       box-shadow:0 8px 24px #0009; padding:6px 8px; gap:5px; }
+  .ov-pop .actions { gap:5px; }
+  .ov-pop .actions .btn { padding:5px 8px; font-size:12.5px; min-height:0; }
+  .ov-pop .ac { width:48px; }
+  .ov-pop .ac .t { font-size:7.5px; }
   .ov-x { position:absolute; top:2px; right:4px; width:22px; height:22px; border-radius:6px; border:0; background:rgb(255 255 255 / .12);
           color:var(--text); font:inherit; font-weight:800; cursor:pointer; }
   .ov-r .btn { align-self:flex-start; padding:3px 10px; font-size:12px; }
@@ -114,7 +113,8 @@
   .ac.back { border-color:#4a3420; box-shadow:none; }
   .gl svg { border:2.5px solid #6b3f12; box-sizing:border-box; }
   .gl.eq svg { border-color:#1c7ed6; }
-  .rt-eq { border:2px solid #1c7ed6; cursor:help; -webkit-touch-callout:none; user-select:none; -webkit-user-select:none; }
+  .rt-eq { border:2px solid #1c7ed6; cursor:pointer; -webkit-touch-callout:none; user-select:none; -webkit-user-select:none; position:relative; }
+  .rt-eq::after { content:''; position:absolute; inset:-10px; } /* vùng chạm ~30px dù hình chỉ 14px (tính từ mép trong viền) */
   /* Chạm giữ lá bài để xem nghĩa */
   .ac { -webkit-touch-callout:none; user-select:none; -webkit-user-select:none; }
   .ac-tip { position:fixed; left:50%; bottom:calc(16px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:60;
