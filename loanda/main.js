@@ -1,6 +1,6 @@
 import { el } from '../shared/lobby.js';
 import { runTable } from '../shared/table.js';
-import { validate, start, apply, viewFor, forceSkip, nextTimer, onTimer, CHARS, ONESHOT, defaultRoles, MAX_PLAYERS } from './engine.js';
+import { validate, start, apply, viewFor, forceSkip, nextTimer, onTimer, CHARS, ONESHOT, DODGE_EQ, defaultRoles, MAX_PLAYERS } from './engine.js';
 import { botAction } from './bot.js';
 import { art, CARD, EQUIP } from './art.js';
 import { roundTable, sideLayout } from '../shared/roundtable.js';
@@ -11,8 +11,11 @@ const GOAL = {
   cuop: 'Hạ gục Cảnh sát trưởng.', phanboi: 'Là người cuối cùng còn sống.',
 };
 const SUIT = ['♥', '♦', '♣', '♠'];
-const TARGETED = ['ban', 'cuop', 'pha', 'duel', 'tu', 'dam', 'ruoumanh', 'sunggiau', 'dao', 'xetho'];
-const PICK_CARD = ['cuop', 'pha', 'xetho']; // chọn người rồi chọn lá của họ
+const RANK = ['', 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+const face = (c) => `${RANK[c.r] ?? ''}${SUIT[c.s] ?? ''}`; // vd "7♠"
+const TARGETED = ['ban', 'cuop', 'pha', 'duel', 'tu', 'dam', 'ruoumanh', 'sunggiau', 'dao', 'xetho', 'bantia', 'taydai', 'sungbo', 'oquay', 'vucong'];
+const PICK_CARD = ['cuop', 'pha', 'xetho', 'taydai', 'vucong']; // chọn người rồi chọn lá của họ
+const NEEDS_EXTRA = ['ruoumanh', 'audai', 'bantia', 'taydai', 'ruounong']; // phải bỏ kèm 1 lá trên tay
 
 let sel = null;       // id lá đang chọn (trên tay, hoặc trang bị dùng 1 lần)
 let extra = null;     // lá bỏ kèm cho Rượu mạnh / Ẩu đả
@@ -68,7 +71,7 @@ const acard = (c, attrs = {}) => {
     class: 'ac' + (EQUIP.has(c.t) ? ' eq' : '') + (attrs.big ? ' big' : '') + (attrs.sel ? ' sel' : ''), style: attrs.style,
     onclick: live ? (e) => { if (!shown()) attrs.onclick(e); } : undefined, ...hold,
     title: CARD[c.t]?.[1], 'aria-label': CARD[c.t]?.[0],
-  }, el('span', { class: 'su' + (c.s <= 1 ? ' r' : '') }, SUIT[c.s] ?? ''), art(c.t), el('span', { class: 't' }, CARD[c.t]?.[0] || '?'));
+  }, el('span', { class: 'su' + (c.s <= 1 ? ' r' : '') }, face(c)), art(c.t), el('span', { class: 't' }, CARD[c.t]?.[0] || '?'));
 };
 let wasMine = false; // để rung máy đúng lúc vừa tới lượt mình
 
@@ -84,7 +87,7 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
   const card = hand.find((c) => c.id === sel) || myEq.find((c) => c.id === sel && ONESHOT.includes(c.t));
   const kind = card && !hand.includes(card) ? 'use' : 'play'; // trang bị 1 lần thì gửi 'use'
   if (!card) { sel = null; target = null; }
-  const needsExtra = !!card && (card.t === 'ruoumanh' || card.t === 'audai');
+  const needsExtra = !!card && NEEDS_EXTRA.includes(card.t);
   if (!needsExtra || !hand.some((c) => c.id === extra)) extra = null;
   if (v.phase !== 'discard' && !healMode) picks.clear();
   const asType = (c) => (c.t === 'ne' && v.me.char === 'haisung' ? 'ban' : c.t); // Cô nàng hai súng: Né dùng như Bắn
@@ -124,7 +127,7 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
   const inRange = (p) => {
     if (!card || p.dist == null) return true;
     if (card.t === 'ruoumanh') return p.hp < p.max;
-    if (asType(card) === 'ban' || card.t === 'dao') return p.dist <= v.me.range;
+    if (asType(card) === 'ban' || card.t === 'dao' || card.t === 'oquay') return p.dist <= v.me.range;
     if (card.t === 'dam' || card.t === 'sunggiau') return p.dist <= 1;
     if (card.t === 'cuop') return p.dist <= 1;
     if (card.t === 'tu') return p.role !== 'cst';
@@ -172,7 +175,7 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
     v.phase === 'react' && pd && lp && lp.by !== pd.from
       ? el('div', { class: 'msg', style: 'background:#e8590ccc' }, `↩ ${who(lp.by)} vừa đánh ${CARD[lp.card.t]?.[0]} · tới lượt ${who(pd.responder)}${pd.kind === 'duel' ? ' đánh Bắn' : ''}`)
       : null,
-    v.lastFlip ? el('div', { class: 'msg' }, `🃏 ${who(v.lastFlip.by)} lật (${v.lastFlip.why}): ${CARD[v.lastFlip.card.t]?.[0]} ${SUIT[v.lastFlip.card.s]}`) : null,
+    v.lastFlip ? el('div', { class: 'msg' }, `🃏 ${who(v.lastFlip.by)} lật (${v.lastFlip.why}): ${CARD[v.lastFlip.card.t]?.[0]} ${face(v.lastFlip.card)}`) : null,
   ];
   const arrow = lp?.target ? { from: lp.by, to: lp.target } : null; // luôn theo lá vừa đánh (kể cả lá đáp trả)
   const table = roundTable({ order: v.players.map((p) => p.id), me, seat, seatAttrs, center, arrow });
@@ -194,8 +197,8 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
     const tp = P[target];
     pops.push(el('div', { class: 'card-tile stack' }, el('b', {}, `${CARD[card.t][0]} lá nào của ${who(target)}?`),
       el('div', { class: 'actions' },
-        tp.handCount ? el('button', { class: 'btn', disabled: pending, onclick: () => { const id = sel; sel = target = null; send({ type: kind, card: id, target: tp.id, which: 'hand' }); } }, 'Lá ngẫu nhiên trên tay') : null,
-        tp.eq.map((c) => el('button', { class: 'btn', disabled: pending, onclick: () => { const id = sel; sel = target = null; send({ type: kind, card: id, target: tp.id, which: c.id }); } }, CARD[c.t][0])),
+        tp.handCount ? el('button', { class: 'btn', disabled: pending, onclick: () => { const id = sel; sel = target = null; const ex = extra; extra = null; send({ type: kind, card: id, target: tp.id, which: 'hand', ...(ex != null ? { extra: ex } : {}) }); } }, 'Lá ngẫu nhiên trên tay') : null,
+        tp.eq.map((c) => el('button', { class: 'btn', disabled: pending, onclick: () => { const id = sel; sel = target = null; const ex = extra; extra = null; send({ type: kind, card: id, target: tp.id, which: c.id, ...(ex != null ? { extra: ex } : {}) }); } }, CARD[c.t][0])),
         el('button', { class: 'btn', onclick: () => { target = null; rerender(); } }, 'Huỷ'))));
   }
 
@@ -238,13 +241,13 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
     const swap = v.me.char === 'haisung' ? { ne: 'ban', ban: 'ne' }[need] : null;
     const noNe = need === 'ne' && v.me.char === 'khonglo'; // Gã khổng lồ không dùng được lá Né
     const mine = noNe ? null : hand.find((c) => c.t === need) || (need === 'ne' ? hand.find((c) => c.t === 'lach') : null) || hand.find((c) => c.t === swap);
-    const hat = need === 'ne' ? myEq.find((c) => c.t === 'mu') : null; // Mũ rộng vành: trang bị né 1 phát
+    const hat = need === 'ne' ? myEq.find((c) => DODGE_EQ.includes(c.t)) : null; // trang bị né 1 phát (Mũ, Tấm thép, Bùa…)
     pops.push(el('div', { class: 'card-tile stack', style: 'border-color:var(--danger)' }, el('b', {}, `⚠️ ${msg}`),
       noNe ? el('div', { class: 'muted' }, 'Gã khổng lồ không dùng được lá Né.') : null,
       pd.left > 1 ? el('div', {}, `Đòn của Tay súng thép: cần ${pd.left} lá Né nữa`) : null,
       el('div', { class: 'actions' },
         el('button', { class: 'btn btn-primary', disabled: !mine || pending, onclick: () => send({ type: 'respond', card: mine.id }) }, mine ? `Đánh ${CARD[mine.t][0]}` : `Không có lá ${CARD[need][0]}`),
-        hat ? el('button', { class: 'btn', disabled: pending, onclick: () => send({ type: 'respond', card: hat.id }) }, '🎩 Mũ rộng vành') : null,
+        hat ? el('button', { class: 'btn', disabled: pending, onclick: () => send({ type: 'respond', card: hat.id }) }, `🎩 ${CARD[hat.t][0]}`) : null,
         el('button', { class: 'btn', disabled: pending, onclick: () => send({ type: 'respond' }) }, 'Chịu mất 1 máu'))));
   }
 
@@ -294,7 +297,7 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
       if (card?.t === 'ruou') acts.append(el('button', { class: 'btn btn-primary', disabled: pending, onclick: () => fire() }, '🍺 Cả bàn hồi 1 máu'),
         el('button', { class: 'btn btn-primary', disabled: pending || P[me].hp >= P[me].max, onclick: () => fire({ self: true }) }, '🍺 Mình hồi 1 máu'));
       else if (card && !TARGETED.includes(asType(card))) acts.append(el('button', { class: 'btn btn-primary', disabled: pending || (needsExtra && extra == null), onclick: () => fire() }, `${kind === 'use' ? 'Dùng' : 'Đánh'} ${CARD[card.t][0]}`));
-      myEq.filter((c) => ONESHOT.includes(c.t) && c.t !== 'mu').forEach((c) => acts.append(el('button', { class: 'btn' + (sel === c.id ? ' btn-primary' : ''), disabled: pending, onclick: () => { sel = sel === c.id ? null : c.id; target = extra = null; rerender(); } }, `🎒 ${CARD[c.t][0]}`)));
+      myEq.filter((c) => ONESHOT.includes(c.t) && !DODGE_EQ.includes(c.t)).forEach((c) => acts.append(el('button', { class: 'btn' + (sel === c.id ? ' btn-primary' : ''), disabled: pending, onclick: () => { sel = sel === c.id ? null : c.id; target = extra = null; rerender(); } }, `🎒 ${CARD[c.t][0]}`)));
       if (v.me.char === 'lieumang' && P[me].hp > 1) acts.append(el('button', { class: 'btn', disabled: pending, onclick: () => send({ type: 'gamble' }) }, '🎲 Mất 1 máu, bốc 2 lá'));
       acts.append(el('button', { class: 'btn', disabled: pending, onclick: () => { sel = null; send({ type: 'end' }); } }, 'Kết thúc lượt ➜'));
     }

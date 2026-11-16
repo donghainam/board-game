@@ -599,7 +599,8 @@ Mã phòng bắt đầu bằng `W` · 4–8 người · có vai trò bí mật +
 - **Ngựa** (trang bị): người khác nhìn mình xa thêm 1.
 - **Ống nhòm** (trang bị): mình nhìn người khác gần lại 1.
 
-### Bộ bài (126 lá; mọi loại ít nhất 3 lá; tên gọi: em tự quyết)
+### Bộ bài (160 lá; mỗi loại 3 lá, loại trùng tác dụng với lá có sẵn 2 lá; tên gọi: em tự quyết)
+Mỗi lá có chất (♥♦♣♠) và số (A–K), hiện ở góc lá.
 Viền nâu = lá đánh ngay, chỉ trong lượt mình (trừ **Né**, **Lách người**, **Băng bó** dùng được ngoài lượt).
 Viền xanh dương = trang bị, đặt ra trước mặt rồi mới có tác dụng.
 
@@ -622,6 +623,9 @@ Viền xanh dương = trang bị, đặt ra trước mặt rồi mới có tác 
 | Lách người | 3 | Dùng như Né, rồi bốc thêm 1 lá. |
 | Rượu mạnh | 3 | Bỏ kèm 1 lá trên tay: 1 người tự chọn (kể cả mình) hồi 1 máu. |
 | Ẩu đả | 3 | Bỏ kèm 1 lá trên tay: mỗi người khác mất ngẫu nhiên 1 lá trên tay. |
+| Bắn tỉa | 3 | Bỏ kèm 1 lá trên tay: bắn 1 người ở bất kỳ khoảng cách nào (Né hoặc mất 1 máu). Không tính giới hạn Bắn. |
+| Tay dài | 3 | Bỏ kèm 1 lá trên tay: lấy 1 lá của bất kỳ ai (trên tay hoặc trang bị), không kể khoảng cách. |
+| Rượu nồng | 3 | Bỏ kèm 1 lá trên tay: mình hồi 2 máu. |
 
 **Trang bị (viền xanh dương; mỗi loại chỉ đặt được 1 lá; có súng mới thì súng cũ bị bỏ):**
 | Lá | Số lượng | Tác dụng |
@@ -632,7 +636,9 @@ Viền xanh dương = trang bị, đặt ra trước mặt rồi mới có tác 
 | Ống nhòm | 3 | Mình nhìn người khác gần lại 1 |
 | Thùng gỗ | 3 | Khi bị Bắn, lật bài: ra ♥ thì coi như đã Né |
 | Nhà tù | 3 | Đặt lên 1 người khác (trừ Cảnh sát trưởng). Đầu lượt người đó lật bài: ra ♥ thì thoát, ngược lại thì **mất lượt**. Lật xong thì bỏ lá Nhà tù. |
-| Thuốc nổ | 3 | Đặt trước mặt mình. Đầu lượt của người đang giữ, lật bài: ra ♠ thì **nổ, mất 3 máu**; ngược lại thì chuyền sang người kế tiếp. |
+| Kính viễn vọng | 2 | Như Ống nhòm (cùng loại, không đặt cả hai). |
+| Chỗ nấp | 2 | Như Ngựa (cùng loại, không đặt cả hai). |
+| Thuốc nổ | 3 | Đặt trước mặt mình. Đầu lượt của người đang giữ, lật bài: ra **♠ từ 2 đến 9** thì **nổ, mất 3 máu**; ngược lại thì chuyền sang người kế tiếp. |
 
 **Trang bị dùng 1 lần (viền xanh dương; đặt ra rồi dùng được ngay, bỏ đi để kích hoạt; người khác Cướp/Phá được):**
 | Lá | Số lượng | Tác dụng |
@@ -642,6 +648,13 @@ Viền xanh dương = trang bị, đặt ra trước mặt rồi mới có tác 
 | Mũ rộng vành | 3 | Khi bị Bắn / Bắn loạt / Đấm: bỏ đi để né 1 phát. |
 | Xe thồ | 3 | Lấy 1 lá của bất kỳ ai, không kể khoảng cách. |
 | Dao găm | 3 | Đánh 1 người trong tầm súng (Né hoặc mất 1 máu). Không tính giới hạn Bắn. |
+| Súng ổ quay | 2 | Như Dao găm: bắn 1 người trong tầm súng. |
+| Mũ cao / Tấm thép | 2 / 2 | Như Mũ rộng vành: bị bắn thì bỏ đi để né 1 phát. |
+| Bùa hộ mệnh | 3 | Bị bắn thì bỏ đi để né 1 phát, rồi bốc 1 lá. |
+| Súng săn bò | 3 | Bắn 1 người ở bất kỳ khoảng cách nào. Không tính giới hạn Bắn. |
+| Đại bác | 3 | Bắn loạt: mọi người khác phải Né hoặc mất 1 máu. |
+| Vũ công | 3 | Phá 1 lá của bất kỳ ai (trên tay hoặc trang bị). |
+| Ngựa trạm | 3 | Bốc 3 lá. |
 
 ### Phản ứng (khi bị Bắn, Bắn loạt, Phục kích, Đấu tay đôi)
 - Máy chờ người bị nhắm bấm "Né", "Bắn" (khi Phục kích hoặc Đấu tay đôi) hoặc "Chịu".

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { buildDeck, validate, start, apply, viewFor, forceSkip, distance, CHARS, defaultRoles } from '../loanda/engine.js';
 
 let n = 1000;
-const C = (t, s = 2) => ({ t, s, id: n++ }); // mặc định chất ♣
+const C = (t, s = 2, r = 5) => ({ t, s, r, id: n++ }); // mặc định 5♣
 const rng0 = () => 0;
 // roles: mảng vai theo ghế. deck: phần tử cuối là lá trên cùng.
 function mk(roles, extra = {}) {
@@ -20,8 +20,9 @@ const give = (s, id, ...cards) => { s.players.find((p) => p.id === id).hand.push
 const P = (s, id) => s.players.find((p) => p.id === id);
 
 test('bộ bài, chia vai, chọn chức năng rồi mới chia bài', () => {
-  assert.equal(buildDeck().length, 126);
-  assert.ok(Object.values(Object.groupBy(buildDeck(), (c) => c.t)).every((g) => g.length >= 3), "mọi loại ít nhất 3 lá");
+  assert.equal(buildDeck().length, 160);
+  assert.ok(buildDeck().every((c) => c.r >= 1 && c.r <= 13), 'mọi lá có số A–K');
+  assert.ok(Object.values(Object.groupBy(buildDeck(), (c) => c.t)).every((g) => g.length >= 2), "mọi loại ít nhất 2 lá");
   assert.equal(validate(['a', 'b', 'c']), 'Cần 4–8 người.');
   let s = start(['a', 'b', 'c', 'd', 'e'], {}, Math.random);
   assert.deepEqual(s.players.map((p) => p.role).sort(), ['cst', 'cuop', 'cuop', 'phanboi', 'pho']);
@@ -177,6 +178,16 @@ test('thuốc nổ: lật ♠ nổ mất 3 máu, không thì chuyền sang ngư�
   s = pass(s, 'A');
   assert.equal(P(s, 'B').hp, 6);
   assert.equal(P(s, 'B').eq.length, 0);
+  // ♠ ngoài 2–9 (A, 10, J, Q, K) thì không nổ, chuyền tiếp
+  for (const r of [1, 10, 13]) {
+    let t = mk(R4);
+    P(t, 'B').eq.push(C('no'));
+    t.players.forEach((p) => { p.hp = 9; p.max = 9; });
+    t.deck.push(C('ban', 3, r));
+    t = A(t, 'A', { type: 'end' });
+    assert.equal(P(t, 'B').hp, 9, `♠ số ${r} không nổ`);
+    assert.equal(P(t, 'C').eq.some((c) => c.t === 'no'), true);
+  }
 });
 
 test('bỏ bài thừa cuối lượt', () => {
@@ -456,7 +467,7 @@ test('phản ứng (đấu tay đôi, né, chịu đòn) hiện lên giữa bàn
   const [b] = give(s, 'B', C('ban'));
   s = A(s, 'A', { type: 'play', card: d.id, target: 'B' });
   s = A(s, 'B', { type: 'respond', card: b.id });
-  assert.deepEqual(viewFor(s, 'A').lastPlay, { by: 'B', card: { t: 'ban', s: b.s }, target: 'A' });
+  assert.deepEqual(viewFor(s, 'A').lastPlay, { by: 'B', card: { t: 'ban', s: b.s, r: b.r }, target: 'A' });
   assert.match(s.log.at(-1), /B đánh Bắn/);
   s = A(s, 'A', { type: 'respond' });
   assert.match(s.log.at(-1), /A mất 1 máu/);
@@ -562,4 +573,65 @@ test('Vai: mặc định theo số người, chủ phòng chỉnh tay (tổng ph
   assert.equal(validate(ids, { roles: { pho: -1, cuop: 4, phanboi: 1 } }), 'Số vai không hợp lệ.');
   const s = start(ids, { config }, Math.random);
   assert.deepEqual(s.players.map((p) => p.role).sort(), ['cst', 'cuop', 'cuop', 'cuop', 'phanboi']);
+});
+
+test('Lá mới: Bắn tỉa, Tay dài, Rượu nồng (bỏ kèm 1 lá)', () => {
+  let s = mk(R4);
+  const [bt, x1] = give(s, 'A', C('bantia'), C('ne'));
+  NO(s, 'A', { type: 'play', card: bt.id, target: 'C' }); // thiếu lá bỏ kèm
+  s = A(s, 'A', { type: 'play', card: bt.id, target: 'C', extra: x1.id }); // khoảng cách 2, vẫn bắn được
+  s = A(s, 'C', { type: 'respond' });
+  assert.equal(P(s, 'C').hp, 3);
+  assert.ok(!s.bangUsed, 'không tính giới hạn Bắn');
+  let t = mk(R4);
+  const [td, x2] = give(t, 'A', C('taydai'), C('ne'));
+  give(t, 'C', C('ban'));
+  t = A(t, 'A', { type: 'play', card: td.id, target: 'C', which: 'hand', extra: x2.id });
+  assert.deepEqual([P(t, 'A').hand.length, P(t, 'C').hand.length], [1, 0]);
+  let r = mk(R4);
+  P(r, 'A').hp = 2;
+  const [rn, x3] = give(r, 'A', C('ruounong'), C('ne'));
+  r = A(r, 'A', { type: 'play', card: rn.id, extra: x3.id });
+  assert.equal(P(r, 'A').hp, 4);
+});
+
+test('Trang bị mới: Kính viễn vọng / Chỗ nấp cùng loại Ống nhòm / Ngựa; né bằng Mũ cao, Tấm thép, Bùa hộ mệnh', () => {
+  const s = mk(R4);
+  P(s, 'C').eq.push(C('chonap'));
+  assert.equal(distance(s, 0, 2), 3, 'Chỗ nấp như Ngựa');
+  P(s, 'A').eq.push(C('kinhvien'));
+  assert.equal(distance(s, 0, 2), 2, 'Kính viễn vọng như Ống nhòm');
+  const [on] = give(s, 'A', C('ongnhom'));
+  NO(s, 'A', { type: 'play', card: on.id }); // đã có trang bị cùng loại
+  for (const t of ['mucao', 'tamthep', 'bua']) {
+    let k = mk(R4);
+    const hat = C(t);
+    P(k, 'B').eq.push(hat);
+    const [b] = give(k, 'A', C('ban'));
+    k = A(k, 'A', { type: 'play', card: b.id, target: 'B' });
+    k = A(k, 'B', { type: 'respond', card: hat.id });
+    assert.equal(P(k, 'B').hp, 4, `${t} né được`);
+    assert.equal(P(k, 'B').hand.length, t === 'bua' ? 1 : 0, 'Bùa hộ mệnh né rồi bốc 1');
+  }
+});
+
+test('Trang bị mới: Súng săn bò, Súng ổ quay, Đại bác, Vũ công, Ngựa trạm', () => {
+  let s = mk(R4);
+  const eq = [C('sungbo'), C('oquay'), C('daibac'), C('vucong'), C('ngutram')];
+  P(s, 'A').eq.push(...eq);
+  s = A(A(s, 'A', { type: 'use', card: eq[0].id, target: 'C' }), 'C', { type: 'respond' }); // khoảng cách 2
+  assert.equal(P(s, 'C').hp, 3, 'Súng săn bò bắn mọi khoảng cách');
+  NO(s, 'A', { type: 'use', card: eq[1].id, target: 'C' }); // ổ quay: ngoài tầm 1
+  s = A(A(s, 'A', { type: 'use', card: eq[1].id, target: 'B' }), 'B', { type: 'respond' });
+  assert.equal(P(s, 'B').hp, 3);
+  s = A(s, 'A', { type: 'use', card: eq[2].id });
+  assert.equal(s.phase, 'react');
+  for (const id of ['B', 'C', 'D']) s = A(s, id, { type: 'respond' });
+  assert.deepEqual(['B', 'C', 'D'].map((id) => P(s, id).hp), [2, 2, 3], 'Đại bác: mọi người khác mất 1');
+  give(s, 'D', C('ne'));
+  s = A(s, 'A', { type: 'use', card: eq[3].id, target: 'D', which: 'hand' });
+  assert.equal(P(s, 'D').hand.length, 0, 'Vũ công phá 1 lá');
+  s = A(s, 'A', { type: 'use', card: eq[4].id });
+  assert.equal(P(s, 'A').hand.length, 3, 'Ngựa trạm bốc 3');
+  assert.equal(P(s, 'A').eq.length, 0);
 });

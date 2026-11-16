@@ -1,5 +1,8 @@
 // Bot đơn giản cho Loạn Đả Viễn Tây: chỉ nhìn đúng góc nhìn (view) của nó, trả về 1 hành động hợp lệ.
-import { GUN_RANGE } from './engine.js';
+import { GUN_RANGE, DODGE_EQ } from './engine.js';
+
+const KIND = { kinhvien: 'ongnhom', chonap: 'ngua' }; // cùng loại trang bị
+const kindOf = (t) => KIND[t] || t;
 
 // Ai là "địch" theo vai của bot (bot chỉ biết vai công khai: Cảnh sát trưởng và người đã chết).
 function enemies(v) {
@@ -23,7 +26,7 @@ export function botAction(v) {
     const swap = me.char === 'haisung' ? { ne: 'ban', ban: 'ne' }[need] : null;
     const c = need === 'ne' && me.char === 'khonglo' ? null
       : me.hand.find((x) => x.t === need) || (need === 'ne' && me.hand.find((x) => x.t === 'lach')) || me.hand.find((x) => x.t === swap);
-    const hat = need === 'ne' && v.players.find((p) => p.id === me.id).eq.find((x) => x.t === 'mu');
+    const hat = need === 'ne' && v.players.find((p) => p.id === me.id).eq.find((x) => DODGE_EQ.includes(x.t));
     const use = c || hat;
     return use ? { type: 'respond', card: use.id } : { type: 'respond' };
   }
@@ -37,15 +40,21 @@ export function botAction(v) {
   for (const t of ['tiepte', 'tieptelon', 'chophien']) if (H(t)) return play(H(t));
   const gun = me.hand.find((c) => GUN_RANGE[c.t]);
   if (gun && !equipped((c) => GUN_RANGE[c.t])) return play(gun);
-  for (const t of ['ngua', 'ongnhom', 'thung', 'sunggiau', 'binhnuoc', 'mu', 'xetho', 'dao']) if (H(t) && !equipped((c) => c.t === t)) return play(H(t));
+  for (const t of ['ngua', 'ongnhom', 'kinhvien', 'chonap', 'thung', 'sunggiau', 'binhnuoc', 'xetho', 'dao', 'sungbo', 'oquay', 'daibac', 'vucong', 'ngutram', ...DODGE_EQ]) {
+    if (H(t) && !equipped((c) => kindOf(c.t) === kindOf(t))) return play(H(t));
+  }
   const E = (t) => self.eq.find((c) => c.t === t);
   const use = (c, target) => ({ type: 'use', card: c.id, ...(target ? { target } : {}) });
   if (self.hp < self.max && E('binhnuoc')) return use(E('binhnuoc'));
+  if (E('ngutram')) return use(E('ngutram'));
+  if (E('daibac') && enemies(v).length) return use(E('daibac'));
+  if (E('sungbo') && enemies(v)[0]) return use(E('sungbo'), enemies(v)[0].id);
   const near = enemies(v).find((p) => p.dist === 1);
   if (near && H('dam')) return play(H('dam'), near.id);
   if (near && E('sunggiau')) return use(E('sunggiau'), near.id);
   const inRange = enemies(v).find((p) => p.dist && p.dist <= me.range);
   if (inRange && E('dao')) return use(E('dao'), inRange.id);
+  if (inRange && E('oquay')) return use(E('oquay'), inRange.id);
   const free = (p) => me.char === 'laoluyen' && p.dist === 1;
   {
     const shot = me.hand.find((c) => c.t === 'ban' || (c.t === 'ne' && me.char === 'haisung'));
