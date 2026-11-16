@@ -436,3 +436,98 @@ Hội bạn ngồi chung một phòng, mỗi người dùng điện thoại riê
 ### 5. Không làm
 
 Giọng đọc quản trò, chat, các vai ngoài bảng trên.
+
+---
+
+## Thiết kế đợt 4 – phần 1: Cờ Tỷ Phú
+
+Mã phòng bắt đầu bằng `P` · 2–6 người · tiền ảo kiểu VNĐ
+
+### Mục đích
+Game mua đất, xây nhà, thu tiền thuê trên bàn cờ 40 ô mang tên các tỉnh thành Việt Nam. Luật theo kiểu cờ tỷ phú phổ biến ở Việt Nam: 3 nhà + Công trình, Mua lại, Lễ hội, Độc quyền.
+
+**Không làm (đã chốt):** đấu giá, giao dịch đất giữa người chơi, gom tiền ở ô nghỉ, bot.
+
+**Thất bại nếu:** client tự gieo xúc xắc hoặc tự rút thẻ sự kiện (chỉ chủ bàn làm việc này); có người bị trừ tiền sai; ván kẹt vì một người nợ tiền mà không có lối ra (phải luôn có lối ra: bán nhà, thế chấp hoặc phá sản).
+
+### Bàn cờ (40 ô)
+- **4 góc:** 0 *Xuất phát*, 10 *Nhà tù*, 20 *Lễ hội*, 30 *Vào tù*. *(em tự quyết: Lễ hội đặt ở góc, thay cho ô Bãi đậu xe)*
+- **22 ô đất, chia thành 8 nhóm màu** (giá tăng dần theo nhóm):
+  - Nhóm 1 (2 ô): Hà Giang, Cao Bằng
+  - Nhóm 2 (3 ô): Lạng Sơn, Điện Biên, Sơn La
+  - Nhóm 3 (3 ô): Thanh Hoá, Nghệ An, Hà Tĩnh
+  - Nhóm 4 (3 ô): Huế, Quảng Nam, Quảng Ngãi
+  - Nhóm 5 (3 ô): Bình Định, Khánh Hoà, Lâm Đồng
+  - Nhóm 6 (3 ô): An Giang, Kiên Giang, Cần Thơ
+  - Nhóm 7 (3 ô): Quảng Ninh, Hải Phòng, Bình Dương
+  - Nhóm 8 (2 ô): Hà Nội, TP. Hồ Chí Minh
+- **4 sân bay:** Nội Bài, Đà Nẵng, Cam Ranh, Tân Sơn Nhất
+- **2 ô tiện ích:** Điện lực, Cấp nước
+- **6 ô Sự kiện ngẫu nhiên**
+- **2 ô Thuế:** thuế thu nhập 2.000.000đ, thuế xa xỉ 1.000.000đ
+
+*(Danh sách tỉnh, cách chia nhóm và mọi mức giá: em tự quyết)*
+
+### Tiền
+- Mỗi người bắt đầu với **15.000.000đ**.
+- Đi qua hoặc dừng ở ô Xuất phát được nhận **2.000.000đ**.
+- Giá đất từ 600.000đ đến 4.000.000đ, tăng dần theo nhóm.
+
+### Lượt chơi
+1. Gieo 2 xúc xắc rồi đi tới. Gieo ra **đôi** thì được gieo thêm lượt; 3 lần đôi liên tiếp thì vào tù.
+2. Dừng ở **ô đất / sân bay / tiện ích chưa có chủ**: được mua hoặc bỏ qua.
+3. Dừng ở **đất của người khác**: trả tiền thuê. Sau đó được **Mua lại** ô đó với giá **gấp đôi giá trị ô** (đất + nhà). Người chủ cũ nhận số tiền này. Ô đã có Công trình thì không mua lại được.
+4. Dừng ở **đất của mình**: được xây thêm, nhiều cấp một lúc nếu đủ tiền.
+   - Thứ tự: nhà 1 → nhà 2 → nhà 3 → **Công trình**.
+   - Mỗi nhà giá 50% giá đất; Công trình giá bằng giá đất.
+   - Không cần đủ bộ màu mới được xây.
+
+### Tiền thuê
+- Tính theo giá đất P: chưa có nhà 10% P; 1 nhà 50% P; 2 nhà 150% P; 3 nhà 300% P; có Công trình 500% P.
+- Sở hữu **đủ cả nhóm màu** thì tiền thuê đất trống được ×2.
+- **Sân bay:** chủ có 1/2/3/4 sân bay thì thu 250k / 500k / 1tr / 2tr.
+- **Tiện ích:** tổng xúc xắc × 40.000đ; chủ có cả 2 ô tiện ích thì × 100.000đ.
+- **Lễ hội ×2** (xem bên dưới).
+- **Ô đang thế chấp** không thu tiền thuê.
+
+### Lễ hội (góc 20)
+- Dừng ở ô này thì chọn 1 ô đất của mình để tổ chức lễ hội: tiền thuê ô đó **×2**.
+- Cả bàn chỉ có **1 lễ hội** tại một thời điểm. Lễ hội mới thay thế lễ hội cũ. *(em tự quyết)*
+
+### Sự kiện ngẫu nhiên
+- Một chồng **16 thẻ**, nội dung do em tự viết. Ví dụ:
+  - trúng vé số;
+  - bão lũ phải sửa nhà (trả theo số nhà và Công trình);
+  - đi du lịch tới một sân bay;
+  - vào tù;
+  - thẻ "được tại ngoại";
+  - lùi 3 ô;
+  - nhận hoặc trả tiền cho mỗi người chơi.
+- Thẻ được rút lần lượt; hết chồng thì trộn lại.
+
+### Nhà tù
+- Vào tù khi: dừng ở ô *Vào tù*, gieo đôi 3 lần liên tiếp, hoặc rút trúng thẻ sự kiện vào tù.
+- Ra tù bằng một trong các cách:
+  - gieo ra đôi (tối đa 3 lượt);
+  - trả **500.000đ**;
+  - dùng thẻ "được tại ngoại".
+- Hết 3 lượt mà vẫn chưa ra thì bắt buộc trả tiền rồi đi. Lượt ngồi tù vẫn thu tiền thuê bình thường.
+
+### Thế chấp, nợ, phá sản
+- **Thế chấp:** trong lượt của mình, hoặc khi đang nợ, được thế chấp một ô và nhận 50% giá đất. Chuộc lại thì trả 55%. Ô có nhà phải bán nhà trước; nhà bán lại cho ngân hàng được 50% giá xây.
+- **Nợ:** khi phải trả nhiều hơn số tiền đang có, người chơi vào trạng thái **Nợ** và phải bán nhà hoặc thế chấp cho tới khi đủ tiền. Nếu không thể đủ thì bấm **Phá sản**.
+- **Phá sản:** toàn bộ tài sản chuyển cho chủ nợ. Nếu chủ nợ là ngân hàng thì đất trở về trạng thái chưa có chủ.
+
+### Thắng
+- **Độc quyền:** thắng ngay khi sở hữu **3 nhóm màu trọn vẹn**, hoặc **trọn một cạnh bàn cờ** (mọi ô đất và sân bay trên cạnh đó), hoặc **cả 4 sân bay**.
+- **Phá sản hết người khác:** người cuối cùng còn trụ lại thì thắng.
+- **Hết giờ:** chủ bàn chọn 30 / 45 / 60 phút hoặc Không giới hạn. Hết giờ thì ai có **tổng tài sản** lớn nhất thắng. Tổng tài sản = tiền mặt + giá đất (ô đang thế chấp tính 50%) + giá nhà và Công trình đã xây.
+
+### Người chơi offline
+Chủ bàn có nút "Bỏ lượt hộ": tự gieo xúc xắc và đi cho người đó, không mua, không xây. Nếu người đó đang nợ thì tự bán nhà / thế chấp theo thứ tự; vẫn không đủ thì phá sản. *(em tự quyết)*
+
+### Giao diện
+- Bàn cờ 11×11 ô (vòng 40 ô quanh viền), tên ô viết tắt.
+- Chạm vào một ô để xem chi tiết: giá, chủ, số nhà, tiền thuê.
+- Quân cờ là chấm tròn mang màu của từng người.
+- Phía dưới bàn cờ: tiền của mọi người, đồng hồ đếm ngược nếu có giới hạn thời gian, các nút hành động của lượt hiện tại.

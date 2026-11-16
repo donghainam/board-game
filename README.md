@@ -12,6 +12,7 @@ Board game tiếng Việt để cả hội **ngồi chung một phòng, mỗi ng
 | 🌈 Sắc Bài | 2–10 | `S` |
 | 💣 Bom Xịt | 2–5 | `B` |
 | 🐺 Ma Sói (máy làm quản trò) | 5–16 | `M` |
+| 🏙️ Cờ Tỷ Phú | 2–6 | `P` |
 
 Luật chi tiết và các quyết định thiết kế nằm trong [docs/THIET-KE.md](docs/THIET-KE.md).
 

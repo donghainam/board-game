@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cờ Tỷ Phú</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏙️</text></svg>">
+<link rel="stylesheet" href="../shared/ui.css">
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
+<style>
+  :root { --p0:#e03131; --p1:#1c7ed6; --p2:#2f9e44; --p3:#f08c00; --p4:#9c36b5; --p5:#0c8599; }
+  .tboard { display:grid; grid-template-columns:repeat(11,1fr); grid-template-rows:repeat(11,1fr); gap:1px;
+            width:100%; max-width:520px; aspect-ratio:1; margin:0 auto; background:#6b4a1f; border:2px solid #6b4a1f; border-radius:8px; overflow:hidden; }
+  .sq { background:#fffaf0; color:#2a2118; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+        font-size:clamp(6px,1.9vw,10px); line-height:1.05; text-align:center; padding:1px; min-width:0; min-height:0; overflow:hidden; border:0; font-family:inherit; }
+  .sq.sel { outline:3px solid var(--accent); z-index:2; }
+  .sq .bar { width:100%; height:22%; flex:none; }
+  .sq .nm { font-weight:700; margin-top:1px; word-break:break-word; }
+  .sq .lv { font-size:clamp(6px,1.8vw,10px); }
+  .sq.mort { background: repeating-linear-gradient(45deg,#fffaf0 0 4px,#e8dccb 4px 8px); }
+  .sq .own { position:absolute; inset:auto 0 0 0; height:4px; }
+  .sq .toks { position:absolute; bottom:5px; left:0; right:0; display:flex; justify-content:center; flex-wrap:wrap; gap:1px; }
+  .tok { width:clamp(6px,2vw,10px); height:clamp(6px,2vw,10px); border-radius:50%; border:1px solid #fff; box-shadow:0 0 2px #000; }
+  .corner { background:#f6ecdf; font-size:clamp(7px,2.1vw,11px); justify-content:center; }
+  .mid { grid-row:2/11; grid-column:2/11; background: var(--felt); color: var(--felt-text); display:flex; flex-direction:column;
+         align-items:center; justify-content:center; gap:6px; padding:8px; text-align:center; font-size:13px; }
+  .mid .dice { font-size:34px; line-height:1; }
+  .g1{background:#8d6e63}.g2{background:#81d4fa}.g3{background:#f06292}.g4{background:#ffb74d}
+  .g5{background:#e53935}.g6{background:#fdd835}.g7{background:#43a047}.g8{background:#1e3a8a}
+  .money { display:grid; grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); gap:6px; }
+  .money div { border-radius:10px; padding:6px 8px; color:#fff; font-weight:600; font-size:14px; }
+  .money .turn { outline:3px solid var(--text); }
+  .money .out { opacity:.4; text-decoration: line-through; }
+  .actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .actions .btn { flex:1; min-width:120px; }
+  .detail h3 { margin:0; }
+  .clock { text-align:center; font: 700 16px ui-monospace, Menlo, Consolas, monospace; }
+</style>
+</head>
+<body>
+<main class="wrap stack">
+  <div class="top"><a href="../">← Trang chủ</a><b>Cờ Tỷ Phú</b><span class="net muted" id="net"></span></div>
+  <div id="app" class="stack"></div>
+</main>
+<script type="module" src="main.js"></script>
+</body>
+</html>
