@@ -153,6 +153,7 @@ function checkWin(s) {
 
 // ---------- Lượt ----------
 function startTurn(s, rng) {
+  s.lastFlip = null; // dòng "vừa lật bài" chỉ giữ trong lượt của nó
   for (let guard = 0; guard < 20 && !s.winner; guard++) {
     const pi = s.turn;
     const p = s.players[pi];
@@ -411,6 +412,7 @@ export function apply(state, id, action, rng = Math.random) {
       take(p.hand, card.id); p.eq.push(card);
     }
   }
+  s.lastPlay = { by: id, card: { t: card.t, s: card.s }, target: tp && ti !== pi ? tp.id : null };
   return done(s, rng);
 }
 
@@ -457,6 +459,6 @@ export function viewFor(s, id) {
     waitingOn: picking ? s.players.filter((p) => !p.char).map((p) => p.id) : undefined,
     phase: s.phase, bangUsed: s.bangUsed, deckCount: s.deck.length,
     pending: s.pending && { kind: s.pending.kind, from: s.pending.from, need: s.pending.need, a: s.pending.a, b: s.pending.b, responder: responder(s), left: s.pending.left ?? s.pending.need2 ?? 1 },
-    lastFlip: s.lastFlip, log: s.log, winner: s.winner, winTeam: s.winTeam,
+    lastFlip: s.lastFlip, lastPlay: s.lastPlay || null, log: s.log, winner: s.winner, winTeam: s.winTeam,
   };
 }

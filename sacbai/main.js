@@ -1,5 +1,6 @@
 import { el } from '../shared/lobby.js';
 import { runTable } from '../shared/table.js';
+import { roundTable, sideLayout } from '../shared/roundtable.js';
 import { start, apply, viewFor, forceSkip, COLORS } from './engine.js';
 
 const COLOR_NAME = { r: 'Đỏ', y: 'Vàng', g: 'Lục', b: 'Lam' };
@@ -13,29 +14,44 @@ const card = (c, attrs = {}, big = false) => el(attrs.onclick ? 'button' : 'span
   'aria-label': `${NAME[c.v] || c.v} ${COLOR_NAME[c.c] || 'đen'}`, ...attrs,
 }, LABEL[c.v] || c.v);
 
+const RULES = [
+  ['Đánh bài', 'Lá cùng màu hoặc cùng số / cùng loại với lá trên cùng. Lá đen đánh lúc nào cũng được (trừ khi đang bị phạt).'],
+  ['Phạt +2', 'Người kế bốc 2, hoặc chặn bằng +2 / +4 để dồn phạt cho người sau.'],
+  ['Phạt +4 (đen)', 'Đổi màu + phạt 4; chỉ chặn được bằng một lá +4 khác.'],
+  ['Chặn ⛔', 'Người kế mất lượt (2 người thì bạn đi tiếp).'],
+  ['Đổi màu 🎨', 'Chọn màu mới.'],
+  ['Bốc', 'Không đánh được thì bốc 1 lá; lá vừa bốc đánh được thì đánh luôn, không thì Qua.'],
+  ['BÁO!', 'Còn 1 lá phải bấm BÁO trước khi người kế đi; bị người khác Bắt trước thì bốc 2 lá.'],
+];
+
 function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
   const myTurn = v.turn === me;
   if (!myTurn) picking = null;
-  const mine = v.order.indexOf(me);
-  const others = [...v.order.slice(mine + 1), ...v.order.slice(0, mine)];
+  const who = (id) => (id === me ? 'Bạn' : nameOf(id));
   const count = Object.fromEntries(v.others.map((o) => [o.id, o.count]));
-  const players = el('div', { class: 'players' }, others.map((id) => el('div', { class: 'pl' + (v.turn === id ? ' turn' : '') },
-    el('div', { class: 'n' }, el('span', { class: 'dot' + (online(id) ? ' on' : '') }), ' ', nameOf(id)),
-    el('div', { class: 'muted' }, `${count[id]} lá`),
-    v.unannounced === id ? el('button', { class: 'btn btn-small btn-primary', onclick: () => send({ type: 'bat', target: id }) }, 'Bắt!') : null)));
-
-  const felt = el('div', { class: 'felt' },
+  count[me] = v.me.hand.length;
+  const seat = (id) => [
+    el('div', { class: 'rt-av' }, v.unannounced === id ? '📣' : '🌈', el('span', { class: 'rt-cnt' }, `🂠${count[id]}`)),
+    el('div', { class: 'rt-nm' }, el('span', { class: 'dot' + (online(id) ? ' on' : '') }), ' ', who(id)),
+    el('div', { class: 'rt-sub' }, `${count[id]} lá`),
+    v.unannounced === id && id !== me ? el('span', { class: 'rt-chip', style: 'background:var(--accent);color:#fff' }, 'Chạm để BẮT!') : null,
+  ];
+  const seatAttrs = (id) => ({
+    cls: v.turn === id ? 'turn' : '',
+    onclick: v.unannounced === id && id !== me && !pending ? () => send({ type: 'bat', target: id }) : undefined,
+    label: who(id),
+  });
+  const center = [
     card(v.top, {}, true),
-    el('div', {}, `Màu: ${COLOR_NAME[v.color]}`, ' · ', `Chồng bài: ${v.deckCount}`),
-    v.penalty ? el('div', { class: 'alert-big' }, `Phạt dồn +${v.penalty.n}`) : null);
+    el('div', { class: 'msg' }, `Màu: ${COLOR_NAME[v.color]} · Chồng bài: ${v.deckCount}`),
+    v.penalty ? el('div', { class: 'alert-big' }, `Phạt dồn +${v.penalty.n}`) : null,
+  ];
 
   const status = el('div', { class: 'status' + (myTurn ? ' me' : ''), role: 'status' },
     myTurn ? (v.drew ? 'Đánh lá vừa bốc hoặc bấm Qua.' : 'Tới lượt bạn!') : `Đang chờ ${nameOf(v.turn)}…`);
-
   const bao = v.unannounced === me
     ? el('button', { class: 'btn btn-primary', style: 'font-size:20px', onclick: () => send({ type: 'bao' }) }, '📣 BÁO!')
     : null;
-
   const play = (c) => {
     if (c.c === 'k') { picking = c.id; rerender(); return; }
     send({ type: 'play', card: c.id });
@@ -50,13 +66,14 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
       onclick: () => { const id = picking; picking = null; send({ type: 'play', card: id, color: col }); },
     }))))
     : null;
-
   const actions = el('div', { class: 'actions' },
     el('button', { class: 'btn', disabled: !myTurn || v.drew || pending, onclick: () => send({ type: 'draw' }) },
       v.penalty ? `Bốc phạt ${v.penalty.n}` : 'Bốc'),
     el('button', { class: 'btn', disabled: !myTurn || !v.drew || pending, onclick: () => send({ type: 'pass' }) }, 'Qua'));
 
-  return [players, felt, bao, status, swatches, hand, actions];
+  const left = { icon: '📖', title: 'Lá bài', body: RULES.map(([n, d]) => el('div', { class: 'chr' }, el('b', {}, n), el('small', {}, d))) };
+  const main = [roundTable({ order: v.order, me, seat, seatAttrs, center }), bao, status, swatches, hand, actions].filter(Boolean);
+  return [sideLayout({ left, main })];
 }
 
 document.documentElement.style.cssText += ';--sw-r:#e03131;--sw-y:#f2b200;--sw-g:#2f9e44;--sw-b:#1c7ed6';

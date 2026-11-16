@@ -116,16 +116,18 @@ export async function hostRoom(code, { hostId = null, secrets = {}, onRetry = ()
   };
 }
 
-export function joinRoom(code, hello) {
+export function joinRoom(code, hello, { retryBase = 1000 } = {}) {
   const fns = { message: [], status: [] };
-  let peer = null, conn = null, timer = null, closed = false, delay = 1000, status = '', lastSeen = 0;
+  let peer = null, conn = null, attempt = null, timer = null, closed = false, delay = retryBase, status = '', lastSeen = 0;
+  // Mỗi lần thử tạo 1 RTCPeerConnection: lần thử chưa thông phải đóng lại, không thì trình duyệt hết chỗ.
+  const dropAttempt = () => { const a = attempt; attempt = null; if (a && a !== conn) a.close(); };
   const setStatus = (s) => { if (s !== status) { status = s; fns.status.forEach((f) => f(s)); } };
 
   function retry() {
     if (closed || timer) return;
     setStatus('reconnecting');
     timer = setTimeout(() => { timer = null; connect(); }, delay);
-    delay = Math.min(delay * 2, 10000);
+    delay = Math.min(delay * 2, 10 * retryBase);
   }
 
   function ensurePeer() {
@@ -134,21 +136,29 @@ export function joinRoom(code, hello) {
       return peer.open ? Promise.resolve(peer) : new Promise((r) => peer.once('open', () => r(peer)));
     }
     peer = new window.Peer();
-    peer.on('error', () => { conn = null; retry(); });
+    peer.on('error', (e) => {
+      if (e?.type === 'peer-unavailable' || !conn?.open) dropAttempt(); // phòng chưa mở / lần thử hỏng
+      if (!conn?.open) { conn = null; retry(); }
+    });
     peer.on('disconnected', () => { if (!closed && !peer.destroyed) peer.reconnect(); });
     return new Promise((r) => peer.once('open', () => r(peer)));
   }
 
   async function connect() {
-    if (closed || conn?.open) return;
+    if (closed) return;
+    if (conn?.open) { setStatus('connected'); return; }
     if (!status) setStatus('connecting');
     const p = await ensurePeer();
-    if (closed) return;
+    if (closed || conn?.open) return;
+    dropAttempt();
     const c = p.connect(PREFIX + code, { reliable: true });
-    const guard = setTimeout(() => { if (!c.open) { c.close(); retry(); } }, 8000);
+    attempt = c;
+    const guard = setTimeout(() => { if (!c.open) { if (attempt === c) dropAttempt(); else c.close(); retry(); } }, 8000);
     c.on('open', () => {
       clearTimeout(guard);
-      conn = c; delay = 1000; lastSeen = Date.now();
+      if (attempt === c) attempt = null;
+      if (conn?.open && conn !== c) { c.close(); return; } // đã có kết nối khác thông rồi
+      conn = c; delay = retryBase; lastSeen = Date.now();
       c.send({ t: 'hello', ...hello });
       setStatus('connected');
     });
@@ -157,12 +167,17 @@ export function joinRoom(code, hello) {
       lastSeen = Date.now();
       if (d.t !== 'hb') fns.message.forEach((f) => f(d));
     });
-    c.on('close', () => { clearTimeout(guard); if (conn === c) conn = null; retry(); });
+    c.on('close', () => {
+      clearTimeout(guard);
+      if (attempt === c) attempt = null;
+      if (conn === c) conn = null;
+      if (!conn?.open) retry(); // lần thử cũ đóng sau khi kết nối mới đã thông thì bỏ qua, không báo "đang nối lại"
+    });
   }
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && !closed && !conn?.open) {
-      clearTimeout(timer); timer = null; delay = 1000; connect();
+      clearTimeout(timer); timer = null; delay = retryBase; connect();
     }
   });
   const beat = setInterval(() => {

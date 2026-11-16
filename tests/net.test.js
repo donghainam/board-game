@@ -82,3 +82,27 @@ test('mở phòng: báo tiến độ khi mã đang bị giữ, và không treo k
   await assert.rejects(hostRoom('TSILN', { openTimeout: 30 }), (e) => e.type === 'timeout');
   globalThis.window.Peer = FakePeer;
 });
+
+test('client nối lại nhiều lần: các lần thử cũ phải được đóng (không rò rỉ PeerConnection)', async () => {
+  globalThis.document = { addEventListener() {}, visibilityState: 'visible' };
+  const attempts = [];
+  class ClientPeer extends EventEmitter {
+    constructor() { super(); this.open = false; this.destroyed = false; setTimeout(() => { this.open = true; this.emit('open'); }, 0); }
+    connect() {
+      const c = new FakeConn(); c.open = false; c.closed = false;
+      c.close = () => { c.closed = true; c.emit('close'); };
+      attempts.push(c);
+      setTimeout(() => this.emit('error', { type: 'peer-unavailable' }), 0); // phòng không tồn tại
+      return c;
+    }
+    reconnect() {} destroy() { this.destroyed = true; }
+  }
+  globalThis.window.Peer = ClientPeer;
+  const { joinRoom } = await import('../shared/net.js');
+  const cl = joinRoom('TGONE', { playerId: 'p', secret: 's', name: 'x' }, { retryBase: 5 });
+  await new Promise((r) => setTimeout(r, 150));
+  cl.close();
+  globalThis.window.Peer = FakePeer;
+  assert.ok(attempts.length >= 3, 'đã thử lại nhiều lần');
+  assert.equal(attempts.slice(0, -1).every((c) => c.closed), true, 'mọi lần thử cũ đều đã đóng');
+});
