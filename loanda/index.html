@@ -47,7 +47,7 @@
     .lz-in { flex-direction:row; }
     .lz-table { flex:1 1 56%; min-width:0; }
     .lz-ctrl { flex:1 1 44%; height:auto; min-width:0; justify-content:center; }
-    .lz-in .ov-pop { left:auto; right:0; bottom:auto; top:50%; transform:translateY(-50%); width:calc(44% - 8px); max-height:100%; }
+    .lz-in .ov-pop { left:auto; right:0; bottom:auto; top:50%; transform:translateY(-50%); width:min(calc(44% - 8px), 340px); max-height:100%; }
   }
   .lz-ctrl > * { flex-shrink:0; } /* không ép dẹt bài trên tay; thiếu chỗ thì khung điều khiển tự cuộn */
   /* Điện thoại xoay ngang (màn thấp): dồn nút cho bàn tròn rộng chỗ, không ẩn phần nào */
@@ -92,10 +92,14 @@
   button.ov, .ov button, .ov ul { pointer-events:auto; } /* nút "🎭 Vai ▾" (thu gọn) cũng phải bấm được */
   /* Khung hành động nổi đè lên vùng điều khiển (dọc: đáy màn hình; ngang: cột phải): bàn giữ nguyên cỡ, không bị che */
   .lz-in { position:relative; }
-  .ov-pop { position:absolute; left:50%; bottom:0; transform:translateX(-50%); z-index:6; width:min(100%, 460px); max-height:60%;
-            overflow:auto; display:flex; flex-direction:column; gap:6px; }
+  .ov-pop { position:absolute; left:50%; bottom:0; transform:translateX(-50%); z-index:6; width:min(100%, 380px); max-height:55%;
+            overflow:auto; display:flex; flex-direction:column; gap:6px; font-size:13px; }
   .ov-pop .card-tile { background:rgb(28 22 16 / .84); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px);
-                       box-shadow:0 8px 24px #0009; padding:10px 12px; gap:8px; }
+                       box-shadow:0 8px 24px #0009; padding:8px 10px; gap:6px; }
+  .ov-pop .actions { gap:6px; }
+  .ov-pop .actions .btn { padding:6px 10px; font-size:13px; min-height:0; }
+  .ov-pop .ac { width:54px; }
+  .ov-pop .ac .t { font-size:8px; }
   .ov-x { position:absolute; top:2px; right:4px; width:22px; height:22px; border-radius:6px; border:0; background:rgb(255 255 255 / .12);
           color:var(--text); font:inherit; font-weight:800; cursor:pointer; }
   .ov-r .btn { align-self:flex-start; padding:3px 10px; font-size:12px; }
