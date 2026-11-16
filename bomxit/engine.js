@@ -1,11 +1,8 @@
 // Luật Bom Xịt — thuần logic. Lá = {t: 'soi'|'ne'|'chan'|'keo'|'bom', id}. deck: phần tử cuối là lá trên cùng.
 
-export const WINDOW = 3000; // cửa sổ để người khác đánh Chặn (ms)
+import { shuffle, fail } from '../shared/util.js';
 
-function shuffle(a, rng) {
-  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
-  return a;
-}
+export const WINDOW = 3000; // cửa sổ để người khác đánh Chặn (ms)
 
 export function start(ids, { lastWinner } = {}, rng = Math.random) {
   let id = 0;
@@ -24,7 +21,6 @@ function advance(s) {
   }
 }
 
-const fail = (error) => ({ ok: false, error });
 const take = (hand, cardId, t) => {
   const i = hand.findIndex((c) => c.id === cardId && c.t === t);
   return i < 0 ? null : hand.splice(i, 1)[0];

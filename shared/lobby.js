@@ -24,7 +24,7 @@ export function toast(text) {
   setTimeout(() => t.remove(), 2600);
 }
 
-export function keepAwake() {
+function keepAwake() {
   if (!navigator.wakeLock) return;
   const ask = () => navigator.wakeLock.request('screen').catch(() => {});
   ask();

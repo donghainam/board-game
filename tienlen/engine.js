@@ -1,11 +1,13 @@
 // Luật Tiến Lên miền Nam — thuần logic, không DOM, không mạng.
 // Lá bài = số 0..51: rank = c>>2 (0 là '3' … 11 là 'A', 12 là '2'), suit = c&3 (♠ ♣ ♦ ♥).
 
+import { shuffle, fail } from '../shared/util.js';
+
 export const RANKS = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2'];
 export const SUITS = ['♠', '♣', '♦', '♥'];
 const HEO = 12;
 
-export const rankOf = (c) => c >> 2;
+const rankOf = (c) => c >> 2;
 export const card = (r, s) => RANKS.indexOf(r) * 4 + SUITS.indexOf(s);
 export const label = (c) => RANKS[rankOf(c)] + SUITS[c & 3];
 
@@ -64,18 +66,9 @@ export function instantWin(hand) {
   return null;
 }
 
-function shuffled(rng) {
-  const d = Array.from({ length: 52 }, (_, i) => i);
-  for (let i = d.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [d[i], d[j]] = [d[j], d[i]];
-  }
-  return d;
-}
-
 // opts.deck chỉ dùng cho test: bộ bài đã xếp sẵn.
 export function newGame(ids, opts = {}) {
-  const deck = opts.deck || shuffled(opts.rng || Math.random);
+  const deck = opts.deck || shuffle(Array.from({ length: 52 }, (_, i) => i), opts.rng);
   const players = ids.map((id, i) => ({
     id, hand: deck.slice(i * 13, i * 13 + 13).sort((a, b) => a - b),
   }));
@@ -118,8 +111,6 @@ function endNotes(s) {
   }
   return notes;
 }
-
-const fail = (error) => ({ ok: false, error });
 
 export function applyAction(s, id, action) {
   if (s.winner) return fail('Ván đã kết thúc.');

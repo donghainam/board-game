@@ -8,9 +8,6 @@
 <link rel="stylesheet" href="../shared/ui.css">
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
 <style>
-  .top { display:flex; justify-content:space-between; align-items:center; gap:8px; }
-  .top a { color: var(--muted); text-decoration: none; }
-  .net { font-size: 13px; }
   :root { --c0:#e03131; --c1:#2f9e44; --c2:#f2b200; --c3:#1c7ed6; }
   .lboard { display:grid; grid-template-columns:repeat(15,1fr); grid-template-rows:repeat(15,1fr);
             width:100%; max-width:460px; aspect-ratio:1; margin:0 auto; background:#fffaf0; border-radius:10px;
@@ -30,13 +27,9 @@
   @media (prefers-reduced-motion: reduce) { .horse.go { animation:none; } }
   .info { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
   .die { font-size:34px; line-height:1; }
-  .status { font-weight:700; text-align:center; }
-  .status.me { color: var(--accent); }
   .plist { display:flex; gap:6px; flex-wrap:wrap; }
   .plist span { padding:4px 10px; border-radius:999px; color:#fff; font-weight:600; font-size:14px; }
   .plist .turn { outline:3px solid var(--text); }
-  .scores li { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed var(--line); }
-  .result h2 { color: var(--accent); }
 </style>
 </head>
 <body>

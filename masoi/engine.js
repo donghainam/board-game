@@ -1,12 +1,9 @@
 // Luật Ma Sói — thuần logic, máy làm quản trò. Mọi thông tin bí mật chỉ đi ra qua viewFor.
 
+import { shuffle, fail } from '../shared/util.js';
+
 export const SPECIAL = ['tientri', 'baove', 'phuthuy', 'thosan', 'cupid', 'soinguyen', 'soigayme'];
 const WOLF_ROLES = ['soi', 'soinguyen', 'soigayme'];
-
-function shuffle(a, rng) {
-  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
-  return a;
-}
 
 export function validate(ids, c) {
   if (!c) return 'Chưa cài đặt vai.';
@@ -158,7 +155,6 @@ function resolveVotes(s, now, rng) {
 }
 
 // ---------- Hành động ----------
-const fail = (error) => ({ ok: false, error });
 
 export function apply(state, id, action, rng = Math.random, now = Date.now()) {
   if (state.winner) return fail('Ván đã kết thúc.');

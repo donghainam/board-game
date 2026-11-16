@@ -1,6 +1,8 @@
 // Luật cờ cá ngựa — thuần logic. Vị trí ngựa: -1 trong chuồng (chưa xuất), 0..50 số bước từ ô
 // xuất phát (50 = cửa chuồng), 51..56 = bậc chuồng 1..6. Ô tuyệt đối trên đường 52 ô: (13*màu + bước) % 52.
 
+import { fail } from '../shared/util.js';
+
 export const DOOR = 50;
 const COLORS = { 2: [0, 2], 3: [0, 1, 2], 4: [0, 1, 2, 3] };
 export const absSquare = (color, step) => (13 * color + step) % 52;
@@ -57,8 +59,6 @@ export function movable(s) {
 function endTurn(s, value) {
   return { ...s, roll: null, turn: value === 6 ? s.turn : (s.turn + 1) % s.players.length };
 }
-
-const fail = (error) => ({ ok: false, error });
 
 export function apply(s, id, action, rng = Math.random) {
   if (s.winner) return fail('Ván đã kết thúc.');

@@ -54,3 +54,11 @@ h1, h2, h3 { line-height: 1.2; margin: 0 0 8px; }
   background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 999px; max-width: 90vw;
 }
 .badge { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
+/* Khung trang game dùng chung */
+.top { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.top a { color: var(--muted); text-decoration: none; }
+.net { font-size: 13px; }
+.status { font-weight:700; text-align:center; }
+.status.me { color: var(--accent); }
+.scores li { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed var(--line); }
+.result h2 { color: var(--accent); }

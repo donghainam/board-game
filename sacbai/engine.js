@@ -1,5 +1,7 @@
 // Luật Sắc Bài — thuần logic. Lá = {c: màu 'r'|'y'|'g'|'b' hoặc 'k' (đen), v: '1'..'9'|'+2'|'chan'|'doi'|'+4', id}.
 
+import { shuffle, fail } from '../shared/util.js';
+
 export const COLORS = ['r', 'y', 'g', 'b'];
 const HAND = 6;
 
@@ -11,11 +13,6 @@ export function buildDeck() {
   }
   for (let i = 0; i < 4; i++) d.push({ c: 'k', v: 'doi' }, { c: 'k', v: '+4' });
   return d.map((card, id) => ({ ...card, id }));
-}
-
-function shuffle(a, rng) {
-  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
-  return a;
 }
 
 const isNumber = (card) => /^[1-9]$/.test(card.v);
@@ -58,8 +55,6 @@ function advance(s, step = 1) {
   s.drew = false;
   s.drawnId = null;
 }
-
-const fail = (error) => ({ ok: false, error });
 
 export function apply(state, id, action, rng = Math.random) {
   if (state.winner) return fail('Ván đã kết thúc.');

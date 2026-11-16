@@ -1,7 +1,4 @@
-/* Lá bài vẽ bằng CSS, dùng chung cho các game bài (Sắc Bài, Bom Xịt). */
-.top { display:flex; justify-content:space-between; align-items:center; gap:8px; }
-.top a { color: var(--muted); text-decoration: none; }
-.net { font-size: 13px; }
+/* Bàn chơi + lá bài vẽ bằng CSS, dùng chung cho các game bài (Tiến Lên, Sắc Bài, Bom Xịt) và Ma Sói. */
 .players { display:grid; grid-template-columns: repeat(auto-fit, minmax(110px,1fr)); gap:8px; }
 .pl { background: var(--surface); border:2px solid var(--line); border-radius:12px; padding:8px 10px; }
 .pl.turn { border-color: var(--accent); }
@@ -21,14 +18,10 @@
 .gc.dim { opacity:.45; }
 .hand { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; padding-top:10px; }
 .hand .gc { cursor:pointer; transition: transform .12s; }
-.status { font-weight:700; text-align:center; }
-.status.me { color: var(--accent); }
 .actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
 .actions .btn { flex:1; min-width: 96px; }
 .swatches { display:flex; gap:8px; justify-content:center; }
 .swatch { width:52px; height:52px; border-radius:50%; border:3px solid #fff; box-shadow: var(--shadow); }
-.scores li { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed var(--line); }
-.result h2 { color: var(--accent); }
 .bar { height:8px; border-radius:999px; background: rgb(255 255 255 / .25); overflow:hidden; width:100%; max-width:240px; }
 .bar > i { display:block; height:100%; background: var(--accent); animation: shrink linear forwards; }
 @keyframes shrink { from { width:100%; } to { width:0; } }

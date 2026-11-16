@@ -1,6 +1,8 @@
 // Luật cờ tướng — thuần logic. Bàn = mảng 90 ô, chỉ số r*9+c; hàng 0 phía Đen, hàng 9 phía Đỏ.
 // Quân = màu ('r'|'b') + loại (K tướng, A sĩ, B tượng, N mã, R xe, C pháo, P tốt).
 
+import { fail } from '../shared/util.js';
+
 const BACK = ['R', 'N', 'B', 'A', 'K', 'A', 'B', 'N', 'R'];
 const inside = (r, c) => r >= 0 && r < 10 && c >= 0 && c < 9;
 const other = (color) => (color === 'r' ? 'b' : 'r');
@@ -94,7 +96,6 @@ export function start(ids, { round = 0 } = {}) {
   return { board: initialBoard(), red, black, turn: 'r', last: null, history: [], undoAsk: null, winner: null, endReason: null };
 }
 
-const fail = (error) => ({ ok: false, error });
 const colorOf = (s, id) => (id === s.red ? 'r' : id === s.black ? 'b' : null);
 const isSquare = (x) => Number.isInteger(x) && x >= 0 && x < 90;
 
