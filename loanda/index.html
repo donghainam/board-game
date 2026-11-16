@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Loạn Đả Viễn Tây</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤠</text></svg>">
+<link rel="stylesheet" href="../shared/ui.css">
+<link rel="stylesheet" href="../shared/cards.css">
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
+<style>
+  .seats2 { display:grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap:8px; }
+  .seat { text-align:left; background: var(--surface); color: var(--text); border:2px solid var(--line); border-radius:12px; padding:8px; font: inherit; }
+  .seat.turn { border-color: var(--accent); }
+  .seat.pick { border-style:dashed; border-color: var(--ok); cursor:pointer; }
+  .seat.far { opacity:.45; }
+  .seat.dead { opacity:.4; }
+  .seat .hp { letter-spacing:-2px; }
+  .seat small { color: var(--muted); }
+  .eqs { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
+  .eqs span { font-size:12px; background: var(--surface-2); border-radius:999px; padding:1px 6px; }
+  .wc { min-width:74px; min-height:96px; border-radius:10px; border:2px solid var(--line); background: var(--surface); color: var(--text);
+        display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; padding:4px; font: inherit; font-size:12px; }
+  .wc b { font-size:22px; line-height:1; }
+  .wc.sel { border-color: var(--accent); transform: translateY(-6px); }
+  .wc .suit { font-size:11px; color: var(--muted); }
+  .wc.eq { border-style:dashed; }
+  .react { background:#7a1f1f; color:#fff; border-radius:14px; padding:12px; }
+  .react .btn { border-color:#fff; }
+</style>
+</head>
+<body>
+<main class="wrap stack">
+  <div class="top"><a href="../">← Trang chủ</a><b>Loạn Đả Viễn Tây</b><span class="net muted" id="net"></span></div>
+  <div id="app" class="stack"></div>
+</main>
+<script type="module" src="main.js"></script>
+</body>
+</html>

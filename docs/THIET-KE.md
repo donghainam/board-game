@@ -531,3 +531,83 @@ Chủ bàn có nút "Bỏ lượt hộ": tự gieo xúc xắc và đi cho ngư�
 - Chạm vào một ô để xem chi tiết: giá, chủ, số nhà, tiền thuê.
 - Quân cờ là chấm tròn mang màu của từng người.
 - Phía dưới bàn cờ: tiền của mọi người, đồng hồ đếm ngược nếu có giới hạn thời gian, các nút hành động của lượt hiện tại.
+
+---
+
+## Thiết kế đợt 4 – phần 2: Loạn Đả Viễn Tây
+
+Mã phòng bắt đầu bằng `W` · 4–7 người · không có nhân vật kỹ năng riêng, chỉ có vai trò
+
+### Vai trò
+| Số người | Cảnh sát trưởng | Phó cảnh sát | Băng cướp | Kẻ phản bội |
+|---|---|---|---|---|
+| 4 | 1 | 0 | 2 | 1 |
+| 5 | 1 | 1 | 2 | 1 |
+| 6 | 1 | 1 | 3 | 1 |
+| 7 | 1 | 2 | 3 | 1 |
+
+- **Cảnh sát trưởng** lộ mặt ngay từ đầu và đi trước. Các vai khác được giữ bí mật; ai chết thì lật vai.
+- **Máu:** 4, riêng Cảnh sát trưởng có 5. Máu cũng là số lá tối đa được giữ trên tay khi kết thúc lượt.
+- **Thắng:**
+  - **Phe Luật** (Cảnh sát trưởng và Phó) thắng khi toàn bộ Băng cướp và Kẻ phản bội đã chết.
+  - **Băng cướp** thắng khi Cảnh sát trưởng chết, trừ trường hợp Kẻ phản bội là người duy nhất còn sống.
+  - **Kẻ phản bội** thắng khi chỉ còn một mình mình sống.
+- **Không có thưởng/phạt** khi hạ gục người khác (đã chốt).
+
+### Lượt chơi
+1. **Đầu lượt:**
+   - Nếu trước mặt đang có Thuốc nổ thì lật bài kiểm tra trước.
+   - Sau đó, nếu đang bị Nhà tù thì lật bài kiểm tra tiếp.
+2. **Bốc 2 lá.**
+3. **Đánh bài** tùy ý. Mỗi lượt **chỉ được đánh 1 lá Bắn**, trừ khi đang cầm Súng liên thanh.
+4. **Kết thúc lượt:** bỏ bớt bài cho tới khi số lá trên tay không vượt quá số máu đang có.
+
+**Lật bài kiểm tra:** máy lật lá trên cùng của chồng bài, xem chất (♥ ♦ ♣ ♠). Mỗi lá bài có sẵn một chất. *(em tự quyết)*
+
+### Khoảng cách
+- Mọi người ngồi thành vòng tròn theo thứ tự trong phòng. Khoảng cách giữa hai người là số ghế ít nhất giữa họ, chỉ tính người còn sống.
+- **Tầm bắn** mặc định là 1. Trang bị súng sẽ thay tầm bắn.
+- **Ngựa** (trang bị): người khác nhìn mình xa thêm 1.
+- **Ống nhòm** (trang bị): mình nhìn người khác gần lại 1.
+
+### Bộ bài (khoảng 70 lá; tên gọi và số lượng: em tự quyết)
+**Lá dùng ngay:**
+| Lá | Số lượng | Tác dụng |
+|---|---|---|
+| Bắn | 22 | Bắn 1 người trong tầm. Người đó phải đánh **Né**, nếu không thì mất 1 máu. |
+| Né | 12 | Chỉ đánh khi bị Bắn hoặc bị Bắn loạt. |
+| Băng bó | 6 | Hồi 1 máu, không vượt quá máu tối đa. |
+| Rượu mừng | 1 | Mọi người còn sống hồi 1 máu. |
+| Cướp | 4 | Lấy 1 lá của người ở khoảng cách 1: hoặc 1 lá ngẫu nhiên trên tay, hoặc 1 trang bị tự chọn. |
+| Phá | 4 | Bỏ 1 lá của bất kỳ ai: hoặc 1 lá ngẫu nhiên trên tay, hoặc 1 trang bị tự chọn. |
+| Đấu tay đôi | 3 | Thách 1 người bất kỳ. Hai bên lần lượt đánh Bắn, người đối thủ đánh trước. Ai không đánh được thì mất 1 máu. |
+| Bắn loạt | 1 | Mọi người khác phải đánh Né, nếu không thì mất 1 máu. |
+| Phục kích | 2 | Mọi người khác phải đánh Bắn, nếu không thì mất 1 máu. |
+| Tiếp tế | 3 | Bốc thêm 2 lá. |
+| Tiếp tế lớn | 1 | Bốc thêm 3 lá. |
+
+**Trang bị (đặt trước mặt; mỗi loại chỉ đặt được 1 lá; có súng mới thì súng cũ bị bỏ):**
+| Lá | Số lượng | Tác dụng |
+|---|---|---|
+| Súng ngắn / Súng trường / Súng săn / Súng xa | 3 / 2 / 1 / 1 | Tầm bắn lần lượt 2 / 3 / 4 / 5 |
+| Súng liên thanh | 2 | Tầm bắn 1, mỗi lượt đánh Bắn không giới hạn |
+| Ngựa | 2 | Người khác nhìn mình xa thêm 1 |
+| Ống nhòm | 1 | Mình nhìn người khác gần lại 1 |
+| Thùng gỗ | 2 | Khi bị Bắn, lật bài: ra ♥ thì coi như đã Né |
+| Nhà tù | 3 | Đặt lên 1 người khác (trừ Cảnh sát trưởng). Đầu lượt người đó lật bài: ra ♥ thì thoát, ngược lại thì **mất lượt**. Lật xong thì bỏ lá Nhà tù. |
+| Thuốc nổ | 1 | Đặt trước mặt mình. Đầu lượt của người đang giữ, lật bài: ra ♠ thì **nổ, mất 3 máu**; ngược lại thì chuyền sang người kế tiếp. |
+
+### Phản ứng (khi bị Bắn, Bắn loạt, Phục kích, Đấu tay đôi)
+- Máy chờ người bị nhắm bấm "Né", "Bắn" (khi Phục kích hoặc Đấu tay đôi) hoặc "Chịu".
+- Nhiều người cùng bị nhắm thì máy hỏi lần lượt theo thứ tự ghế.
+- Người bị nhắm mà offline thì chủ bàn bấm "Bỏ qua", tính là người đó chịu mất máu.
+
+### Hết máu
+- Máu về 0 mà trên tay còn **Băng bó** thì máy tự dùng để sống lại với 1 máu. Không áp dụng khi chỉ còn 2 người sống. *(em tự quyết)*
+- Chết thì lật vai, toàn bộ bài trên tay và trang bị bị bỏ đi.
+
+### Giao diện
+- **Thẻ vai:** mặc định che, bấm mới hiện (như Ma Sói). Riêng Cảnh sát trưởng hiện công khai.
+- **Danh sách người chơi** theo vòng ghế, mỗi người có: máu (❤️), số lá trên tay, trang bị đang đặt, và khoảng cách tính từ mình.
+- **Bài trên tay:** chạm 1 lá → nếu lá đó cần chọn người thì chạm tiếp vào người. Ô người chơi nào đang ngoài tầm bắn thì bị làm mờ.
+- **Khung phản ứng** hiện nổi lên khi mình đang bị nhắm.
