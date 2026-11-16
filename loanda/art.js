@@ -36,6 +36,8 @@ const ART = {
   daibac: `<path d="M8 24l38-10 4 12-38 10z" fill="#5f6b73" ${S}/><circle cx="24" cy="46" r="10" fill="#a1683a" ${S}/><circle cx="24" cy="46" r="3" fill="#3b2a17"/><path d="M52 14l6-4M54 20h8" ${S}/>`,
   vucong: `<circle cx="32" cy="10" r="5" fill="#e9c49a" ${S}/><path d="M32 16v12M32 20l-10-6M32 20l10-4" ${S}/><path d="M32 28L14 50h36z" fill="#e64980" ${S}/><path d="M26 50l-4 10M38 50l6 8" ${S}/>`,
   ngutram: `<rect x="8" y="18" width="48" height="32" rx="3" fill="#f4e6c8" ${S}/><path d="M8 20l24 16 24-16" fill="none" ${S}/><path d="M44 8l8 4-8 4" fill="none" ${S}/>`,
+  treo: `<rect x="12" y="6" width="40" height="52" rx="2" fill="#f4e6c8" ${S}/><circle cx="32" cy="26" r="9" fill="#e9c49a" ${S}/><path d="M20 44h24M24 50h16" ${S}/><text x="32" y="17" font-size="9" font-weight="800" text-anchor="middle" fill="#9c3d1a" font-family="system-ui">$$$</text>`,
+  daudoc: `<path d="M26 6h12v10l8 10v30H18V26l8-10z" fill="#5c940d" ${S}/><circle cx="32" cy="36" r="7" fill="#f4e6c8" ${S}/><path d="M28 35h1M35 35h1M29 40h6" ${S}/><path d="M24 50l16-4M24 46l16 4" ${S}/>`,
   sung2: gun(2), sung3: gun(3), sung4: gun(4), sung5: gun(5),
   lienthanh: `<path d="M6 24h40v14H6z" fill="#9e9e9e" ${S}/><circle cx="18" cy="31" r="4" fill="#3b2a17"/><circle cx="30" cy="31" r="4" fill="#3b2a17"/><path d="M46 28h12M46 34h12M20 38l-4 14h8l4-14" ${S} fill="none"/>`,
   ngua: `<path d="M20 54V36c0-12 8-22 20-24l4 6 6 2-2 8-8 2-6 10v14z" fill="#a1683a" ${S}/><circle cx="42" cy="22" r="2" fill="#3b2a17"/><path d="M30 14c-4 2-8 8-8 14" ${S} fill="none"/>`,
@@ -87,10 +89,12 @@ export const CARD = {
   daibac: ['Đại bác', 'Trang bị 1 lần: bỏ đi để bắn loạt, mọi người khác phải Né hoặc mất 1 máu.'],
   vucong: ['Vũ công', 'Trang bị 1 lần: bỏ đi để phá 1 lá của bất kỳ ai (trên tay hoặc trang bị).'],
   ngutram: ['Ngựa trạm', 'Trang bị 1 lần: bỏ đi để bốc 3 lá.'],
+  treo: ['Treo thưởng', 'Đặt trước mặt 1 người khác: ai đánh lá nhắm vào người đó thì được bốc 1 lá.'],
+  daudoc: ['Đầu độc', 'Đặt trước mặt 1 người khác: đầu lượt người đó lật bài, ra ♠ thì mất 1 máu (lá vẫn nằm đó).'],
   no: ['Thuốc nổ', 'Đặt trước mặt: đầu lượt lật ra ♠ từ 2 đến 9 thì nổ mất 3 máu, không thì chuyền sang người kế.'],
 };
 export const EQUIP = new Set(['sung2', 'sung3', 'sung4', 'sung5', 'lienthanh', 'ngua', 'ongnhom', 'thung', 'tu', 'no', 'sunggiau', 'binhnuoc', 'mu', 'xetho', 'dao',
-  'kinhvien', 'chonap', 'mucao', 'tamthep', 'bua', 'sungbo', 'oquay', 'daibac', 'vucong', 'ngutram']);
+  'treo', 'daudoc', 'kinhvien', 'chonap', 'mucao', 'tamthep', 'bua', 'sungbo', 'oquay', 'daibac', 'vucong', 'ngutram']);
 
 // Nút/khung SVG từ chuỗi tĩnh (không chứa dữ liệu người chơi).
 export function art(t) {

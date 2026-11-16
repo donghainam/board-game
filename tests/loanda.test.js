@@ -20,7 +20,7 @@ const give = (s, id, ...cards) => { s.players.find((p) => p.id === id).hand.push
 const P = (s, id) => s.players.find((p) => p.id === id);
 
 test('bộ bài, chia vai, chọn chức năng rồi mới chia bài', () => {
-  assert.equal(buildDeck().length, 160);
+  assert.equal(buildDeck().length, 166);
   assert.ok(buildDeck().every((c) => c.r >= 1 && c.r <= 13), 'mọi lá có số A–K');
   assert.ok(Object.values(Object.groupBy(buildDeck(), (c) => c.t)).every((g) => g.length >= 2), "mọi loại ít nhất 2 lá");
   assert.equal(validate(['a', 'b', 'c']), 'Cần 4–8 người.');
@@ -38,7 +38,7 @@ test('bộ bài, chia vai, chọn chức năng rồi mới chia bài', () => {
   const cst = s.players.find((p) => p.role === 'cst');
   // Cảnh sát trưởng là Kẻ móc túi thì lượt mở đầu bằng bước chọn người để móc
   assert.equal(s.phase, { moctui: 'steal', thamtu: 'scout' }[cst.char] || 'play');
-  assert.equal(cst.max, CHARS[cst.char].hp + 1);
+  assert.equal(cst.max, Math.max(...[cst.char, ...(cst.extra || [])].map((c) => CHARS[c].hp)) + 1);
   assert.equal(s.players[s.turn].id, cst.id);
   assert.ok(cst.hand.length >= cst.max);
   assert.equal(viewFor(s, 'b').players[0].char, s.players[0].char, 'chọn xong thì công khai');
@@ -348,14 +348,16 @@ test('Kẻ lang thang: hết bài thì bốc 1', () => {
   assert.equal(P(s, 'A').hand.length, 1);
 });
 
-test('Tay súng lão luyện: bắn người kề bên không giới hạn, người xa 1 lần; Kẻ liều mạng: mất 1 máu bốc 2; Thợ rèn tầm +1', () => {
+test('Tay súng lão luyện: bắn không giới hạn trong tầm; Kẻ liều mạng: mất 1 máu bốc 2; Thợ rèn tầm +1', () => {
   let s = ch(mk(R4), 'A', 'laoluyen');
+  const [b0] = give(s, 'A', C('ban'));
+  NO(s, 'A', { type: 'play', card: b0.id, target: 'C' }); // khoảng cách 2, tầm 1: ngoài tầm
   P(s, 'A').eq.push(C('sung3'));
-  const [b1, b2, b3, b4] = give(s, 'A', C('ban'), C('ban'), C('ban'), C('ban'));
-  s = A(A(s, 'A', { type: 'play', card: b1.id, target: 'B' }), 'B', { type: 'respond' }); // kề bên
-  s = A(A(s, 'A', { type: 'play', card: b2.id, target: 'B' }), 'B', { type: 'respond' }); // kề bên lần 2
-  s = A(A(s, 'A', { type: 'play', card: b3.id, target: 'C' }), 'C', { type: 'respond' }); // xa: lần 1
-  NO(s, 'A', { type: 'play', card: b4.id, target: 'C' }); // xa: lần 2 bị chặn
+  const [b1, b2, b3] = give(s, 'A', C('ban'), C('ban'), C('ban'));
+  s = A(A(s, 'A', { type: 'play', card: b1.id, target: 'B' }), 'B', { type: 'respond' });
+  s = A(A(s, 'A', { type: 'play', card: b2.id, target: 'C' }), 'C', { type: 'respond' });
+  s = A(A(s, 'A', { type: 'play', card: b3.id, target: 'C' }), 'C', { type: 'respond' }); // lần 3 vẫn được
+  assert.equal(P(s, 'C').hp, 2);
   let l = ch(mk(R4), 'A', 'lieumang');
   P(l, 'A').hp = 2;
   l = A(l, 'A', { type: 'gamble' });
@@ -413,25 +415,38 @@ test('Cao bồi nhanh tay: bị Phá/Cướp thì bắn trả miễn phí', () =
   assert.equal(s.players[s.turn].id, 'A', 'vẫn là lượt A');
 });
 
-test('Thám tử: xem lá trên cùng, đẩy xuống đáy rồi bốc', () => {
+test('Thám tử: xem 3 lá trên cùng, giữ 2, trả 1 về đầu chồng bài', () => {
   let s = ch(mk(R4), 'B', 'thamtu');
   const bom = C('no');
-  s.deck.push(bom);
+  s.deck.push(C('ne'), C('ban'), bom);
   s = endFrom(s, 'A');
   assert.equal(s.phase, 'scout');
-  assert.equal(viewFor(s, 'B').scout.t, 'no');
+  assert.equal(viewFor(s, 'B').scout.length, 3);
   assert.equal(viewFor(s, 'C').scout, null, 'người khác không thấy');
-  s = A(s, 'B', { type: 'scout', bottom: true });
-  assert.equal(P(s, 'B').hand.some((c) => c.id === bom.id), false);
-  assert.equal(s.deck[0].id, bom.id);
+  NO(s, 'B', { type: 'scout', back: 123456 });
+  s = A(s, 'B', { type: 'scout', back: bom.id });
+  assert.equal(s.phase, 'play');
+  assert.deepEqual(P(s, 'B').hand.map((c) => c.t).sort(), ['ban', 'ne']);
+  assert.equal(s.deck.at(-1).id, bom.id, 'lá trả về nằm trên cùng');
 });
 
-test('Thầy bói: ♦ tính như ♥ (Nhà tù); Gã khổng lồ: không dùng Né, Thùng gỗ vẫn được, giữ tối đa 5 lá', () => {
+test('Thầy bói: lật 2 lá chọn 1 (Nhà tù, Thuốc nổ); Gã khổng lồ: không dùng Né, Thùng gỗ vẫn được, giữ tối đa 5 lá', () => {
   const s = ch(mk(R4), 'B', 'thayboi');
   P(s, 'B').eq.push(C('tu'));
-  s.deck.push(C('ban', 1)); // ♦
+  s.deck.push(C('ban', 0), C('ban', 3)); // lật ra ♠ trước rồi ♥
   const r = endFrom(s, 'A');
-  assert.equal(r.players[r.turn].id, 'B', 'vượt ngục nhờ ♦');
+  assert.equal(r.players[r.turn].id, 'B', 'chọn lá ♥ để vượt ngục');
+  assert.equal(r.lastFlip.alt.s, 3, 'cả bàn thấy cả lá không chọn');
+  const n = mk(R4);
+  P(n, 'B').eq.push(C('tu'));
+  n.deck.push(C('ban', 0), C('ban', 3));
+  const nr = endFrom(n, 'A');
+  assert.notEqual(nr.players[nr.turn].id, 'B', 'người thường lật 1 lá ♠ là bị giam, mất lượt');
+  const d = ch(mk(R4), 'B', 'thayboi');
+  P(d, 'B').eq.push(C('no'));
+  Object.assign(P(d, 'B'), { hp: 9, max: 9 });
+  d.deck.push(C('ban', 2), C('ban', 3, 5)); // ♠5 (nổ) rồi ♣
+  assert.equal(P(endFrom(d, 'A'), 'B').hp, 9, 'Thuốc nổ: chọn lá không nổ');
   let k = ch(mk(R4), 'B', 'khonglo');
   Object.assign(P(k, 'B'), { hp: 9, max: 9 });
   const [b] = give(k, 'A', C('ban'));
@@ -646,4 +661,76 @@ test('Trang bị mới: Súng săn bò, Súng ổ quay, Đại bác, Vũ công, 
   s = A(s, 'A', { type: 'use', card: eq[4].id });
   assert.equal(P(s, 'A').hand.length, 3, 'Ngựa trạm bốc 3');
   assert.equal(P(s, 'A').eq.length, 0);
+});
+
+test('Treo thưởng: nhắm vào người bị treo thưởng thì được bốc 1 lá; lá đánh cả bàn không tính', () => {
+  let s = mk(R4);
+  const [tr, b, lo] = give(s, 'A', C('treo'), C('ban'), C('loat'));
+  s = A(s, 'A', { type: 'play', card: tr.id, target: 'B' });
+  assert.equal(P(s, 'B').eq[0].t, 'treo');
+  s = A(s, 'A', { type: 'play', card: b.id, target: 'B' });
+  assert.equal(P(s, 'A').hand.length, 2, 'bốc 1 lá thưởng (còn Bắn loạt + lá thưởng)');
+  s = A(s, 'B', { type: 'respond' });
+  s = A(s, 'A', { type: 'play', card: lo.id });
+  assert.equal(P(s, 'A').hand.length, 1, 'Bắn loạt không có thưởng');
+});
+
+test('Đầu độc: đầu lượt lật ♠ thì mất 1 máu, lá vẫn nằm đó', () => {
+  let s = mk(R4);
+  const [dd] = give(s, 'A', C('daudoc'));
+  s = A(s, 'A', { type: 'play', card: dd.id, target: 'B' });
+  s.deck.push(C('ban', 3));
+  s = A(s, 'A', { type: 'end' });
+  assert.equal(P(s, 'B').hp, 3);
+  assert.equal(P(s, 'B').eq.some((c) => c.t === 'daudoc'), true);
+  let t = mk(R4);
+  P(t, 'B').eq.push(C('daudoc'));
+  t.deck.push(C('ban', 0));
+  assert.equal(P(endFrom(t, 'A'), 'B').hp, 4, 'không phải ♠ thì không sao');
+});
+
+test('Kẻ nhặt rác, Kẻ nhặt đồ cúng, Kẻ lẩn khuất, Mắt diều hâu, Gã tích trữ', () => {
+  let s = ch(mk(R4), 'C', 'nhatrac');
+  const extra = give(s, 'A', C('ne'), C('ne'), C('ne'), C('ne'), C('ne'), C('ne'), C('ne'));
+  P(s, 'A').hp = 5;
+  s = A(s, 'A', { type: 'end' });
+  s = A(s, 'A', { type: 'discard', cards: extra.slice(0, 2).map((c) => c.id) });
+  assert.equal(P(s, 'C').hand.filter((c) => c.t === 'ne').length, 2, 'nhặt bài thừa');
+  let d = ch(mk(R4), 'C', 'nhatdo');
+  P(d, 'B').hp = 1;
+  give(d, 'B', C('ban'), C('ban'));
+  const [b] = give(d, 'A', C('ban'));
+  d = A(A(d, 'A', { type: 'play', card: b.id, target: 'B' }), 'B', { type: 'respond' });
+  assert.equal(P(d, 'B').alive, false);
+  assert.equal(P(d, 'C').hand.length, 2, 'lấy hết bài trên tay người gục');
+  const k = ch(ch(mk(R4), 'B', 'lankhuat'), 'A', 'mathieu');
+  assert.equal(distance(k, 2, 1), 2, 'người khác nhìn Kẻ lẩn khuất xa thêm 1');
+  assert.equal(distance(k, 0, 2), 1, 'Mắt diều hâu nhìn gần lại 1');
+  const t = ch(mk(R4), 'A', 'tichtru');
+  P(t, 'A').hp = 2;
+  assert.equal(viewFor(t, 'A').me.handLimit, 10);
+});
+
+test('Tay buôn bài: mỗi lượt 1 lần đưa 1 lá lấy 2 lá ngẫu nhiên', () => {
+  let s = ch(mk(R4), 'A', 'taybuon');
+  const [g, g2] = give(s, 'A', C('ne'), C('ne'));
+  give(s, 'C', C('ban'), C('ban'), C('ban'));
+  s = A(s, 'A', { type: 'swap', card: g.id, target: 'C' });
+  assert.deepEqual([P(s, 'A').hand.length, P(s, 'C').hand.length], [3, 2]);
+  NO(s, 'A', { type: 'swap', card: g2.id, target: 'C' }); // lượt này đã dùng
+  NO(mk(R4), 'A', { type: 'swap', card: 1, target: 'C' }); // không phải Tay buôn bài
+});
+
+test('Kẻ đa tài: thêm 2 chức năng ngẫu nhiên chưa chia, máu theo chức năng nhiều máu nhất', () => {
+  let s = start(['a', 'b', 'c', 'd'], {}, Math.random);
+  s.players[0].offer = ['datai', s.players[0].offer[1]];
+  s = A(s, 'a', { type: 'pick', char: 'datai' });
+  const p = s.players[0];
+  assert.equal(p.extra.length, 2);
+  const dealt = new Set(s.players.flatMap((q) => q.offer || []));
+  assert.ok(p.extra.every((c) => !dealt.has(c) && c !== 'datai'), 'lấy từ bộ chưa chia');
+  for (const q of s.players.slice(1)) s = A(s, q.id, { type: 'pick', char: q.offer[0] });
+  const a = s.players[0];
+  assert.equal(a.max, Math.max(...['datai', ...a.extra].map((c) => CHARS[c].hp)) + (a.role === 'cst' ? 1 : 0));
+  assert.deepEqual(viewFor(s, 'b').players[0].chars, ['datai', ...a.extra]);
 });

@@ -16,15 +16,16 @@ function enemies(v) {
 
 export function botAction(v) {
   const me = v.me;
+  const mine = (ch) => (me.chars || [me.char]).includes(ch); // tính cả chức năng thêm của Kẻ đa tài
   if (v.phase === 'pick') return { type: 'pick', char: me.offer[0] };
   if (v.phase === 'steal') return { type: 'steal', target: null };
-  if (v.phase === 'scout') return { type: 'scout', bottom: false };
+  if (v.phase === 'scout') return { type: 'scout', back: v.scout?.[0]?.id };
   if (v.phase === 'store') return { type: 'store', card: v.store.cards[0].id };
   if (v.phase === 'react') {
     const pd = v.pending;
     const need = pd.kind === 'duel' ? 'ban' : pd.need;
-    const swap = me.char === 'haisung' ? { ne: 'ban', ban: 'ne' }[need] : null;
-    const c = need === 'ne' && me.char === 'khonglo' ? null
+    const swap = mine('haisung') && !mine('khonglo') ? { ne: 'ban', ban: 'ne' }[need] : null;
+    const c = need === 'ne' && mine('khonglo') ? null
       : me.hand.find((x) => x.t === need) || (need === 'ne' && me.hand.find((x) => x.t === 'lach')) || me.hand.find((x) => x.t === swap);
     const hat = need === 'ne' && v.players.find((p) => p.id === me.id).eq.find((x) => DODGE_EQ.includes(x.t));
     const use = c || hat;
@@ -55,10 +56,14 @@ export function botAction(v) {
   const inRange = enemies(v).find((p) => p.dist && p.dist <= me.range);
   if (inRange && E('dao')) return use(E('dao'), inRange.id);
   if (inRange && E('oquay')) return use(E('oquay'), inRange.id);
-  const free = (p) => me.char === 'laoluyen' && p.dist === 1;
+  // Treo thưởng / Đầu độc: đặt lên địch chưa có lá đó
+  for (const t of ['treo', 'daudoc']) {
+    const foe = enemies(v).find((p) => !p.eq.some((c) => c.t === t));
+    if (H(t) && foe) return play(H(t), foe.id);
+  }
   {
-    const shot = me.hand.find((c) => c.t === 'ban' || (c.t === 'ne' && me.char === 'haisung'));
-    const target = enemies(v).find((p) => p.dist && p.dist <= me.range && (free(p) || v.bangUsed < me.bangLimit));
+    const shot = me.hand.find((c) => c.t === 'ban' || (c.t === 'ne' && mine('haisung') && !mine('khonglo')));
+    const target = enemies(v).find((p) => p.dist && p.dist <= me.range && v.bangUsed < me.bangLimit);
     if (shot && target) return play(shot, target.id);
   }
   return { type: 'end' };

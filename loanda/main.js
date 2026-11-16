@@ -13,7 +13,7 @@ const GOAL = {
 const SUIT = ['♥', '♦', '♣', '♠'];
 const RANK = ['', 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 const face = (c) => `${RANK[c.r] ?? ''}${SUIT[c.s] ?? ''}`; // vd "7♠"
-const TARGETED = ['ban', 'cuop', 'pha', 'duel', 'tu', 'dam', 'ruoumanh', 'sunggiau', 'dao', 'xetho', 'bantia', 'taydai', 'sungbo', 'oquay', 'vucong'];
+const TARGETED = ['ban', 'cuop', 'pha', 'duel', 'tu', 'treo', 'daudoc', 'dam', 'ruoumanh', 'sunggiau', 'dao', 'xetho', 'bantia', 'taydai', 'sungbo', 'oquay', 'vucong'];
 const PICK_CARD = ['cuop', 'pha', 'xetho', 'taydai', 'vucong']; // chọn người rồi chọn lá của họ
 const NEEDS_EXTRA = ['ruoumanh', 'audai', 'bantia', 'taydai', 'ruounong']; // phải bỏ kèm 1 lá trên tay
 
@@ -25,7 +25,10 @@ let roleMin = false;   // ô vai trên bàn đang thu gọn
 let logOpen = false;   // nhật ký đang xổ xuống
 let picks = new Set(); // lá chọn để bỏ khi thừa bài
 let healMode = false;  // Ông lang vườn đang chọn 2 lá để hồi máu
+let swapMode = false;  // Tay buôn bài: đang chọn người để đổi lá đang chọn
 const charName = (c) => CHARS[c]?.name || '';
+const charsOf = (p) => (p.chars?.length ? p.chars : p.char ? [p.char] : []); // Kẻ đa tài có 3 chức năng
+const charsLabel = (p) => charsOf(p).map(charName).join(' + ');
 let lastRound = null; // đổi ván thì che thẻ vai lại
 
 // Khung nghĩa lá ở đáy màn hình. hideAfter: tự ẩn sau bấy nhiêu ms (null = giữ tới khi gọi hideTipSoon).
@@ -90,7 +93,10 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
   const needsExtra = !!card && NEEDS_EXTRA.includes(card.t);
   if (!needsExtra || !hand.some((c) => c.id === extra)) extra = null;
   if (v.phase !== 'discard' && !healMode) picks.clear();
-  const asType = (c) => (c.t === 'ne' && v.me.char === 'haisung' ? 'ban' : c.t); // Cô nàng hai súng: Né dùng như Bắn
+  const mine = (ch) => charsOf(v.me).includes(ch);
+  const asType = (c) => (c.t === 'ne' && mine('haisung') ? 'ban' : c.t); // Cô nàng hai súng: Né dùng như Bắn
+  const swapping = swapMode && !!card && kind === 'play' && myTurn && v.phase === 'play' && mine('taybuon') && !v.swapUsed;
+  if (!swapping) swapMode = false;
   const P = Object.fromEntries(v.players.map((p) => [p.id, p]));
   const r = v.me.role;
 
@@ -100,7 +106,7 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
       ? [el('b', {}, `${ROLE[r][0]} ${ROLE[r][1]}`), el('small', { class: 'muted' }, GOAL[r])]
       : el('div', { class: 'muted' }, 'Vai của bạn đang được che.'),
     r === 'cst' ? null : el('button', { class: 'btn btn-small', onclick: () => { showRole = !showRole; rerender(); } }, showRole ? '🙈 Che vai' : '👁 Xem vai'),
-    v.me.char ? el('small', {}, `🎭 ${charName(v.me.char)} – ${CHARS[v.me.char]?.text || ''}`) : null);
+    charsOf(v.me).map((c) => el('small', {}, `🎭 ${charName(c)} – ${CHARS[c]?.text || ''}`)));
 
   // Hai bảng bên: ý nghĩa lá bài / nhân vật trong ván
   const left = { icon: '📖', title: 'Lá bài', body: Object.entries(CARD).map(([t, [n, d]]) => el('div', { class: 'gl' + (EQUIP.has(t) ? ' eq' : '') }, art(t), el('div', {}, el('b', {}, n), el('small', {}, d)))) };
@@ -108,7 +114,8 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
     icon: '🎭', title: 'Nhân vật',
     body: v.phase === 'pick'
       ? [el('p', { class: 'muted' }, 'Chức năng của mọi người sẽ hiện khi cả bàn chọn xong.')]
-      : v.players.map((p) => el('div', { class: 'chr' }, el('b', {}, `${who(p.id)}: ${charName(p.char)}`), el('small', {}, CHARS[p.char]?.text || ''))),
+      : v.players.map((p) => el('div', { class: 'chr' }, el('b', {}, `${who(p.id)}: ${charsLabel(p)}`),
+        charsOf(p).map((c) => el('small', {}, (charsOf(p).length > 1 ? `${charName(c)}: ` : '') + (CHARS[c]?.text || ''))))),
   };
 
   if (v.phase === 'pick') {
@@ -118,7 +125,7 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
         ...v.me.offer.map((c) => el('div', { class: 'card-tile stack', style: 'gap:6px' },
           el('b', {}, `${CHARS[c].name} · ${'❤️'.repeat(CHARS[c].hp)}`), el('div', {}, CHARS[c].text),
           el('button', { class: 'btn btn-primary', disabled: pending, onclick: () => send({ type: 'pick', char: c }) }, 'Chọn chức năng này'))));
-    } else main.push(el('div', { class: 'status' }, `✓ Bạn đã chọn ${charName(v.me.char)}. Đang chờ: ${v.waitingOn.map(who).join(', ')}`));
+    } else main.push(el('div', { class: 'status' }, `✓ Bạn đã chọn ${charsLabel(v.me)}. Đang chờ: ${v.waitingOn.map(who).join(', ')}`));
     return [sideLayout({ left, right, main })];
   }
 
@@ -133,7 +140,8 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
     if (card.t === 'tu') return p.role !== 'cst';
     return true;
   };
-  const canPick = (p) => needs && p.alive && (p.id !== me || card.t === 'ruoumanh') && inRange(p);
+  const canPick = (p) => (swapping ? p.alive && p.id !== me && p.handCount > 0 : needs && p.alive && (p.id !== me || card.t === 'ruoumanh') && inRange(p));
+  const targeting = needs || swapping;
   const roleIcon = (p) => (p.role && (p.id !== me || showRole || p.role === 'cst' || !p.alive) ? ROLE[p.role][0] : (p.alive ? '🤠' : '💀'));
   const seat = (id) => {
     const p = P[id];
@@ -141,7 +149,7 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
       el('div', { class: 'rt-av' }, roleIcon(p), el('span', { class: 'rt-cnt' }, `🂠${p.handCount}`)),
       el('div', { class: 'rt-nm' }, el('span', { class: 'dot' + (online(id) ? ' on' : '') }), ' ', who(id)),
       el('div', { style: 'font-size:11px;letter-spacing:-1px' }, p.alive ? '❤️'.repeat(p.hp) + '🤍'.repeat(Math.max(0, p.max - p.hp)) : 'Đã gục'),
-      p.char ? el('div', { class: 'rt-sub' }, `🎭 ${charName(p.char)}`, p.dist ? ` · cách ${p.dist}` : '') : null,
+      p.char ? el('div', { class: 'rt-sub' }, `🎭 ${charsLabel(p)}`, p.dist ? ` · cách ${p.dist}` : '') : null,
       // trang bị hiện bằng hình nhỏ (xem nghĩa ở bảng Lá bài) để ghế không cao quá đè lên phần dưới
       p.eq.length ? el('div', {}, p.eq.map((c) => eqIcon(c, canPick(p)))) : null,
     ];
@@ -150,8 +158,9 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
     const p = P[id];
     const pickable = canPick(p);
     return {
-      cls: [id === v.turnPlayer ? 'turn' : '', !p.alive ? 'dead' : '', pickable ? 'pick' : '', needs && !pickable && id !== me ? 'far' : ''].join(' '),
+      cls: [id === v.turnPlayer ? 'turn' : '', !p.alive ? 'dead' : '', pickable ? 'pick' : '', targeting && !pickable && id !== me ? 'far' : ''].join(' '),
       onclick: pickable && !pending ? () => {
+        if (swapping) { const cid = sel; sel = null; swapMode = false; send({ type: 'swap', card: cid, target: id }); return; }
         if (PICK_CARD.includes(card.t)) { target = id; rerender(); return; }
         const cid = sel, ex = extra; sel = extra = null;
         send({ type: kind, card: cid, target: id, ...(ex != null ? { extra: ex } : {}) });
@@ -175,7 +184,9 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
     v.phase === 'react' && pd && lp && lp.by !== pd.from
       ? el('div', { class: 'msg', style: 'background:#e8590ccc' }, `↩ ${who(lp.by)} vừa đánh ${CARD[lp.card.t]?.[0]} · tới lượt ${who(pd.responder)}${pd.kind === 'duel' ? ' đánh Bắn' : ''}`)
       : null,
-    v.lastFlip ? el('div', { class: 'msg' }, `🃏 ${who(v.lastFlip.by)} lật (${v.lastFlip.why}): ${CARD[v.lastFlip.card.t]?.[0]} ${face(v.lastFlip.card)}`) : null,
+    v.lastFlip ? el('div', { class: 'msg' }, v.lastFlip.alt
+      ? `🃏 ${who(v.lastFlip.by)} (Thầy bói) lật 2 lá (${v.lastFlip.why}): ${face(v.lastFlip.card)}, ${face(v.lastFlip.alt)} → chọn ${face(v.lastFlip.card)}`
+      : `🃏 ${who(v.lastFlip.by)} lật (${v.lastFlip.why}): ${CARD[v.lastFlip.card.t]?.[0]} ${face(v.lastFlip.card)}`) : null,
   ];
   const arrow = lp?.target ? { from: lp.by, to: lp.target } : null; // luôn theo lá vừa đánh (kể cả lá đáp trả)
   const table = roundTable({ order: v.players.map((p) => p.id), me, seat, seatAttrs, center, arrow });
@@ -212,12 +223,13 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
           : Array.from({ length: v.store.count }, () => el('div', { class: 'ac back', 'aria-label': 'Lá úp' })))));
   }
 
+  // Thám tử: 3 lá trên cùng (chỉ mình thấy), chạm 1 lá để trả về đầu chồng bài, 2 lá còn lại vào tay
   if (v.scout) {
-    pops.push(el('div', { class: 'card-tile stack', style: 'align-items:center' }, el('b', {}, '🕵️ Thám tử: lá trên cùng chồng bài là'),
-      acard(v.scout, { big: true }),
-      el('div', { class: 'actions' },
-        el('button', { class: 'btn btn-primary', disabled: pending, onclick: () => send({ type: 'scout', bottom: false }) }, 'Giữ, bốc luôn'),
-        el('button', { class: 'btn', disabled: pending, onclick: () => send({ type: 'scout', bottom: true }) }, 'Đẩy xuống đáy rồi bốc'))));
+    pops.push(el('div', { class: 'card-tile stack', style: 'align-items:center' },
+      el('b', {}, v.scout.length >= 3 ? '🕵️ Thám tử: chạm 1 lá để trả về đầu chồng bài (2 lá còn lại vào tay)' : '🕵️ Thám tử: lấy các lá này'),
+      el('div', { class: 'row', style: 'gap:6px;justify-content:center;flex-wrap:wrap' },
+        v.scout.map((c) => acard(c, v.scout.length >= 3 ? { disabled: pending, onclick: () => send({ type: 'scout', back: c.id }) } : {}))),
+      v.scout.length < 3 ? el('button', { class: 'btn btn-primary', disabled: pending, onclick: () => send({ type: 'scout' }) }, 'Lấy') : null));
   }
 
   // Bác sĩ làng: người khác vừa hồi máu → chạm 1 lá để bỏ và hồi theo
@@ -238,8 +250,8 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
   // Khung phản ứng
   if (v.phase === 'react' && pd && actor) {
     const need = pd.kind === 'duel' ? 'ban' : pd.need;
-    const swap = v.me.char === 'haisung' ? { ne: 'ban', ban: 'ne' }[need] : null;
-    const noNe = need === 'ne' && v.me.char === 'khonglo'; // Gã khổng lồ không dùng được lá Né
+    const noNe = need === 'ne' && mine('khonglo'); // Gã khổng lồ không dùng được lá Né
+    const swap = mine('haisung') && !mine('khonglo') ? { ne: 'ban', ban: 'ne' }[need] : null;
     const mine = noNe ? null : hand.find((c) => c.t === need) || (need === 'ne' ? hand.find((c) => c.t === 'lach') : null) || hand.find((c) => c.t === swap);
     const hat = need === 'ne' ? myEq.find((c) => DODGE_EQ.includes(c.t)) : null; // trang bị né 1 phát (Mũ, Tấm thép, Bùa…)
     pops.push(el('div', { class: 'card-tile stack', style: 'border-color:var(--danger)' }, el('b', {}, `⚠️ ${msg}`),
@@ -258,6 +270,7 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
   else if (v.phase === 'scout' && !myTurn) status = `${nameOf(v.turnPlayer)} (Thám tử) đang xem lá trên cùng…`;
   else if (v.phase === 'steal' && !myTurn) status = `${nameOf(v.turnPlayer)} đang chọn người để móc túi…`;
   else if (v.phase === 'store') status = v.store.turn === me ? 'Chợ phiên: chọn 1 lá.' : `Chợ phiên: chờ ${who(v.store.turn)} chọn…`;
+  else if (swapping) status = 'Chạm vào người để đưa lá đang chọn và rút 2 lá của họ.';
   else if (myTurn && v.phase === 'play') status = card ? (needsExtra && extra == null ? 'Chạm thêm 1 lá trên tay để bỏ kèm.' : needs ? `Chạm vào người để ${CARD[asType(card)][0]}.` : `Đánh ${CARD[card.t][0]}?`) : `Lượt của bạn · tầm bắn ${v.me.range}${v.bangUsed >= v.me.bangLimit ? ' · đã bắn đủ' : ''}`;
   else if (myTurn) status = 'Lượt của bạn';
   else if (v.phase === 'react' && !actor) status = `Đang chờ ${who(v.turn)} phản ứng…`;
@@ -267,7 +280,7 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
   // Bài trên tay (xếp quạt)
   if (v.me.alive) {
     const discarding = v.phase === 'discard' && myTurn;
-    const canHeal = v.me.char === 'langvuon' && P[me].hp < P[me].max && hand.length >= 2;
+    const canHeal = mine('langvuon') && P[me].hp < P[me].max && hand.length >= 2;
     if (!canHeal) healMode = false;
     const picking = discarding || healMode;
     const mid = (hand.length - 1) / 2;
@@ -278,7 +291,7 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
       onclick: () => {
         if (v.docOffer) { send({ type: 'doc', card: c.id }); return; }
         if (picking) { picks.has(c.id) ? picks.delete(c.id) : picks.add(c.id); } else if (needsExtra && c.id !== sel) extra = extra === c.id ? null : c.id;
-        else { sel = sel === c.id ? null : c.id; target = null; extra = null; }
+        else { sel = sel === c.id ? null : c.id; target = null; extra = null; swapMode = false; }
         rerender();
       },
     }))));
@@ -298,7 +311,8 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
         el('button', { class: 'btn btn-primary', disabled: pending || P[me].hp >= P[me].max, onclick: () => fire({ self: true }) }, '🍺 Mình hồi 1 máu'));
       else if (card && !TARGETED.includes(asType(card))) acts.append(el('button', { class: 'btn btn-primary', disabled: pending || (needsExtra && extra == null), onclick: () => fire() }, `${kind === 'use' ? 'Dùng' : 'Đánh'} ${CARD[card.t][0]}`));
       myEq.filter((c) => ONESHOT.includes(c.t) && !DODGE_EQ.includes(c.t)).forEach((c) => acts.append(el('button', { class: 'btn' + (sel === c.id ? ' btn-primary' : ''), disabled: pending, onclick: () => { sel = sel === c.id ? null : c.id; target = extra = null; rerender(); } }, `🎒 ${CARD[c.t][0]}`)));
-      if (v.me.char === 'lieumang' && P[me].hp > 1) acts.append(el('button', { class: 'btn', disabled: pending, onclick: () => send({ type: 'gamble' }) }, '🎲 Mất 1 máu, bốc 2 lá'));
+      if (mine('lieumang') && P[me].hp > 1) acts.append(el('button', { class: 'btn', disabled: pending, onclick: () => send({ type: 'gamble' }) }, '🎲 Mất 1 máu, bốc 2 lá'));
+      if (mine('taybuon') && !v.swapUsed && card && kind === 'play') acts.append(el('button', { class: 'btn' + (swapMode ? ' btn-primary' : ''), disabled: pending, onclick: () => { swapMode = !swapMode; target = extra = null; rerender(); } }, swapMode ? '🔁 Huỷ đổi bài' : '🔁 Đưa lá này, lấy 2 lá'));
       acts.append(el('button', { class: 'btn', disabled: pending, onclick: () => { sel = null; send({ type: 'end' }); } }, 'Kết thúc lượt ➜'));
     }
     main.push(acts);
@@ -347,6 +361,6 @@ runTable({
   resultOf: (v, nameOf) => ({
     title: { luat: '⭐ Phe Luật thắng!', cuop: '🦹 Băng cướp thắng!', phanboi: '🐍 Kẻ phản bội thắng!' }[v.winTeam],
     reason: `Người thắng: ${[].concat(v.winner).map(nameOf).join(', ')}`,
-    lines: v.players.map((p) => `${nameOf(p.id)}: ${p.role ? ROLE[p.role][1] : '?'}${p.char ? ` (${charName(p.char)})` : ''}`),
+    lines: v.players.map((p) => `${nameOf(p.id)}: ${p.role ? ROLE[p.role][1] : '?'}${p.char ? ` (${charsLabel(p)})` : ''}`),
   }),
 });

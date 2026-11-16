@@ -6,7 +6,9 @@ export const GUN_RANGE = { sung2: 2, sung3: 3, sung4: 4, sung5: 5, lienthanh: 1 
 // Trang bị dùng 1 lần: đặt ra trước mặt, bỏ đi để kích hoạt. DODGE_EQ: chỉ dùng khi bị bắn (né 1 phát).
 export const DODGE_EQ = ['mu', 'mucao', 'tamthep', 'bua'];
 export const ONESHOT = ['sunggiau', 'binhnuoc', 'xetho', 'dao', 'sungbo', 'oquay', 'daibac', 'vucong', 'ngutram', ...DODGE_EQ];
-const EQUIP = ['sung2', 'sung3', 'sung4', 'sung5', 'lienthanh', 'ngua', 'ongnhom', 'thung', 'tu', 'no', 'kinhvien', 'chonap', ...ONESHOT];
+const EQUIP = ['sung2', 'sung3', 'sung4', 'sung5', 'lienthanh', 'ngua', 'ongnhom', 'thung', 'tu', 'no', 'kinhvien', 'chonap', 'treo', 'daudoc', ...ONESHOT];
+// Lá nhắm vào riêng 1 người: người bị Treo thưởng bị nhắm thì người nhắm được bốc 1 lá
+const ATTACK = ['ban', 'dam', 'duel', 'pha', 'cuop', 'tu', 'daudoc', 'bantia', 'taydai', 'sunggiau', 'dao', 'sungbo', 'oquay', 'xetho', 'vucong', 'swap'];
 // Lá nâu phải bỏ kèm 1 lá trên tay
 const NEEDS_EXTRA = ['ruoumanh', 'audai', 'bantia', 'taydai', 'ruounong'];
 const COUNTS = { // mỗi loại 3 lá; loại trùng tác dụng với lá có sẵn thì 2 lá
@@ -14,7 +16,7 @@ const COUNTS = { // mỗi loại 3 lá; loại trùng tác dụng với lá có 
   chophien: 3, dam: 3, lach: 3, ruoumanh: 3, audai: 3, bantia: 3, taydai: 3, ruounong: 3,
   sung2: 3, sung3: 3, sung4: 3, sung5: 3, lienthanh: 3, ngua: 3, ongnhom: 3, thung: 3, tu: 3, no: 3, kinhvien: 2, chonap: 2,
   sunggiau: 3, binhnuoc: 3, mu: 3, xetho: 3, dao: 3, bua: 3, sungbo: 3, daibac: 3, vucong: 3, ngutram: 3,
-  mucao: 2, tamthep: 2, oquay: 2,
+  mucao: 2, tamthep: 2, oquay: 2, treo: 3, daudoc: 3,
 };
 const NAME = { ban: 'Bắn', ne: 'Né', lach: 'Lách người', mu: 'Mũ rộng vành', mucao: 'Mũ cao', tamthep: 'Tấm thép', bua: 'Bùa hộ mệnh' };
 const ROLES = {
@@ -24,7 +26,7 @@ const ROLES = {
   7: ['cst', 'pho', 'pho', 'phanboi', 'cuop', 'cuop', 'cuop'],
   8: ['cst', 'pho', 'pho', 'phanboi', 'phanboi', 'cuop', 'cuop', 'cuop'],
 };
-export const MAX_PLAYERS = 8; // 16 chức năng, mỗi người được chia 2 để chọn
+export const MAX_PLAYERS = 8; // giới hạn theo bảng vai; 23 chức năng đủ chia mỗi người 2 + Kẻ đa tài lấy thêm 2
 // Số vai mặc định theo số người (Cảnh sát trưởng luôn 1, không tính ở đây).
 export function defaultRoles(n) {
   const r = ROLES[Math.min(MAX_PLAYERS, Math.max(4, n))];
@@ -46,16 +48,23 @@ export const CHARS = {
   langvuon: { name: 'Ông lang vườn', hp: 4, text: 'Bỏ 2 lá bất kỳ để hồi 1 máu, lúc nào cũng được.' },
   thep: { name: 'Tay súng thép', hp: 4, text: 'Muốn né Bắn của người này phải đánh 2 lá Né.' },
   langthang: { name: 'Kẻ lang thang', hp: 4, text: 'Hết bài trên tay thì bốc ngay 1 lá.' },
-  laoluyen: { name: 'Tay súng lão luyện', hp: 3, text: 'Bắn không giới hạn những người ở khoảng cách 1 (người xa hơn vẫn 1 lần/lượt).' },
+  laoluyen: { name: 'Tay súng lão luyện', hp: 3, text: 'Bắn không giới hạn số lần mỗi lượt (vẫn phải trong tầm bắn).' },
   lieumang: { name: 'Kẻ liều mạng', hp: 4, text: 'Trong lượt mình: chịu mất 1 máu để bốc 2 lá (dùng được tới khi còn 1 máu).' },
   thoren: { name: 'Thợ rèn súng', hp: 4, text: 'Tầm bắn +1 (cộng với súng).' },
   bacsi: { name: 'Bác sĩ làng', hp: 4, text: 'Khi người khác hồi máu: bỏ 1 lá để hồi 1 máu theo (trong 3 giây).' },
   traitim: { name: 'Người có Trái tim', hp: 4, text: 'Sắp mất máu vì Bắn / Bắn loạt: lật 1 lá, ra ♥ thì không mất máu.' },
   nhanhtay: { name: 'Cao bồi nhanh tay', hp: 4, text: 'Bị người khác Phá/Cướp thì được bắn trả ngay 1 phát miễn phí vào người đó.' },
-  thamtu: { name: 'Thám tử', hp: 4, text: 'Đầu lượt xem lá trên cùng, được đẩy xuống đáy chồng rồi mới bốc.' },
+  thamtu: { name: 'Thám tử', hp: 4, text: 'Bốc đầu lượt: xem 3 lá trên cùng, giữ 2 lá, trả 1 lá về đầu chồng bài.' },
   phuxe: { name: 'Phu xe ngựa', hp: 4, text: 'Tiếp tế và Tiếp tế lớn bốc thêm 1 lá.' },
-  thayboi: { name: 'Thầy bói', hp: 4, text: 'Lật bài kiểm tra (Nhà tù, Thùng gỗ, Trái tim): ♦ cũng tính như ♥.' },
+  thayboi: { name: 'Thầy bói', hp: 4, text: 'Lật bài kiểm tra Nhà tù, Thuốc nổ, Đầu độc: lật 2 lá, chọn lá có lợi.' },
   khonglo: { name: 'Gã khổng lồ', hp: 9, text: '9 máu nhưng không dùng được lá Né (Thùng gỗ vẫn được); trên tay giữ tối đa 5 lá.' },
+  nhatrac: { name: 'Kẻ nhặt rác', hp: 4, text: 'Người khác phải bỏ bài thừa cuối lượt thì mình nhặt hết số bài đó về tay.' },
+  nhatdo: { name: 'Kẻ nhặt đồ cúng', hp: 4, text: 'Có người gục thì lấy hết bài trên tay người đó về tay mình.' },
+  lankhuat: { name: 'Kẻ lẩn khuất', hp: 4, text: 'Người khác nhìn mình xa thêm 1 (cộng dồn với Ngựa).' },
+  mathieu: { name: 'Mắt diều hâu', hp: 4, text: 'Mình nhìn người khác gần lại 1 (cộng dồn với Ống nhòm).' },
+  taybuon: { name: 'Tay buôn bài', hp: 4, text: 'Mỗi lượt 1 lần: đưa 1 lá trên tay cho một người bất kỳ, rút ngẫu nhiên 2 lá trên tay người đó.' },
+  tichtru: { name: 'Gã tích trữ', hp: 4, text: 'Trên tay giữ tối đa 10 lá, không phụ thuộc máu.' },
+  datai: { name: 'Kẻ đa tài', hp: 4, text: 'Chọn xong được thêm 2 chức năng ngẫu nhiên (có 3 chức năng); máu lấy theo chức năng nhiều máu nhất.' },
 };
 // Kính viễn vọng = Ống nhòm, Chỗ nấp = Ngựa: cùng loại, không đặt cả hai để cộng dồn
 const ALIAS = { kinhvien: 'ongnhom', chonap: 'ngua' };
@@ -91,10 +100,19 @@ export function start(ids, ctx = {}, rng = Math.random) {
   };
 }
 
+// Chọn chức năng; Kẻ đa tài lấy thêm 2 chức năng ngẫu nhiên chưa chia cho ai.
+function choose(s, p, ch, rng) {
+  p.char = ch;
+  if (ch !== 'datai') return;
+  const used = new Set(s.players.flatMap((q) => [...(q.offer || []), q.char, ...(q.extra || [])]));
+  p.extra = shuffle(Object.keys(CHARS).filter((c) => !used.has(c)), rng).slice(0, 2);
+}
+const charsOf = (p) => (p.char ? [p.char, ...(p.extra || [])] : []);
+
 // Cả bàn chọn xong chức năng → đặt máu, chia bài, bắt đầu lượt Cảnh sát trưởng.
 function begin(s, rng) {
   s.players.forEach((p, i) => {
-    p.max = p.hp = CHARS[p.char].hp + (p.role === 'cst' ? 1 : 0);
+    p.max = p.hp = Math.max(...charsOf(p).map((c) => CHARS[c].hp)) + (p.role === 'cst' ? 1 : 0);
     delete p.offer;
     draw(s, i, p.hp, rng);
   });
@@ -106,7 +124,7 @@ function begin(s, rng) {
 const log = (s, t) => { s.log = [...s.log.slice(-7), t]; };
 const idx = (s, id) => s.players.findIndex((p) => p.id === id);
 const has = (p, kind) => p.eq.find((c) => kindOf(c.t) === kind);
-const is = (p, ch) => p?.char === ch;
+const is = (p, ch) => p?.char === ch || !!p?.extra?.includes(ch); // tính cả chức năng thêm của Kẻ đa tài
 const aliveIdx = (s) => s.players.map((p, i) => (p.alive ? i : -1)).filter((i) => i >= 0);
 
 function refill(s, rng) {
@@ -140,15 +158,31 @@ export function distance(s, a, b) {
   const n = seats.length;
   let d = Math.min(Math.abs(i - j), n - Math.abs(i - j));
   if (has(s.players[b], 'ngua')) d++;
+  if (is(s.players[b], 'lankhuat')) d++;
   if (has(s.players[a], 'ongnhom')) d--;
+  if (is(s.players[a], 'mathieu')) d--;
   return Math.max(1, d);
 }
 const rangeOf = (p) => (GUN_RANGE[has(p, 'gun')?.t] || 1) + (is(p, 'thoren') ? 1 : 0);
-const bangLimit = (p) => (has(p, 'gun')?.t === 'lienthanh' ? Infinity : 1);
-const handLimit = (p) => (is(p, 'khonglo') ? Math.min(p.hp, 5) : p.hp);
+const bangLimit = (p) => (has(p, 'gun')?.t === 'lienthanh' || is(p, 'laoluyen') ? Infinity : 1);
+const handLimit = (p) => (is(p, 'tichtru') ? 10 : is(p, 'khonglo') ? Math.min(p.hp, 5) : p.hp);
 const OFFER_MS = 3000;
-// Lật bài kiểm tra "ra ♥": Thầy bói tính cả ♦.
-const isHeart = (p, c) => !!c && (c.s === 0 || (c.s === 1 && is(p, 'thayboi')));
+const isHeart = (p, c) => !!c && c.s === 0;
+// Lật bài kiểm tra Nhà tù / Thuốc nổ / Đầu độc. Thầy bói lật 2 lá, lấy lá có lợi (good) — cả bàn thấy cả 2 lá.
+function check(s, pi, why, good, rng) {
+  const a = flip(s, pi, why, rng);
+  if (!is(s.players[pi], 'thayboi')) return a;
+  const b = flip(s, pi, why, rng);
+  const pick = a && good(a) ? a : b && good(b) ? b : a || b;
+  s.lastFlip = { by: s.players[pi].id, why, card: pick, alt: pick === a ? b : a };
+  return pick;
+}
+const boom = (c) => !!c && c.s === 3 && c.r >= 2 && c.r <= 9; // Thuốc nổ: ♠ từ 2 đến 9
+// Bài thừa phải bỏ cuối lượt: Kẻ nhặt rác (người khác) nhặt hết, không thì vào chồng bỏ.
+function dropExcess(s, pi, cards) {
+  const q = s.players.find((x, i) => i !== pi && x.alive && is(x, 'nhatrac'));
+  if (q && cards.length) { q.hand.push(...cards); log(s, `${q.id} nhặt ${cards.length} lá bài bỏ`); } else s.discard.push(...cards);
+}
 // Hồi máu; người khác hồi thì Bác sĩ làng (nếu đang mất máu và có bài) được mời hồi theo trong 3 giây.
 function heal(s, p, n) {
   const before = p.hp;
@@ -177,6 +211,8 @@ function damage(s, pi, n, rng) {
   }
   if (p.hp > 0) return;
   p.alive = false; p.hp = 0;
+  const heir = s.players.find((x) => x.alive && x !== p && is(x, 'nhatdo'));
+  if (heir && p.hand.length) { log(s, `${heir.id} nhặt ${p.hand.length} lá của người vừa gục`); heir.hand.push(...p.hand.splice(0)); }
   s.discard.push(...p.hand.splice(0), ...p.eq.splice(0));
   log(s, `${p.id} gục ngã`);
   checkWin(s);
@@ -199,9 +235,9 @@ function startTurn(s, rng) {
     const p = s.players[pi];
     const no = has(p, 'no');
     if (no) {
-      const c = flip(s, pi, 'Thuốc nổ', rng);
+      const c = check(s, pi, 'Thuốc nổ', (x) => !boom(x), rng);
       p.eq.splice(p.eq.indexOf(no), 1);
-      if (c && c.s === 3 && c.r >= 2 && c.r <= 9) { // ♠ từ 2 đến 9 mới nổ
+      if (boom(c)) {
         s.discard.push(no);
         log(s, `💥 Thuốc nổ phát nổ trước mặt ${p.id}`);
         damage(s, pi, 3, rng);
@@ -209,17 +245,30 @@ function startTurn(s, rng) {
         if (!p.alive) { advance(s); continue; }
       } else s.players[nextAlive(s, pi)].eq.push(no);
     }
+    if (has(p, 'daudoc')) { // Đầu độc: lật ra ♠ thì mất 1 máu, lá vẫn nằm đó
+      const c = check(s, pi, 'Đầu độc', (x) => x.s !== 3, rng);
+      if (c && c.s === 3) {
+        log(s, `☠️ ${p.id} trúng độc, mất 1 máu`);
+        damage(s, pi, 1, rng);
+        if (s.winner) return;
+        if (!p.alive) { advance(s); continue; }
+      }
+    }
     const tu = has(p, 'tu');
     if (tu) {
-      const c = flip(s, pi, 'Nhà tù', rng);
+      const c = check(s, pi, 'Nhà tù', (x) => isHeart(p, x), rng);
       p.eq.splice(p.eq.indexOf(tu), 1);
       s.discard.push(tu);
       if (!isHeart(p, c)) { log(s, `${p.id} bị giam, mất lượt`); advance(s); continue; }
       log(s, `${p.id} vượt ngục thành công`);
     }
-    s.bangUsed = 0;
+    s.bangUsed = 0; s.swapUsed = false;
     if (is(p, 'moctui') && s.players.some((q, i) => i !== pi && q.alive && q.hand.length)) { s.phase = 'steal'; return; }
-    if (is(p, 'thamtu') && (s.deck.length || s.discard.length > 1)) { refill(s, rng); s.phase = 'scout'; return; }
+    if (is(p, 'thamtu')) { // Thám tử: rút 3 lá trên cùng ra xem (chỉ mình thấy), giữ 2 trả 1
+      s.scoutCards = [];
+      for (let k = 0; k < 3; k++) { refill(s, rng); const c = s.deck.pop(); if (c) s.scoutCards.push(c); }
+      if (s.scoutCards.length) { s.phase = 'scout'; return; }
+    }
     drawPhase(s, pi, rng, null);
     return;
   }
@@ -345,7 +394,7 @@ export function apply(state, id, action, rng = Math.random, now = Date.now()) {
 
   if (s.phase === 'pick') {
     if (type !== 'pick' || p.char || !p.offer.includes(action.char)) return fail('Hãy chọn 1 trong 2 chức năng được chia.');
-    p.char = action.char;
+    choose(s, p, action.char, rng);
     if (s.players.every((x) => x.char)) begin(s, rng);
     return { ok: true, state: s };
   }
@@ -434,9 +483,14 @@ export function apply(state, id, action, rng = Math.random, now = Date.now()) {
   }
 
   if (s.phase === 'scout') {
-    if (type !== 'scout') return fail('Xem lá trên cùng rồi chọn giữ hoặc đẩy xuống đáy.');
-    if (action.bottom && s.deck.length > 1) s.deck.unshift(s.deck.pop());
-    drawPhase(s, pi, rng, null);
+    if (type !== 'scout') return fail('Chọn 1 lá trả về đầu chồng bài.');
+    const cards = s.scoutCards;
+    const back = cards.length >= 3 ? take(cards, action.back) : null;
+    if (cards.length >= 3 && !back) return fail('Chọn 1 trong 3 lá để trả về.');
+    if (back) s.deck.push(back);
+    p.hand.push(...cards.splice(0));
+    s.scoutCards = null;
+    s.phase = 'play';
     return done(s, rng);
   }
 
@@ -445,7 +499,7 @@ export function apply(state, id, action, rng = Math.random, now = Date.now()) {
     const need = p.hand.length - handLimit(p);
     const ids = [...new Set(action.cards)];
     if (ids.length !== need || !ids.every((x) => p.hand.some((c) => c.id === x))) return fail(`Bỏ đúng ${need} lá.`);
-    ids.forEach((x) => s.discard.push(take(p.hand, x)));
+    dropExcess(s, pi, ids.map((x) => take(p.hand, x)));
     endTurn(s, rng);
     return done(s, rng);
   }
@@ -453,6 +507,22 @@ export function apply(state, id, action, rng = Math.random, now = Date.now()) {
   if (s.phase !== 'play') return fail('Thao tác không hợp lệ.');
   if (type === 'end') {
     if (p.hand.length > handLimit(p)) s.phase = 'discard'; else endTurn(s, rng);
+    return done(s, rng);
+  }
+  if (type === 'swap') { // Tay buôn bài: đưa 1 lá, rút ngẫu nhiên 2 lá của người khác
+    const ti = idx(s, action.target);
+    const tp = s.players[ti];
+    if (!is(p, 'taybuon') || s.swapUsed) return fail('Lượt này không đổi bài được nữa.');
+    if (!tp || !tp.alive || ti === pi || !tp.hand.length) return fail('Chọn người còn bài trên tay.');
+    if (!p.hand.some((c) => c.id === action.card)) return fail('Chọn 1 lá trên tay để đưa.');
+    const bountied = has(tp, 'treo');
+    const got = [];
+    for (let k = 0; k < 2 && tp.hand.length; k++) got.push(grab(tp, 'hand', rng));
+    tp.hand.push(take(p.hand, action.card));
+    p.hand.push(...got);
+    s.swapUsed = true;
+    log(s, `${id} đổi 1 lá lấy ${got.length} lá của ${tp.id}`);
+    if (bountied) bounty(s, pi, rng);
     return done(s, rng);
   }
   if (type === 'gamble') {
@@ -469,6 +539,7 @@ export function apply(state, id, action, rng = Math.random, now = Date.now()) {
     const ti = typeof action.target === 'string' ? idx(s, action.target) : -1;
     const tp = s.players[ti];
     const ok = tp && tp.alive && ti !== pi;
+    const bountied = ok && ATTACK.includes(c.t) && has(tp, 'treo');
     if (c.t === 'binhnuoc' && p.hp >= p.max) return fail('Máu đang đầy.');
     if (c.t === 'sunggiau' && (!ok || distance(s, pi, ti) > 1)) return fail('Súng giấu chỉ bắn người ở khoảng cách 1.');
     if (c.t === 'dao' && (!ok || distance(s, pi, ti) > rangeOf(p))) return fail('Ngoài tầm.');
@@ -498,6 +569,7 @@ export function apply(state, id, action, rng = Math.random, now = Date.now()) {
       log(s, `${id} ${c.t === 'dao' ? 'phóng dao vào' : 'bắn lén'} ${tp.id}`);
       startPending(s, { kind: 'ban', how: c.t === 'dao' ? 'phóng dao vào' : 'bắn lén', from: id, queue: [tp.id], need: 'ne' }, rng);
     }
+    if (bountied) bounty(s, pi, rng);
     return done(s, rng);
   }
   if (type !== 'play') return fail('Thao tác không hợp lệ.');
@@ -507,6 +579,8 @@ export function apply(state, id, action, rng = Math.random, now = Date.now()) {
   const tp = s.players[ti];
   const needTarget = () => tp && tp.alive && ti !== pi;
   const use = () => { s.discard.push(take(p.hand, card.id)); };
+  const bountied = () => needTarget() && ATTACK.includes(card.t === 'ne' && is(p, 'haisung') ? 'ban' : card.t) && has(tp, 'treo');
+  const hadBounty = bountied(); // tính trước khi đánh (lá có thể làm người đó gục hoặc mất lá Treo thưởng)
   const t = card.t === 'ne' && is(p, 'haisung') ? 'ban' : card.t; // Cô nàng hai súng: Né dùng như Bắn
   const ex = NEEDS_EXTRA.includes(t) && action.extra !== card.id && p.hand.find((c) => c.id === action.extra);
   if (NEEDS_EXTRA.includes(t) && !ex) return fail('Chọn thêm 1 lá trên tay để bỏ kèm.');
@@ -515,10 +589,9 @@ export function apply(state, id, action, rng = Math.random, now = Date.now()) {
   switch (t) {
     case 'ban':
       if (!needTarget()) return fail('Chọn người để bắn.');
-      const free = is(p, 'laoluyen') && distance(s, pi, ti) === 1; // lão luyện: bắn người kề bên không giới hạn
-      if (!free && s.bangUsed >= bangLimit(p)) return fail('Lượt này bạn đã bắn đủ số lần.');
+      if (s.bangUsed >= bangLimit(p)) return fail('Lượt này bạn đã bắn đủ số lần.');
       if (distance(s, pi, ti) > rangeOf(p)) return fail('Ngoài tầm bắn.');
-      use(); if (!free) s.bangUsed++;
+      use(); s.bangUsed++;
       log(s, `${id} bắn ${tp.id}`);
       startPending(s, { kind: 'ban', from: id, queue: [tp.id], need: 'ne', need2: is(p, 'thep') ? 2 : 1 }, rng);
       break;
@@ -592,6 +665,7 @@ export function apply(state, id, action, rng = Math.random, now = Date.now()) {
         log(s, `${tp.id} rút súng bắn trả ${id}`);
         s.lastPlay = { by: id, card: { t: card.t, s: card.s, r: card.r }, target: tp.id };
         startPending(s, { kind: 'ban', from: tp.id, queue: [id], need: 'ne', need2: is(tp, 'thep') ? 2 : 1 }, rng);
+        if (hadBounty) bounty(s, pi, rng);
         return done(s, rng);
       }
       break;
@@ -616,6 +690,11 @@ export function apply(state, id, action, rng = Math.random, now = Date.now()) {
       take(p.hand, card.id); tp.eq.push(card);
       log(s, `${id} tống ${tp.id} vào tù`);
       break;
+    case 'treo': case 'daudoc': // đặt trước mặt 1 người khác
+      if (!needTarget() || has(tp, t)) return fail(t === 'treo' ? 'Người này đã bị treo thưởng.' : 'Người này đã bị đầu độc.');
+      take(p.hand, card.id); tp.eq.push(card);
+      log(s, `${id} ${t === 'treo' ? 'treo thưởng' : 'đầu độc'} ${tp.id}`);
+      break;
     default: {
       if (!EQUIP.includes(t)) return fail('Lá không hợp lệ.');
       const kind = kindOf(t);
@@ -626,7 +705,14 @@ export function apply(state, id, action, rng = Math.random, now = Date.now()) {
     }
   }
   s.lastPlay = { by: id, card: { t: card.t, s: card.s, r: card.r }, target: tp && ti !== pi ? tp.id : null };
+  if (hadBounty) bounty(s, pi, rng);
   return done(s, rng);
+}
+
+// Treo thưởng: nhắm vào người bị treo thưởng thì người nhắm được bốc 1 lá.
+function bounty(s, pi, rng) {
+  draw(s, pi, 1, rng);
+  log(s, `💰 ${s.players[pi].id} nhận thưởng: bốc 1 lá`);
 }
 
 // Bỏ qua người offline: chưa chọn chức năng → chọn lá đầu; đang bị nhắm → chịu mất máu;
@@ -636,7 +722,7 @@ export function forceSkip(state, rng = Math.random, stuck = null) {
   if (state.winner) return state;
   const s = structuredClone(state);
   if (s.phase === 'pick') {
-    s.players.forEach((p) => { if (!p.char && (!stuck || stuck.includes(p.id))) p.char = p.offer[0]; });
+    s.players.forEach((p) => { if (!p.char && (!stuck || stuck.includes(p.id))) choose(s, p, p.offer[0], rng); });
     if (s.players.every((p) => p.char)) begin(s, rng);
     return s;
   }
@@ -646,10 +732,13 @@ export function forceSkip(state, rng = Math.random, stuck = null) {
     wanderers(s, rng);
     return s;
   }
-  if (s.phase === 'steal' || s.phase === 'scout') { drawPhase(s, s.turn, rng, null); return s; }
+  if (s.phase === 'steal') { drawPhase(s, s.turn, rng, null); return s; }
+  if (s.phase === 'scout') return apply(s, s.players[s.turn].id, { type: 'scout', back: s.scoutCards[0]?.id }, rng).state;
   if (s.phase === 'store') return apply(s, s.store.queue[0], { type: 'store', card: s.store.cards[0].id }, rng).state;
   const p = s.players[s.turn];
-  while (p.hand.length > handLimit(p)) s.discard.push(p.hand.pop());
+  const extra = [];
+  while (p.hand.length > handLimit(p)) extra.push(p.hand.pop());
+  dropExcess(s, s.turn, extra);
   endTurn(s, rng);
   wanderers(s, rng);
   return s;
@@ -669,21 +758,21 @@ export function viewFor(s, id) {
   const reveal = (p) => p.role === 'cst' || p.id === id || s.winner;
   const picking = s.phase === 'pick';
   return {
-    me: { id, role: me.role, hand: me.hand, alive: me.alive, range: rangeOf(me), char: me.char, offer: picking && !me.char ? me.offer : null, bangLimit: Math.min(99, bangLimit(me)), handLimit: handLimit(me) },
+    me: { id, role: me.role, hand: me.hand, alive: me.alive, range: rangeOf(me), char: me.char, chars: charsOf(me), offer: picking && !me.char ? me.offer : null, bangLimit: Math.min(99, bangLimit(me)), handLimit: handLimit(me) },
     players: s.players.map((p, i) => ({
       id: p.id, hp: p.hp, max: p.max, alive: p.alive, handCount: p.hand.length, eq: p.eq,
       role: reveal(p) ? p.role : null, dist: me.alive && p.alive && !picking ? distance(s, mi, i) : null,
-      char: picking ? null : p.char, picked: !!p.char, // chức năng chỉ công khai khi cả bàn chọn xong
+      char: picking ? null : p.char, chars: picking ? [] : charsOf(p), picked: !!p.char, // chức năng chỉ công khai khi cả bàn chọn xong
     })),
     turn: picking ? null : s.phase === 'react' ? responder(s) : s.phase === 'store' ? s.store.queue[0] : s.players[s.turn].id,
     turnPlayer: s.players[s.turn].id,
     waitingOn: picking ? s.players.filter((p) => !p.char).map((p) => p.id) : undefined,
-    phase: s.phase, bangUsed: s.bangUsed, deckCount: s.deck.length,
+    phase: s.phase, bangUsed: s.bangUsed, swapUsed: !!s.swapUsed, deckCount: s.deck.length,
     // Chợ phiên: chỉ người đang tới lượt chọn mới thấy các lá trên quầy; người khác chỉ biết còn mấy lá
     store: s.store ? { cards: s.store.queue[0] === id ? s.store.cards : null, count: s.store.cards.length, turn: s.store.queue[0] } : null,
     pending: s.pending && { kind: s.pending.kind, how: s.pending.how, from: s.pending.from, need: s.pending.need, a: s.pending.a, b: s.pending.b, responder: responder(s), left: s.pending.left ?? s.pending.need2 ?? 1 },
     lastFlip: s.lastFlip, lastPlay: s.lastPlay || null, log: s.log,
-    scout: s.phase === 'scout' && s.turn === mi ? (({ t, s: su, r }) => ({ t, s: su, r }))(s.deck.at(-1)) : null,
+    scout: s.phase === 'scout' && s.turn === mi ? s.scoutCards : null, // 3 lá Thám tử đang xem: chỉ mình thấy
     docOffer: s.docOffer?.id === id ? true : null, winner: s.winner, winTeam: s.winTeam,
   };
 }

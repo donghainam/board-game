@@ -548,7 +548,7 @@ Mã phòng bắt đầu bằng `W` · 4–8 người · có vai trò bí mật +
 | 8 | 1 | 2 | 3 | 2 |
 
 - Bảng trên là **mặc định**. Ở sảnh chờ cả bàn thấy số lượng từng vai; **chủ phòng bấm +/− để chỉnh** Phó / Băng cướp / Kẻ phản bội (Cảnh sát trưởng luôn đúng 1). Tổng số vai phải bằng số người mới bắt đầu được; có nút "Về mặc định".
-- Tối đa 8 người vì có 16 chức năng, mỗi người được chia 2 để chọn.
+- Tối đa 8 người (theo bảng vai). Có 23 chức năng: mỗi người được chia 2 để chọn, Kẻ đa tài lấy thêm 2 từ phần chưa chia.
 
 - **Cảnh sát trưởng** lộ mặt ngay từ đầu và đi trước. Các vai khác được giữ bí mật, kể cả khi đã chết (chỉ lật hết khi ván kết thúc).
 - **Máu:** theo chức năng (3 hoặc 4), Cảnh sát trưởng +1. Máu cũng là số lá tối đa được giữ trên tay khi kết thúc lượt.
@@ -572,16 +572,23 @@ Mã phòng bắt đầu bằng `W` · 4–8 người · có vai trò bí mật +
 | Ông lang vườn | 4 | Bỏ 2 lá bất kỳ để hồi 1 máu, lúc nào cũng được (máy tự dùng khi sắp gục) |
 | Tay súng thép | 4 | Muốn né Bắn của người này phải 2 lần Né (Thùng gỗ tính 1 lần) |
 | Kẻ lang thang | 4 | Hết bài trên tay thì bốc ngay 1 lá |
-| Tay súng lão luyện | 3 | Bắn không giới hạn những người ở khoảng cách 1 (người xa hơn vẫn 1 lần/lượt) |
+| Tay súng lão luyện | 3 | Bắn không giới hạn số lần mỗi lượt (vẫn phải trong tầm bắn) |
 | Kẻ liều mạng | 4 | Trong lượt mình: chịu mất 1 máu để bốc 2 lá, dùng được tới khi còn 1 máu |
 | Thợ rèn súng | 4 | Tầm bắn +1 (cộng với súng) |
 | Bác sĩ làng | 4 | Khi người khác hồi máu: bỏ 1 lá để hồi 1 máu theo (trong 3 giây) |
 | Người có Trái tim | 4 | Sắp mất máu vì Bắn / Bắn loạt: lật 1 lá, ra ♥ thì không mất máu (không áp dụng Thuốc nổ, Đấu tay đôi, Phục kích) |
 | Cao bồi nhanh tay | 4 | Bị người khác Phá/Cướp thì được bắn trả ngay 1 phát miễn phí vào người đó |
-| Thám tử | 4 | Đầu lượt xem lá trên cùng, được đẩy xuống đáy chồng rồi mới bốc |
+| Thám tử | 4 | Bốc đầu lượt: xem 3 lá trên cùng, giữ 2 lá, trả 1 lá về đầu chồng bài |
 | Phu xe ngựa | 4 | Tiếp tế và Tiếp tế lớn bốc thêm 1 lá |
-| Thầy bói | 4 | Lật bài kiểm tra (Nhà tù, Thùng gỗ, Trái tim): ♦ cũng tính như ♥ |
+| Thầy bói | 4 | Lật bài kiểm tra Nhà tù, Thuốc nổ, Đầu độc: lật 2 lá, chọn lá có lợi (máy tự chọn; cả bàn thấy cả 2 lá) |
 | Gã khổng lồ | 9 | Không dùng được lá Né (Thùng gỗ vẫn được); trên tay giữ tối đa 5 lá |
+| Kẻ nhặt rác | 4 | Người khác phải bỏ bài thừa cuối lượt thì mình nhặt hết số bài đó về tay |
+| Kẻ nhặt đồ cúng | 4 | Có người gục thì lấy hết bài trên tay người đó về tay mình |
+| Kẻ lẩn khuất | 4 | Người khác nhìn mình xa thêm 1 (cộng dồn với Ngựa) |
+| Mắt diều hâu | 4 | Mình nhìn người khác gần lại 1 (cộng dồn với Ống nhòm) |
+| Tay buôn bài | 4 | Mỗi lượt 1 lần: đưa 1 lá trên tay cho một người bất kỳ, rút ngẫu nhiên 2 lá trên tay người đó |
+| Gã tích trữ | 4 | Trên tay giữ tối đa 10 lá, không phụ thuộc máu |
+| Kẻ đa tài | theo chức năng nhiều máu nhất | Chọn xong được thêm 2 chức năng ngẫu nhiên chưa chia cho ai (có 3 chức năng) |
 
 ### Lượt chơi
 1. **Đầu lượt:**
@@ -599,7 +606,7 @@ Mã phòng bắt đầu bằng `W` · 4–8 người · có vai trò bí mật +
 - **Ngựa** (trang bị): người khác nhìn mình xa thêm 1.
 - **Ống nhòm** (trang bị): mình nhìn người khác gần lại 1.
 
-### Bộ bài (160 lá; mỗi loại 3 lá, loại trùng tác dụng với lá có sẵn 2 lá; tên gọi: em tự quyết)
+### Bộ bài (166 lá; mỗi loại 3 lá, loại trùng tác dụng với lá có sẵn 2 lá; tên gọi: em tự quyết)
 Mỗi lá có chất (♥♦♣♠) và số (A–K), hiện ở góc lá.
 Viền nâu = lá đánh ngay, chỉ trong lượt mình (trừ **Né**, **Lách người**, **Băng bó** dùng được ngoài lượt).
 Viền xanh dương = trang bị, đặt ra trước mặt rồi mới có tác dụng.
@@ -635,6 +642,8 @@ Viền xanh dương = trang bị, đặt ra trước mặt rồi mới có tác 
 | Ngựa | 3 | Người khác nhìn mình xa thêm 1 |
 | Ống nhòm | 3 | Mình nhìn người khác gần lại 1 |
 | Thùng gỗ | 3 | Khi bị Bắn, lật bài: ra ♥ thì coi như đã Né |
+| Treo thưởng | 3 | Đặt trước mặt 1 người khác. Ai đánh lá nhắm vào riêng người đó (Bắn, Đấm, Phá, Cướp, Đấu tay đôi…) thì được bốc 1 lá; lá đánh cả bàn không tính. Lá nằm đó tới khi bị Phá/Cướp. |
+| Đầu độc | 3 | Đặt trước mặt 1 người khác. Đầu lượt người đó lật bài: ra ♠ thì mất 1 máu. Lá nằm đó tới khi bị Phá/Cướp. |
 | Nhà tù | 3 | Đặt lên 1 người khác (trừ Cảnh sát trưởng). Đầu lượt người đó lật bài: ra ♥ thì thoát, ngược lại thì **mất lượt**. Lật xong thì bỏ lá Nhà tù. |
 | Kính viễn vọng | 2 | Như Ống nhòm (cùng loại, không đặt cả hai). |
 | Chỗ nấp | 2 | Như Ngựa (cùng loại, không đặt cả hai). |
