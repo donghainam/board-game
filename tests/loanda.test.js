@@ -219,7 +219,19 @@ test('hết máu: tự dùng Băng bó (trừ khi còn 2 người); chết thì 
   assert.equal(P(t, 'B').alive, false);
   assert.equal(t.winTeam, 'luat');
   assert.deepEqual(t.winner, ['A']);
-  assert.equal(viewFor(t, 'C').players[1].role, 'cuop');
+  assert.equal(viewFor(t, 'C').players[1].role, 'cuop', 'ván kết thúc thì lật hết vai');
+});
+
+test('người gục không bị lật vai khi ván chưa kết thúc', () => {
+  let s = mk(['cst', 'cuop', 'phanboi', 'cuop', 'pho']);
+  P(s, 'C').hp = 1;
+  const [b] = give(s, 'A', C('ban'));
+  s.players[0].eq.push(C('sung3'));
+  s = A(A(s, 'A', { type: 'play', card: b.id, target: 'C' }), 'C', { type: 'respond' });
+  assert.equal(P(s, 'C').alive, false);
+  assert.equal(s.winner, null);
+  assert.equal(viewFor(s, 'B').players[2].role, null, 'người khác không thấy vai người đã gục');
+  assert.equal(viewFor(s, 'C').me.role, 'phanboi', 'người gục vẫn thấy vai của mình');
 });
 
 test('cảnh sát trưởng chết: băng cướp thắng; còn mình kẻ phản bội thì kẻ phản bội thắng', () => {

@@ -140,7 +140,7 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
     return [
       el('div', { class: 'rt-av' }, roleIcon(p), el('span', { class: 'rt-cnt' }, `🂠${p.handCount}`)),
       el('div', { class: 'rt-nm' }, el('span', { class: 'dot' + (online(id) ? ' on' : '') }), ' ', who(id)),
-      el('div', { style: 'font-size:11px;letter-spacing:-1px' }, p.alive ? '❤️'.repeat(p.hp) + '🤍'.repeat(Math.max(0, p.max - p.hp)) : (p.role ? ROLE[p.role][1] : '')),
+      el('div', { style: 'font-size:11px;letter-spacing:-1px' }, p.alive ? '❤️'.repeat(p.hp) + '🤍'.repeat(Math.max(0, p.max - p.hp)) : 'Đã gục'),
       p.char ? el('div', { class: 'rt-sub' }, `🎭 ${charName(p.char)}`, p.dist ? ` · cách ${p.dist}` : '') : null,
       // trang bị hiện bằng hình nhỏ (xem nghĩa ở bảng Lá bài) để ghế không cao quá đè lên phần dưới
       p.eq.length ? el('div', {}, p.eq.map((c) => eqIcon(c, canPick(p)))) : null,

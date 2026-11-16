@@ -550,7 +550,7 @@ Mã phòng bắt đầu bằng `W` · 4–8 người · có vai trò bí mật +
 - Bảng trên là **mặc định**. Ở sảnh chờ cả bàn thấy số lượng từng vai; **chủ phòng bấm +/− để chỉnh** Phó / Băng cướp / Kẻ phản bội (Cảnh sát trưởng luôn đúng 1). Tổng số vai phải bằng số người mới bắt đầu được; có nút "Về mặc định".
 - Tối đa 8 người vì có 16 chức năng, mỗi người được chia 2 để chọn.
 
-- **Cảnh sát trưởng** lộ mặt ngay từ đầu và đi trước. Các vai khác được giữ bí mật; ai chết thì lật vai.
+- **Cảnh sát trưởng** lộ mặt ngay từ đầu và đi trước. Các vai khác được giữ bí mật, kể cả khi đã chết (chỉ lật hết khi ván kết thúc).
 - **Máu:** theo chức năng (3 hoặc 4), Cảnh sát trưởng +1. Máu cũng là số lá tối đa được giữ trên tay khi kết thúc lượt.
 - **Thắng:**
   - **Phe Luật** (Cảnh sát trưởng và Phó) thắng khi toàn bộ Băng cướp và Kẻ phản bội đã chết.
@@ -663,7 +663,7 @@ Viền xanh dương = trang bị, đặt ra trước mặt rồi mới có tác 
 
 ### Hết máu
 - Máu về 0 mà trên tay còn **Băng bó** thì máy tự dùng để sống lại với 1 máu. Không áp dụng khi chỉ còn 2 người sống. *(em tự quyết)*
-- Chết thì lật vai, toàn bộ bài trên tay và trang bị bị bỏ đi.
+- Chết thì **không lật vai** (vai chỉ lộ khi ván kết thúc); toàn bộ bài trên tay và trang bị bị bỏ đi.
 
 ### Giao diện
 - **Thẻ vai:** mặc định che, bấm mới hiện (như Ma Sói). Riêng Cảnh sát trưởng hiện công khai.

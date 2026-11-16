@@ -665,7 +665,8 @@ export function viewFor(s, id) {
   const mi = idx(s, id);
   if (mi < 0) return null;
   const me = s.players[mi];
-  const reveal = (p) => p.role === 'cst' || !p.alive || p.id === id || s.winner;
+  // Vai chỉ lộ: Cảnh sát trưởng, chính mình, hoặc khi ván kết thúc (người gục không lật vai)
+  const reveal = (p) => p.role === 'cst' || p.id === id || s.winner;
   const picking = s.phase === 'pick';
   return {
     me: { id, role: me.role, hand: me.hand, alive: me.alive, range: rangeOf(me), char: me.char, offer: picking && !me.char ? me.offer : null, bangLimit: Math.min(99, bangLimit(me)), handLimit: handLimit(me) },
