@@ -86,7 +86,7 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
     v.me.char ? el('small', {}, `🎭 ${charName(v.me.char)} – ${CHARS[v.me.char]?.text || ''}`) : null);
 
   // Hai bảng bên: ý nghĩa lá bài / nhân vật trong ván
-  const left = { icon: '📖', title: 'Lá bài', body: Object.entries(CARD).map(([t, [n, d]]) => el('div', { class: 'gl' }, art(t), el('div', {}, el('b', {}, n), el('small', {}, d)))) };
+  const left = { icon: '📖', title: 'Lá bài', body: Object.entries(CARD).map(([t, [n, d]]) => el('div', { class: 'gl' + (EQUIP.has(t) ? ' eq' : '') }, art(t), el('div', {}, el('b', {}, n), el('small', {}, d)))) };
   const right = {
     icon: '🎭', title: 'Nhân vật',
     body: v.phase === 'pick'
@@ -163,6 +163,7 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
   const arrow = lp?.target ? { from: lp.by, to: lp.target } : null; // luôn theo lá vừa đánh (kể cả lá đáp trả)
   const table = roundTable({ order: v.players.map((p) => p.id), me, seat, seatAttrs, center, arrow });
   const main = [];
+  const pops = []; // khung hành động (phản ứng, Chợ phiên, Thám tử…) hiện nổi trên bàn, không làm bàn co lại
   // Ô vai nổi mờ ở góc phải bàn (thu gọn được) + nhật ký xổ xuống ở góc trái: vẫn nhìn thấy bàn bên dưới
   const roleBox = roleMin
     ? el('button', { class: 'ov ov-r ov-btn', onclick: () => { roleMin = false; rerender(); } }, '🎭 Vai ▾')
@@ -177,7 +178,7 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
   // Chọn lá của mục tiêu cho Cướp/Phá
   if (card && target && PICK_CARD.includes(card.t)) {
     const tp = P[target];
-    main.push(el('div', { class: 'card-tile stack' }, el('b', {}, `${CARD[card.t][0]} lá nào của ${who(target)}?`),
+    pops.push(el('div', { class: 'card-tile stack' }, el('b', {}, `${CARD[card.t][0]} lá nào của ${who(target)}?`),
       el('div', { class: 'actions' },
         tp.handCount ? el('button', { class: 'btn', disabled: pending, onclick: () => { const id = sel; sel = target = null; send({ type: kind, card: id, target: tp.id, which: 'hand' }); } }, 'Lá ngẫu nhiên trên tay') : null,
         tp.eq.map((c) => el('button', { class: 'btn', disabled: pending, onclick: () => { const id = sel; sel = target = null; send({ type: kind, card: id, target: tp.id, which: c.id }); } }, CARD[c.t][0])),
@@ -187,14 +188,15 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
   // Chợ phiên: lá lật giữa bàn, ai tới lượt thì chạm 1 lá để lấy
   if (v.store) {
     const mine = v.store.turn === me;
-    main.push(el('div', { class: 'card-tile stack', style: 'align-items:center' },
+    pops.push(el('div', { class: 'card-tile stack', style: 'align-items:center' },
       el('b', {}, mine ? '🏪 Chợ phiên: chạm 1 lá để lấy' : `🏪 Chợ phiên: đang chờ ${who(v.store.turn)} chọn`),
       el('div', { class: 'row', style: 'gap:6px;justify-content:center;flex-wrap:wrap' },
-        v.store.cards.map((c) => acard(c, mine ? { disabled: pending, onclick: () => send({ type: 'store', card: c.id }) } : {})))));
+        mine ? v.store.cards.map((c) => acard(c, { disabled: pending, onclick: () => send({ type: 'store', card: c.id }) }))
+          : Array.from({ length: v.store.count }, () => el('div', { class: 'ac back', 'aria-label': 'Lá úp' })))));
   }
 
   if (v.scout) {
-    main.push(el('div', { class: 'card-tile stack', style: 'align-items:center' }, el('b', {}, '🕵️ Thám tử: lá trên cùng chồng bài là'),
+    pops.push(el('div', { class: 'card-tile stack', style: 'align-items:center' }, el('b', {}, '🕵️ Thám tử: lá trên cùng chồng bài là'),
       acard(v.scout, { big: true }),
       el('div', { class: 'actions' },
         el('button', { class: 'btn btn-primary', disabled: pending, onclick: () => send({ type: 'scout', bottom: false }) }, 'Giữ, bốc luôn'),
@@ -203,13 +205,14 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
 
   // Bác sĩ làng: người khác vừa hồi máu → chạm 1 lá để bỏ và hồi theo
   if (v.docOffer) {
-    main.push(el('div', { class: 'card-tile stack', style: 'border-color:var(--ok)' },
-      el('b', {}, '🩺 Bác sĩ làng: có người vừa hồi máu. Chạm 1 lá trên tay để bỏ và hồi 1 máu theo (3 giây).'),
+    pops.push(el('div', { class: 'card-tile stack', style: 'border-color:var(--ok)' },
+      el('b', {}, '🩺 Bác sĩ làng: có người vừa hồi máu. Chạm 1 lá để bỏ và hồi 1 máu theo (3 giây).'),
+      el('div', { class: 'fan', style: `--n:${hand.length}` }, hand.map((c) => acard(c, { disabled: pending, onclick: () => send({ type: 'doc', card: c.id }) }))),
       el('button', { class: 'btn btn-small', disabled: pending, onclick: () => send({ type: 'doc', card: null }) }, 'Bỏ qua')));
   }
 
   if (v.phase === 'steal' && myTurn) {
-    main.push(el('div', { class: 'card-tile stack' }, el('b', {}, '🤏 Kẻ móc túi: rút lá đầu tiên từ tay ai?'),
+    pops.push(el('div', { class: 'card-tile stack' }, el('b', {}, '🤏 Kẻ móc túi: rút lá đầu tiên từ tay ai?'),
       el('div', { class: 'actions' },
         v.players.filter((p) => p.alive && p.id !== me && p.handCount).map((p) => el('button', { class: 'btn', disabled: pending, onclick: () => send({ type: 'steal', target: p.id }) }, `${who(p.id)} (${p.handCount} lá)`)),
         el('button', { class: 'btn', disabled: pending, onclick: () => send({ type: 'steal', target: null }) }, 'Bốc bình thường'))));
@@ -222,7 +225,7 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
     const noNe = need === 'ne' && v.me.char === 'khonglo'; // Gã khổng lồ không dùng được lá Né
     const mine = noNe ? null : hand.find((c) => c.t === need) || (need === 'ne' ? hand.find((c) => c.t === 'lach') : null) || hand.find((c) => c.t === swap);
     const hat = need === 'ne' ? myEq.find((c) => c.t === 'mu') : null; // Mũ rộng vành: trang bị né 1 phát
-    main.push(el('div', { class: 'card-tile stack', style: 'border-color:var(--danger)' }, el('b', {}, `⚠️ ${msg}`),
+    pops.push(el('div', { class: 'card-tile stack', style: 'border-color:var(--danger)' }, el('b', {}, `⚠️ ${msg}`),
       noNe ? el('div', { class: 'muted' }, 'Gã khổng lồ không dùng được lá Né.') : null,
       pd.left > 1 ? el('div', {}, `Đòn của Tay súng thép: cần ${pd.left} lá Né nữa`) : null,
       el('div', { class: 'actions' },
@@ -291,7 +294,8 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
 
   // Khít màn hình: bàn tròn co giãn theo chỗ trống; dọc: bàn trên, điều khiển dưới; ngang: trái / phải
   return [sideLayout({ left, right, main: [el('div', { class: 'lz' }, el('div', { class: 'lz-in' },
-    el('div', { class: 'lz-table' }, table, logBox, roleBox), el('div', { class: 'lz-ctrl stack' }, main)))] })];
+    el('div', { class: 'lz-table' }, table, logBox, roleBox), el('div', { class: 'lz-ctrl stack' }, main),
+    pops.length ? el('div', { class: 'ov-pop' }, pops) : null))] })];
 }
 
 runTable({

@@ -507,7 +507,9 @@ test('Chợ phiên: mỗi người lần lượt lấy 1 lá, người cuối nh
   const [cp] = give(s, 'A', C('chophien'));
   s = A(s, 'A', { type: 'play', card: cp.id });
   assert.equal(s.phase, 'store');
-  assert.equal(viewFor(s, 'C').store.cards.length, 4);
+  assert.equal(viewFor(s, 'A').store.cards.length, 4, 'người đang chọn thấy quầy');
+  assert.equal(viewFor(s, 'C').store.cards, null, 'người chưa tới lượt không thấy');
+  assert.equal(viewFor(s, 'C').store.count, 4);
   assert.equal(viewFor(s, 'C').turn, 'A');
   NO(s, 'B', { type: 'store', card: s.store.cards[0].id });
   for (const id of ['A', 'B', 'C']) s = A(s, id, { type: 'store', card: s.store.cards[0].id });

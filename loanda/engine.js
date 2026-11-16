@@ -615,7 +615,8 @@ export function viewFor(s, id) {
     turnPlayer: s.players[s.turn].id,
     waitingOn: picking ? s.players.filter((p) => !p.char).map((p) => p.id) : undefined,
     phase: s.phase, bangUsed: s.bangUsed, deckCount: s.deck.length,
-    store: s.store ? { cards: s.store.cards, turn: s.store.queue[0] } : null,
+    // Chợ phiên: chỉ người đang tới lượt chọn mới thấy các lá trên quầy; người khác chỉ biết còn mấy lá
+    store: s.store ? { cards: s.store.queue[0] === id ? s.store.cards : null, count: s.store.cards.length, turn: s.store.queue[0] } : null,
     pending: s.pending && { kind: s.pending.kind, how: s.pending.how, from: s.pending.from, need: s.pending.need, a: s.pending.a, b: s.pending.b, responder: responder(s), left: s.pending.left ?? s.pending.need2 ?? 1 },
     lastFlip: s.lastFlip, lastPlay: s.lastPlay || null, log: s.log,
     scout: s.phase === 'scout' && s.turn === mi ? (({ t, s: su }) => ({ t, s: su }))(s.deck.at(-1)) : null,
