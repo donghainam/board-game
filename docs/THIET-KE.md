@@ -568,16 +568,16 @@ Mã phòng bắt đầu bằng `W` · 4–7 người · có vai trò bí mật +
 | Ông lang vườn | 4 | Bỏ 2 lá bất kỳ để hồi 1 máu, lúc nào cũng được (máy tự dùng khi sắp gục) |
 | Tay súng thép | 4 | Muốn né Bắn của người này phải 2 lần Né (Thùng gỗ tính 1 lần) |
 | Kẻ lang thang | 4 | Hết bài trên tay thì bốc ngay 1 lá |
-| Tay súng lão luyện | 3 | Mỗi lượt được đánh 2 lá Bắn |
-| Kẻ liều mạng | 4 | Khi chỉ còn 1 máu: bắn không giới hạn |
+| Tay súng lão luyện | 3 | Bắn không giới hạn những người ở khoảng cách 1 (người xa hơn vẫn 1 lần/lượt) |
+| Kẻ liều mạng | 4 | Trong lượt mình: chịu mất 1 máu để bốc 2 lá, dùng được tới khi còn 1 máu |
 | Thợ rèn súng | 4 | Tầm bắn +1 (cộng với súng) |
-| Bác sĩ làng | 4 | Băng bó hồi 2 máu |
-| Chủ quán rượu | 4 | Đầu lượt: nếu đang mất máu thì hồi 1 máu thay cho lá bốc thứ 2 |
-| Cao bồi nhanh tay | 4 | Né thành công thì bốc 1 lá |
-| Kẻ trộm ngựa | 3 | Cướp được người ở khoảng cách 2 |
+| Bác sĩ làng | 4 | Khi người khác hồi máu: bỏ 1 lá để hồi 1 máu theo (trong 3 giây) |
+| Người có Trái tim | 4 | Sắp mất máu vì Bắn / Bắn loạt: lật 1 lá, ra ♥ thì không mất máu (không áp dụng Thuốc nổ, Đấu tay đôi, Phục kích) |
+| Cao bồi nhanh tay | 4 | Bị người khác Phá/Cướp thì được bắn trả ngay 1 phát miễn phí vào người đó |
+| Thám tử | 4 | Đầu lượt xem lá trên cùng, được đẩy xuống đáy chồng rồi mới bốc |
 | Phu xe ngựa | 4 | Tiếp tế và Tiếp tế lớn bốc thêm 1 lá |
-| Thầy bói | 4 | Miễn nhiễm Thuốc nổ: lật ra ♠ cũng không nổ, chỉ chuyền tiếp |
-| Người thép | 4 | Không mất máu vì Bắn loạt và Phục kích |
+| Thầy bói | 4 | Lật bài kiểm tra (Nhà tù, Thùng gỗ, Trái tim): ♦ cũng tính như ♥ |
+| Gã khổng lồ | 9 | Không dùng được lá Né (Thùng gỗ vẫn được); trên tay giữ tối đa 5 lá |
 
 ### Lượt chơi
 1. **Đầu lượt:**

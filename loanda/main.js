@@ -1,6 +1,6 @@
 import { el } from '../shared/lobby.js';
 import { runTable } from '../shared/table.js';
-import { validate, start, apply, viewFor, forceSkip, CHARS } from './engine.js';
+import { validate, start, apply, viewFor, forceSkip, nextTimer, onTimer, CHARS } from './engine.js';
 import { botAction } from './bot.js';
 import { art, CARD } from './art.js';
 import { roundTable, sideLayout } from '../shared/roundtable.js';
@@ -75,7 +75,7 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
   const inRange = (p) => {
     if (!card || p.dist == null) return true;
     if (asType(card) === 'ban') return p.dist <= v.me.range;
-    if (card.t === 'cuop') return p.dist <= (v.me.char === 'tromngua' ? 2 : 1);
+    if (card.t === 'cuop') return p.dist <= 1;
     if (card.t === 'tu') return p.role !== 'cst';
     return true;
   };
@@ -135,6 +135,21 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
         el('button', { class: 'btn', onclick: () => { target = null; rerender(); } }, 'Huỷ'))));
   }
 
+  if (v.scout) {
+    main.push(el('div', { class: 'card-tile stack', style: 'align-items:center' }, el('b', {}, '🕵️ Thám tử: lá trên cùng chồng bài là'),
+      acard(v.scout, { big: true }),
+      el('div', { class: 'actions' },
+        el('button', { class: 'btn btn-primary', disabled: pending, onclick: () => send({ type: 'scout', bottom: false }) }, 'Giữ, bốc luôn'),
+        el('button', { class: 'btn', disabled: pending, onclick: () => send({ type: 'scout', bottom: true }) }, 'Đẩy xuống đáy rồi bốc'))));
+  }
+
+  // Bác sĩ làng: người khác vừa hồi máu → chạm 1 lá để bỏ và hồi theo
+  if (v.docOffer) {
+    main.push(el('div', { class: 'card-tile stack', style: 'border-color:var(--ok)' },
+      el('b', {}, '🩺 Bác sĩ làng: có người vừa hồi máu. Chạm 1 lá trên tay để bỏ và hồi 1 máu theo (3 giây).'),
+      el('button', { class: 'btn btn-small', disabled: pending, onclick: () => send({ type: 'doc', card: null }) }, 'Bỏ qua')));
+  }
+
   if (v.phase === 'steal' && myTurn) {
     main.push(el('div', { class: 'card-tile stack' }, el('b', {}, '🤏 Kẻ móc túi: rút lá đầu tiên từ tay ai?'),
       el('div', { class: 'actions' },
@@ -146,8 +161,10 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
   if (v.phase === 'react' && pd && actor) {
     const need = pd.kind === 'duel' ? 'ban' : pd.need;
     const swap = v.me.char === 'haisung' ? { ne: 'ban', ban: 'ne' }[need] : null;
-    const mine = hand.find((c) => c.t === need) || hand.find((c) => c.t === swap);
+    const noNe = need === 'ne' && v.me.char === 'khonglo'; // Gã khổng lồ không dùng được lá Né
+    const mine = noNe ? null : hand.find((c) => c.t === need) || hand.find((c) => c.t === swap);
     main.push(el('div', { class: 'card-tile stack', style: 'border-color:var(--danger)' }, el('b', {}, `⚠️ ${msg}`),
+      noNe ? el('div', { class: 'muted' }, 'Gã khổng lồ không dùng được lá Né.') : null,
       pd.left > 1 ? el('div', {}, `Đòn của Tay súng thép: cần ${pd.left} lá Né nữa`) : null,
       el('div', { class: 'actions' },
         el('button', { class: 'btn btn-primary', disabled: !mine || pending, onclick: () => send({ type: 'respond', card: mine.id }) }, mine ? `Đánh ${CARD[mine.t][0]}` : `Không có lá ${CARD[need][0]}`),
@@ -157,9 +174,11 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
   // Trạng thái
   let status = '';
   if (!v.me.alive) status = '💀 Bạn đã gục. Ngồi xem tiếp nhé.';
-  else if (v.phase === 'discard' && myTurn) status = `Bài nhiều hơn máu: chọn ${hand.length - P[me].hp} lá để bỏ.`;
+  else if (v.phase === 'discard' && myTurn) status = `Bài nhiều hơn mức được giữ (${v.me.handLimit} lá): chọn ${hand.length - v.me.handLimit} lá để bỏ.`;
+  else if (v.phase === 'scout' && !myTurn) status = `${nameOf(v.turnPlayer)} (Thám tử) đang xem lá trên cùng…`;
   else if (v.phase === 'steal' && !myTurn) status = `${nameOf(v.turnPlayer)} đang chọn người để móc túi…`;
-  else if (myTurn) status = card ? (needs ? `Chạm vào người để ${CARD[asType(card)][0]}.` : `Đánh ${CARD[card.t][0]}?`) : `Lượt của bạn · tầm bắn ${v.me.range}${v.bangUsed >= v.me.bangLimit ? ' · đã bắn đủ' : ''}`;
+  else if (myTurn && v.phase === 'play') status = card ? (needs ? `Chạm vào người để ${CARD[asType(card)][0]}.` : `Đánh ${CARD[card.t][0]}?`) : `Lượt của bạn · tầm bắn ${v.me.range}${v.bangUsed >= v.me.bangLimit ? ' · đã bắn đủ' : ''}`;
+  else if (myTurn) status = 'Lượt của bạn';
   else if (v.phase === 'react' && !actor) status = `Đang chờ ${who(v.turn)} phản ứng…`;
   else status = `Lượt của ${nameOf(v.turnPlayer)}`;
   main.push(el('div', { class: 'status' + (myTurn || actor ? ' me' : ''), role: 'status' }, status));
@@ -173,9 +192,10 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
     const mid = (hand.length - 1) / 2;
     main.push(el('div', { class: 'fan' }, hand.map((c, i) => acard(c, {
       sel: picking ? picks.has(c.id) : sel === c.id,
-      disabled: !(myTurn || picking) || pending,
+      disabled: !(myTurn || picking || v.docOffer) || pending,
       style: `transform: rotate(${(i - mid) * Math.min(6, 30 / hand.length)}deg) translateY(${Math.abs(i - mid) * 3}px)`,
       onclick: () => {
+        if (v.docOffer) { send({ type: 'doc', card: c.id }); return; }
         if (picking) { picks.has(c.id) ? picks.delete(c.id) : picks.add(c.id); } else { sel = sel === c.id ? null : c.id; target = null; }
         rerender();
       },
@@ -189,6 +209,7 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
     if (discarding) acts.append(el('button', { class: 'btn btn-primary', disabled: pending, onclick: () => send({ type: 'discard', cards: [...picks] }) }, `Bỏ ${picks.size} lá`));
     else if (myTurn && v.phase === 'play') {
       if (card && !TARGETED.includes(asType(card))) acts.append(el('button', { class: 'btn btn-primary', disabled: pending, onclick: () => { const id = sel; sel = null; send({ type: 'play', card: id }); } }, `Đánh ${CARD[card.t][0]}`));
+      if (v.me.char === 'lieumang' && P[me].hp > 1) acts.append(el('button', { class: 'btn', disabled: pending, onclick: () => send({ type: 'gamble' }) }, '🎲 Mất 1 máu, bốc 2 lá'));
       acts.append(el('button', { class: 'btn', disabled: pending, onclick: () => { sel = null; send({ type: 'end' }); } }, 'Kết thúc lượt ➜'));
     }
     main.push(acts);
@@ -202,7 +223,7 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
 
 runTable({
   gameCode: 'W', minPlayers: 4, maxPlayers: 7,
-  engine: { validate, start, apply: (s, id, a) => apply(s, id, a), viewFor, forceSkip: (s, stuck) => forceSkip(s, Math.random, stuck) },
+  engine: { validate, start, apply: (s, id, a) => apply(s, id, a), viewFor, forceSkip: (s, stuck) => forceSkip(s, Math.random, stuck), nextTimer, onTimer },
   renderTable,
   bot: botAction,
   resultOf: (v, nameOf) => ({

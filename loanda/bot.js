@@ -15,15 +15,16 @@ export function botAction(v) {
   const me = v.me;
   if (v.phase === 'pick') return { type: 'pick', char: me.offer[0] };
   if (v.phase === 'steal') return { type: 'steal', target: null };
+  if (v.phase === 'scout') return { type: 'scout', bottom: false };
   if (v.phase === 'react') {
     const pd = v.pending;
     const need = pd.kind === 'duel' ? 'ban' : pd.need;
     const swap = me.char === 'haisung' ? { ne: 'ban', ban: 'ne' }[need] : null;
-    const c = me.hand.find((x) => x.t === need) || me.hand.find((x) => x.t === swap);
+    const c = need === 'ne' && me.char === 'khonglo' ? null : me.hand.find((x) => x.t === need) || me.hand.find((x) => x.t === swap);
     return c ? { type: 'respond', card: c.id } : { type: 'respond' };
   }
   const self = v.players.find((p) => p.id === me.id);
-  if (v.phase === 'discard') return { type: 'discard', cards: me.hand.slice(0, me.hand.length - self.hp).map((c) => c.id) };
+  if (v.phase === 'discard') return { type: 'discard', cards: me.hand.slice(0, me.hand.length - me.handLimit).map((c) => c.id) };
 
   const H = (t) => me.hand.find((c) => c.t === t);
   const play = (c, target) => ({ type: 'play', card: c.id, ...(target ? { target } : {}) });
@@ -33,9 +34,10 @@ export function botAction(v) {
   const gun = me.hand.find((c) => GUN_RANGE[c.t]);
   if (gun && !equipped((c) => GUN_RANGE[c.t])) return play(gun);
   for (const t of ['ngua', 'ongnhom', 'thung']) if (H(t) && !equipped((c) => c.t === t)) return play(H(t));
-  if (v.bangUsed < me.bangLimit) {
+  const free = (p) => me.char === 'laoluyen' && p.dist === 1;
+  {
     const shot = me.hand.find((c) => c.t === 'ban' || (c.t === 'ne' && me.char === 'haisung'));
-    const target = enemies(v).find((p) => p.dist && p.dist <= me.range);
+    const target = enemies(v).find((p) => p.dist && p.dist <= me.range && (free(p) || v.bangUsed < me.bangLimit));
     if (shot && target) return play(shot, target.id);
   }
   return { type: 'end' };

@@ -35,7 +35,7 @@ test('bộ bài, chia vai, chọn chức năng rồi mới chia bài', () => {
   s = forceSkip(s);
   const cst = s.players.find((p) => p.role === 'cst');
   // Cảnh sát trưởng là Kẻ móc túi thì lượt mở đầu bằng bước chọn người để móc
-  assert.equal(s.phase, cst.char === 'moctui' ? 'steal' : 'play');
+  assert.equal(s.phase, { moctui: 'steal', thamtu: 'scout' }[cst.char] || 'play');
   assert.equal(cst.max, CHARS[cst.char].hp + 1);
   assert.equal(s.players[s.turn].id, cst.id);
   assert.ok(cst.hand.length >= cst.max);
@@ -324,64 +324,108 @@ test('Kẻ lang thang: hết bài thì bốc 1', () => {
   assert.equal(P(s, 'A').hand.length, 1);
 });
 
-test('Tay súng lão luyện 2 lần, Kẻ liều mạng 1 máu không giới hạn, Thợ rèn tầm +1', () => {
+test('Tay súng lão luyện: bắn người kề bên không giới hạn, người xa 1 lần; Kẻ liều mạng: mất 1 máu bốc 2; Thợ rèn tầm +1', () => {
   let s = ch(mk(R4), 'A', 'laoluyen');
-  const [b1, b2, b3] = give(s, 'A', C('ban'), C('ban'), C('ban'));
-  s = A(A(s, 'A', { type: 'play', card: b1.id, target: 'B' }), 'B', { type: 'respond' });
-  s = A(A(s, 'A', { type: 'play', card: b2.id, target: 'D' }), 'D', { type: 'respond' });
-  NO(s, 'A', { type: 'play', card: b3.id, target: 'B' });
+  P(s, 'A').eq.push(C('sung3'));
+  const [b1, b2, b3, b4] = give(s, 'A', C('ban'), C('ban'), C('ban'), C('ban'));
+  s = A(A(s, 'A', { type: 'play', card: b1.id, target: 'B' }), 'B', { type: 'respond' }); // kề bên
+  s = A(A(s, 'A', { type: 'play', card: b2.id, target: 'B' }), 'B', { type: 'respond' }); // kề bên lần 2
+  s = A(A(s, 'A', { type: 'play', card: b3.id, target: 'C' }), 'C', { type: 'respond' }); // xa: lần 1
+  NO(s, 'A', { type: 'play', card: b4.id, target: 'C' }); // xa: lần 2 bị chặn
   let l = ch(mk(R4), 'A', 'lieumang');
-  P(l, 'A').hp = 1;
-  const [c1, c2] = give(l, 'A', C('ban'), C('ban'));
-  l = A(A(l, 'A', { type: 'play', card: c1.id, target: 'B' }), 'B', { type: 'respond' });
-  l = A(l, 'A', { type: 'play', card: c2.id, target: 'B' });
-  assert.equal(l.phase, 'react');
+  P(l, 'A').hp = 2;
+  l = A(l, 'A', { type: 'gamble' });
+  assert.equal(P(l, 'A').hp, 1);
+  assert.equal(P(l, 'A').hand.length, 2);
+  NO(l, 'A', { type: 'gamble' }); // còn 1 máu thì thôi
+  NO(ch(mk(R4), 'B', 'lieumang'), 'B', { type: 'gamble' }); // không phải lượt mình
   const r = ch(mk(R4), 'A', 'thoren');
   const [d] = give(r, 'A', C('ban'));
   assert.equal(A(r, 'A', { type: 'play', card: d.id, target: 'C' }).phase, 'react', 'khoảng cách 2, tầm 1+1');
 });
 
-test('Bác sĩ hồi 2; Chủ quán rượu hồi 1 thay lá thứ 2; Phu xe +1 lá', () => {
-  const s = ch(mk(R4), 'A', 'bacsi');
-  P(s, 'A').hp = 2;
+test('Bác sĩ làng hồi theo khi người khác hồi máu (trong 3 giây); Phu xe +1 lá', () => {
+  let s = ch(mk(R4), 'C', 'bacsi');
+  P(s, 'A').hp = 3; P(s, 'C').hp = 2;
   const [bb] = give(s, 'A', C('bangbo'));
-  assert.equal(P(A(s, 'A', { type: 'play', card: bb.id }), 'A').hp, 4);
-  const q = ch(mk(R4), 'B', 'quanruou');
-  P(q, 'B').hp = 2;
-  const r = endFrom(q, 'A');
-  assert.equal(P(r, 'B').hp, 3);
-  assert.equal(P(r, 'B').hand.length, 1);
+  const [x] = give(s, 'C', C('ne'));
+  s = A(s, 'A', { type: 'play', card: bb.id });
+  assert.equal(viewFor(s, 'C').docOffer, true);
+  assert.equal(viewFor(s, 'B').docOffer, null);
+  const late = apply(s, 'C', { type: 'doc', card: x.id }, () => 0, Date.now() + 10_000);
+  assert.equal(late.ok, false, 'quá 3 giây thì hết lời mời');
+  s = A(s, 'C', { type: 'doc', card: x.id });
+  assert.equal(P(s, 'C').hp, 3);
+  assert.equal(P(s, 'C').hand.length, 0);
   let f = ch(mk(R4), 'A', 'phuxe');
   const [tt] = give(f, 'A', C('tiepte'));
   f = A(f, 'A', { type: 'play', card: tt.id });
   assert.equal(P(f, 'A').hand.length, 3);
 });
 
-test('Cao bồi nhanh tay bốc khi né; Kẻ trộm ngựa cướp xa 2', () => {
-  let s = ch(mk(R4), 'B', 'nhanhtay');
+test('Người có Trái tim: lật ♥ khi bị Bắn thì không mất máu; Phục kích thì không cứu', () => {
+  let s = ch(mk(R4), 'B', 'traitim');
+  s.deck.push(C('ne', 0)); // lật ra ♥
   const [b] = give(s, 'A', C('ban'));
-  const [ne] = give(s, 'B', C('ne'));
-  s = A(A(s, 'A', { type: 'play', card: b.id, target: 'B' }), 'B', { type: 'respond', card: ne.id });
-  assert.equal(P(s, 'B').hand.length, 1);
-  let t = ch(mk(R4), 'A', 'tromngua');
-  const [c] = give(t, 'A', C('cuop'));
-  give(t, 'C', C('ne'));
-  t = A(t, 'A', { type: 'play', card: c.id, target: 'C', which: 'hand' });
-  assert.equal(P(t, 'C').hand.length, 0);
+  s = A(A(s, 'A', { type: 'play', card: b.id, target: 'B' }), 'B', { type: 'respond' });
+  assert.equal(P(s, 'B').hp, 4);
+  let t = ch(mk(R4), 'B', 'traitim');
+  t.deck.push(C('ne', 0));
+  const [pk] = give(t, 'A', C('phuckich'));
+  t = A(A(t, 'A', { type: 'play', card: pk.id }), 'B', { type: 'respond' });
+  assert.equal(P(t, 'B').hp, 3);
 });
 
-test('Thầy bói không nổ; Người thép miễn bắn loạt/phục kích', () => {
+test('Cao bồi nhanh tay: bị Phá/Cướp thì bắn trả miễn phí', () => {
+  let s = ch(mk(R4), 'B', 'nhanhtay');
+  const [ph] = give(s, 'A', C('pha'));
+  give(s, 'B', C('ne'));
+  s = A(s, 'A', { type: 'play', card: ph.id, target: 'B', which: 'hand' });
+  assert.equal(s.phase, 'react');
+  assert.equal(viewFor(s, 'A').turn, 'A', 'A phải né phát bắn trả');
+  s = A(s, 'A', { type: 'respond' });
+  assert.equal(P(s, 'A').hp, 4, 'cảnh sát trưởng 5 máu − 1');
+  assert.equal(s.phase, 'play');
+  assert.equal(s.players[s.turn].id, 'A', 'vẫn là lượt A');
+});
+
+test('Thám tử: xem lá trên cùng, đẩy xuống đáy rồi bốc', () => {
+  let s = ch(mk(R4), 'B', 'thamtu');
+  const bom = C('no');
+  s.deck.push(bom);
+  s = endFrom(s, 'A');
+  assert.equal(s.phase, 'scout');
+  assert.equal(viewFor(s, 'B').scout.t, 'no');
+  assert.equal(viewFor(s, 'C').scout, null, 'người khác không thấy');
+  s = A(s, 'B', { type: 'scout', bottom: true });
+  assert.equal(P(s, 'B').hand.some((c) => c.id === bom.id), false);
+  assert.equal(s.deck[0].id, bom.id);
+});
+
+test('Thầy bói: ♦ tính như ♥ (Nhà tù); Gã khổng lồ: không dùng Né, Thùng gỗ vẫn được, giữ tối đa 5 lá', () => {
   const s = ch(mk(R4), 'B', 'thayboi');
-  s.players.forEach((p) => { p.hp = 9; p.max = 9; });
-  P(s, 'B').eq.push(C('no'));
-  s.deck.push(C('ban', 3)); // ♠
+  P(s, 'B').eq.push(C('tu'));
+  s.deck.push(C('ban', 1)); // ♦
   const r = endFrom(s, 'A');
-  assert.equal(P(r, 'B').hp, 9);
-  assert.equal(P(r, 'C').eq.some((c) => c.t === 'no'), true);
-  let t = ch(mk(R4), 'B', 'nguoithep');
-  const [l] = give(t, 'A', C('loat'));
-  t = A(t, 'A', { type: 'play', card: l.id });
-  assert.equal(viewFor(t, 'A').turn, 'C', 'bỏ qua Người thép');
+  assert.equal(r.players[r.turn].id, 'B', 'vượt ngục nhờ ♦');
+  let k = ch(mk(R4), 'B', 'khonglo');
+  Object.assign(P(k, 'B'), { hp: 9, max: 9 });
+  const [b] = give(k, 'A', C('ban'));
+  const [ne] = give(k, 'B', C('ne'));
+  k = A(k, 'A', { type: 'play', card: b.id, target: 'B' });
+  NO(k, 'B', { type: 'respond', card: ne.id });
+  let g = ch(mk(R4), 'B', 'khonglo');
+  P(g, 'B').eq.push(C('thung'));
+  g.deck.push(C('ne', 0));
+  const [b2] = give(g, 'A', C('ban'));
+  g = A(g, 'A', { type: 'play', card: b2.id, target: 'B' });
+  assert.equal(g.phase, 'play', 'Thùng gỗ vẫn né được');
+  let h = ch(mk(R4), 'A', 'khonglo');
+  Object.assign(P(h, 'A'), { hp: 9, max: 9 });
+  give(h, 'A', ...Array.from({ length: 7 }, () => C('ne')));
+  h = A(h, 'A', { type: 'end' });
+  assert.equal(h.phase, 'discard');
+  assert.equal(viewFor(h, 'A').me.handLimit, 5);
 });
 
 test('review: Ông lang vườn hồi máu lúc đang bỏ bài không làm kẹt ván', () => {
