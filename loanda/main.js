@@ -116,6 +116,10 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
       el('div', { class: 'ac back', title: `Chồng bài: ${v.deckCount} lá` }),
       lp ? acard(lp.card, { big: true }) : null),
     msg ? el('div', { class: 'msg' }, msg) : null,
+    // Đang phản ứng mà lá giữa bàn là lá đáp trả: nói rõ ai vừa đánh và tới lượt ai.
+    v.phase === 'react' && pd && lp && lp.by !== pd.from
+      ? el('div', { class: 'msg', style: 'background:#e8590ccc' }, `↩ ${who(lp.by)} vừa đánh ${CARD[lp.card.t]?.[0]} · tới lượt ${who(pd.responder)}${pd.kind === 'duel' ? ' đánh Bắn' : ''}`)
+      : null,
     v.lastFlip ? el('div', { class: 'msg' }, `🃏 ${who(v.lastFlip.by)} lật (${v.lastFlip.why}): ${CARD[v.lastFlip.card.t]?.[0]} ${SUIT[v.lastFlip.card.s]}`) : null,
   ];
   const arrow = lp?.target ? { from: lp.by, to: lp.target } : null; // luôn theo lá vừa đánh (kể cả lá đáp trả)
