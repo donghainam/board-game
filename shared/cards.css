@@ -1,0 +1,35 @@
+/* Lá bài vẽ bằng CSS, dùng chung cho các game bài (Sắc Bài, Bom Xịt). */
+.top { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.top a { color: var(--muted); text-decoration: none; }
+.net { font-size: 13px; }
+.players { display:grid; grid-template-columns: repeat(auto-fit, minmax(110px,1fr)); gap:8px; }
+.pl { background: var(--surface); border:2px solid var(--line); border-radius:12px; padding:8px 10px; }
+.pl.turn { border-color: var(--accent); }
+.pl.out { opacity:.45; text-decoration: line-through; }
+.pl .n { font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.felt { background: var(--felt); color: var(--felt-text); border-radius: 18px; padding:14px; min-height:150px;
+        display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; text-align:center; }
+.gc { width:58px; aspect-ratio: 5/7; border-radius:10px; border:3px solid #fff; color:#fff; padding:0;
+      display:inline-flex; align-items:center; justify-content:center; font: 800 20px/1 system-ui, sans-serif;
+      box-shadow: 0 2px 5px rgb(0 0 0 / .3); text-shadow: 0 1px 2px rgb(0 0 0 / .4); }
+.gc.big { width:84px; font-size:28px; }
+.gc.c-r { background:#e03131; } .gc.c-y { background:#f2b200; } .gc.c-g { background:#2f9e44; } .gc.c-b { background:#1c7ed6; }
+.gc.c-k { background: conic-gradient(#e03131 0 25%, #f2b200 0 50%, #2f9e44 0 75%, #1c7ed6 0); }
+.gc.t-bom { background:#222; } .gc.t-keo { background:#2f9e44; } .gc.t-soi { background:#7048e8; }
+.gc.t-ne { background:#1c7ed6; } .gc.t-chan { background:#e8590c; } .gc.t-back { background: repeating-linear-gradient(45deg,#6b4a1f 0 6px,#8a6431 6px 12px); }
+.gc.sel { outline: 3px solid var(--accent); transform: translateY(-8px); }
+.gc.dim { opacity:.45; }
+.hand { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; padding-top:10px; }
+.hand .gc { cursor:pointer; transition: transform .12s; }
+.status { font-weight:700; text-align:center; }
+.status.me { color: var(--accent); }
+.actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+.actions .btn { flex:1; min-width: 96px; }
+.swatches { display:flex; gap:8px; justify-content:center; }
+.swatch { width:52px; height:52px; border-radius:50%; border:3px solid #fff; box-shadow: var(--shadow); }
+.scores li { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed var(--line); }
+.result h2 { color: var(--accent); }
+.bar { height:8px; border-radius:999px; background: rgb(255 255 255 / .25); overflow:hidden; width:100%; max-width:240px; }
+.bar > i { display:block; height:100%; background: var(--accent); animation: shrink linear forwards; }
+@keyframes shrink { from { width:100%; } to { width:0; } }
+.alert-big { font-weight:800; font-size:18px; color: var(--danger); text-align:center; }

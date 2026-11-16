@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ma Sói</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐺</text></svg>">
+<link rel="stylesheet" href="../shared/ui.css">
+<link rel="stylesheet" href="../shared/cards.css">
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
+<style>
+  .phase { text-align:center; }
+  .phase h2 { margin:0; }
+  .night-bg { background:#1b2240; color:#e8ecff; border-radius:16px; padding:14px; }
+  .day-bg { background: var(--surface-2); border-radius:16px; padding:14px; }
+  .plist { display:grid; grid-template-columns: repeat(auto-fill, minmax(130px,1fr)); gap:8px; }
+  .pbtn { min-height:48px; border-radius:12px; border:2px solid var(--line); background: var(--surface); color: var(--text);
+          font: inherit; font-weight:600; padding:8px; text-align:left; display:flex; flex-direction:column; gap:2px; }
+  .pbtn.sel { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 15%, var(--surface)); }
+  .pbtn.dead { opacity:.45; text-decoration: line-through; }
+  .pbtn small { font-weight:400; color: var(--muted); }
+  .rolecard { text-align:center; }
+  .rolecard .big { font-size:42px; }
+  .countdown { font: 800 40px/1 ui-monospace, Menlo, Consolas, monospace; text-align:center; }
+  .tag { font-size:12px; padding:1px 6px; border-radius:999px; background: var(--surface-2); color: var(--text); }
+</style>
+</head>
+<body>
+<main class="wrap stack">
+  <div class="top"><a href="../">← Trang chủ</a><b>Ma Sói</b><span class="net muted" id="net"></span></div>
+  <div id="app" class="stack"></div>
+</main>
+<script type="module" src="main.js"></script>
+</body>
+</html>

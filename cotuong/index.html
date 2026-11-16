@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cờ tướng</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♟️</text></svg>">
+<link rel="stylesheet" href="../shared/ui.css">
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
+<style>
+  .top { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .top a { color: var(--muted); text-decoration: none; }
+  .net { font-size: 13px; }
+  .sides { display:flex; justify-content:space-between; gap:8px; font-weight:600; }
+  .sides .on { color: var(--accent); }
+  .board { width:100%; max-width:440px; margin:0 auto; display:block; touch-action:manipulation; user-select:none; }
+  .board .bg { fill:#e9c98f; }
+  .board line, .board .grid { stroke:#6b4a1f; stroke-width:1.2; fill:none; }
+  .board .river { font: 600 18px serif; fill:#6b4a1f; }
+  .board .pc circle { fill:#fdf3dc; stroke-width:2; }
+  .board .pc text { font: 700 20px "Noto Serif SC","Songti SC","SimSun",serif; text-anchor:middle; dominant-baseline:central; }
+  .board .r circle { stroke:#c0392b; } .board .r text { fill:#c0392b; }
+  .board .b circle { stroke:#222; } .board .b text { fill:#222; }
+  .board .sel circle { fill:#ffe08a; stroke-width:3; }
+  .board .dot { fill: rgb(40 140 70 / .7); }
+  .board .last { fill: rgb(232 89 12 / .25); }
+  .status { font-weight:700; text-align:center; }
+  .status.me { color: var(--accent); }
+  .check { color: var(--danger); font-weight:800; text-align:center; font-size:20px; }
+  .actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .scores li { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed var(--line); }
+  .result h2 { color: var(--accent); }
+</style>
+</head>
+<body>
+<main class="wrap stack">
+  <div class="top"><a href="../">← Trang chủ</a><b>Cờ tướng</b><span class="net muted" id="net"></span></div>
+  <div id="app" class="stack"></div>
+</main>
+<script type="module" src="main.js"></script>
+</body>
+</html>

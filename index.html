@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Board Game Hội Bạn</title>
+<meta name="description" content="Board game tiếng Việt chơi cùng hội bạn trên điện thoại. Mở link là chơi.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
+<link rel="stylesheet" href="shared/ui.css">
+<style>
+  .hero h1 { font-size: clamp(28px, 8vw, 40px); }
+  .hero h1 span { color: var(--accent); }
+  .games { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .game { display: flex; gap: 12px; align-items: flex-start; text-decoration: none; color: inherit; }
+  .game .ico { font-size: 34px; line-height: 1; }
+  .game h3 { margin: 0 0 4px; font-size: 17px; }
+  .game p { margin: 0 0 6px; font-size: 14px; }
+  .game.soon { opacity: .6; }
+  a.game:hover, a.game:focus-visible { border-color: var(--accent); outline: none; }
+  footer { text-align: center; font-size: 13px; padding: 24px 0 8px; }
+</style>
+</head>
+<body>
+<main class="wrap stack">
+  <section class="hero stack">
+    <h1>Board game tiếng Việt.<br><span>Mở link là chơi.</span></h1>
+    <p class="muted">Ngồi chung một phòng, mỗi người một điện thoại. Không cần cài app, không cần đăng ký.</p>
+  </section>
+
+  <section class="card-tile stack" aria-labelledby="join-h">
+    <h2 id="join-h">Vào phòng bằng mã</h2>
+    <form id="join" class="row" novalidate>
+      <input id="code" class="input" style="flex:1;min-width:140px;text-transform:uppercase" maxlength="5" placeholder="Ví dụ: TAB3K" autocomplete="off" aria-label="Mã phòng">
+      <button class="btn btn-primary">Vào</button>
+    </form>
+    <div id="err" class="muted" role="alert"></div>
+  </section>
+
+  <h2>Chọn game</h2>
+  <section class="games" id="games"></section>
+
+  <footer class="muted">Làm cho hội bạn chơi vui 💛 · Không cá cược tiền thật<br>Dự án cá nhân, không liên kết với bất kỳ trang board game hay nhà phát hành game nào khác.</footer>
+</main>
+<script>
+  // Ký tự đầu của mã phòng = mã game.
+  const GAMES = [
+    { ico: '🃏', name: 'Tiến Lên miền Nam', desc: 'Chặt heo, tới trắng, thối heo – luật miền Nam quen thuộc.', ppl: '2–4 người', href: 'tienlen/', code: 'T' },
+    { ico: '♟️', name: 'Cờ tướng', desc: 'Đấu trí hai người, cả hội vào xem. Có xin đi lại.', ppl: '2 người + người xem', href: 'cotuong/', code: 'X' },
+    { ico: '🐴', name: 'Cờ cá ngựa', desc: 'Đổ xúc xắc, xuất chuồng, đá ngựa bạn về chuồng.', ppl: '2–4 người', href: 'cangua/', code: 'N' },
+    { ico: '🌈', name: 'Sắc Bài', desc: 'Đánh theo màu hoặc số, phạt +2/+4 cộng dồn, còn 1 lá nhớ BÁO!', ppl: '2–10 người', href: 'sacbai/', code: 'S' },
+    { ico: '💣', name: 'Bom Xịt', desc: 'Bốc bài hồi hộp: có Kéo thì gỡ bom, không thì nổ. Soi, Né, Chặn.', ppl: '2–5 người', href: 'bomxit/', code: 'B' },
+    { ico: '🐺', name: 'Ma Sói', desc: 'Máy làm quản trò: Sói, Tiên tri, Bảo vệ, Phù thuỷ, Thợ săn, Cupid, Sói nguyền, Sói gây mê.', ppl: '5–16 người', href: 'masoi/', code: 'M' },
+    { ico: '🤠', name: 'Loạn Đả Viễn Tây', desc: 'Đấu súng miền Tây với vai trò ẩn – ai sẽ trụ lại?', ppl: '4–7 người' },
+    { ico: '🏙️', name: 'Cờ Tỷ Phú', desc: 'Mua đất, xây nhà, thu tiền thuê – giàu nhất bàn thì thắng.', ppl: '2–6 người' },
+  ];
+  const box = document.getElementById('games');
+  for (const g of GAMES) {
+    const a = document.createElement(g.href ? 'a' : 'div');
+    a.className = 'card-tile game' + (g.href ? '' : ' soon');
+    if (g.href) a.href = g.href;
+    a.innerHTML = `<span class="ico" aria-hidden="true"></span><div><h3></h3><p class="muted"></p><span class="badge"></span></div>`;
+    a.querySelector('.ico').textContent = g.ico;
+    a.querySelector('h3').textContent = g.name;
+    a.querySelector('p').textContent = g.desc;
+    a.querySelector('.badge').textContent = g.href ? g.ppl : g.ppl + ' · Sắp có';
+    box.append(a);
+  }
+  document.getElementById('join').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const c = document.getElementById('code').value.trim().toUpperCase();
+    const g = GAMES.find((x) => x.code && x.code === c[0]);
+    if (!/^[A-Z0-9]{5}$/.test(c) || !g) { document.getElementById('err').textContent = 'Mã không đúng.'; return; }
+    location.href = g.href + '?phong=' + c;
+  });
+</script>
+</body>
+</html>

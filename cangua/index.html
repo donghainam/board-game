@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cờ cá ngựa</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐴</text></svg>">
+<link rel="stylesheet" href="../shared/ui.css">
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
+<style>
+  .top { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .top a { color: var(--muted); text-decoration: none; }
+  .net { font-size: 13px; }
+  :root { --c0:#e03131; --c1:#2f9e44; --c2:#f2b200; --c3:#1c7ed6; }
+  .lboard { display:grid; grid-template-columns:repeat(15,1fr); grid-template-rows:repeat(15,1fr);
+            width:100%; max-width:460px; aspect-ratio:1; margin:0 auto; background:#fffaf0; border-radius:10px;
+            border:2px solid #6b4a1f; overflow:hidden; }
+  .cell { border:1px solid #d8c7a8; display:flex; align-items:center; justify-content:center; min-width:0; min-height:0; }
+  .yard { border-radius:8px; margin:6%; opacity:.9; }
+  .center { background: conic-gradient(var(--c1) 0 25%, var(--c2) 0 50%, var(--c3) 0 75%, var(--c0) 0); }
+  .k0 { background: color-mix(in srgb, var(--c0) 55%, white); } .k1 { background: color-mix(in srgb, var(--c1) 55%, white); }
+  .k2 { background: color-mix(in srgb, var(--c2) 55%, white); } .k3 { background: color-mix(in srgb, var(--c3) 55%, white); }
+  .y0 { background: var(--c0); } .y1 { background: var(--c1); } .y2 { background: var(--c2); } .y3 { background: var(--c3); }
+  .lane { font-size: 9px; color: rgb(0 0 0 / .5); font-weight:700; }
+  .horse { width:92%; aspect-ratio:1; border-radius:50%; border:2px solid #fff; padding:0; font-size:clamp(10px,3.2vw,16px);
+           display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgb(0 0 0 / .4); z-index:1; }
+  .horse.h0 { background:var(--c0); } .horse.h1 { background:var(--c1); } .horse.h2 { background:var(--c2); } .horse.h3 { background:var(--c3); }
+  .horse.go { cursor:pointer; outline:3px solid #111; animation: pulse .8s infinite alternate; }
+  @keyframes pulse { to { transform: scale(1.15); } }
+  @media (prefers-reduced-motion: reduce) { .horse.go { animation:none; } }
+  .info { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+  .die { font-size:34px; line-height:1; }
+  .status { font-weight:700; text-align:center; }
+  .status.me { color: var(--accent); }
+  .plist { display:flex; gap:6px; flex-wrap:wrap; }
+  .plist span { padding:4px 10px; border-radius:999px; color:#fff; font-weight:600; font-size:14px; }
+  .plist .turn { outline:3px solid var(--text); }
+  .scores li { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed var(--line); }
+  .result h2 { color: var(--accent); }
+</style>
+</head>
+<body>
+<main class="wrap stack">
+  <div class="top"><a href="../">← Trang chủ</a><b>Cờ cá ngựa</b><span class="net muted" id="net"></span></div>
+  <div id="app" class="stack"></div>
+</main>
+<script type="module" src="main.js"></script>
+</body>
+</html>

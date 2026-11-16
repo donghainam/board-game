@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><title>Dev net</title>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script></head>
+<body>
+<p><button id="host">Tạo phòng (host)</button> <input id="code" placeholder="mã"> <button id="join">Vào (client)</button> <button id="ping">Ping</button></p>
+<pre id="log"></pre>
+<script type="module">
+import { makeCode, getPlayerId, hostRoom, joinRoom } from './net.js';
+const log = (...a) => (document.getElementById('log').textContent += a.join(' ') + '\n');
+let h, c;
+const q = new URLSearchParams(location.search);
+host.onclick = async () => {
+  const code = q.get('code') || makeCode('T');
+  h = await hostRoom(code); log('host mở', code);
+  h.onHello((id, n) => log('hello', id.slice(0, 8), n));
+  h.onLeave((id) => log('leave', id.slice(0, 8)));
+  h.onMessage((id, m) => { log('host nhận', JSON.stringify(m)); h.send(id, { t: 'pong' }); });
+};
+join.onclick = () => {
+  const pid = q.get('pid') || getPlayerId();
+  c = joinRoom(code.value.trim().toUpperCase(), { playerId: pid, secret: 'dev-secret-' + pid.padEnd(8, 'x'), name: 'Thử' });
+  c.onStatus((s) => log('status', s));
+  c.onMessage((m) => log('client nhận', JSON.stringify(m)));
+};
+ping.onclick = () => (c ? c.send({ t: 'ping' }) : h?.broadcast({ t: 'ping' }));
+window.dbg = { get h() { return h; }, get c() { return c; } };
+</script></body></html>

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tiến Lên miền Nam</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🃏</text></svg>">
+<link rel="stylesheet" href="../shared/ui.css">
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
+<style>
+  .top { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .top a { color: var(--muted); text-decoration: none; }
+  .net { font-size: 13px; }
+  .players { display:grid; grid-template-columns: repeat(auto-fit, minmax(110px,1fr)); gap:8px; }
+  .pl { background: var(--surface); border:2px solid var(--line); border-radius:12px; padding:8px 10px; }
+  .pl.turn { border-color: var(--accent); }
+  .pl .n { font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .felt { background: var(--felt); color: var(--felt-text); border-radius: 18px; padding:14px; min-height:150px;
+          display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; text-align:center; }
+  .felt .cards { display:flex; flex-wrap:wrap; justify-content:center; gap:4px; }
+  .pc { width:46px; height:66px; border-radius:8px; border:1px solid #cdbfae; background:#fffdf8; color:#1d1d1d;
+        display:inline-flex; flex-direction:column; align-items:center; justify-content:center;
+        font: 700 17px/1.05 system-ui, sans-serif; padding:0; box-shadow: 0 1px 3px rgb(0 0 0 / .2); }
+  .pc.red { color: var(--red-suit); }
+  .pc .s { font-size: 19px; }
+  .hand { display:grid; grid-template-columns: repeat(7, 1fr); gap:6px; padding-top:14px; }
+  .hand .pc { width:100%; height:auto; aspect-ratio: 46/66; cursor:pointer; transition: transform .12s; }
+  .hand .pc.sel { transform: translateY(-12px); border-color: var(--accent); box-shadow: 0 4px 10px rgb(232 89 12 / .45); }
+  .status { font-weight:700; text-align:center; }
+  .status.me { color: var(--accent); }
+  .actions { display:flex; gap:8px; }
+  .actions .btn { flex:1; }
+  .scores li { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed var(--line); }
+  .result h2 { color: var(--accent); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pc { background:#f6efe4; } }
+</style>
+</head>
+<body>
+<main class="wrap stack">
+  <div class="top"><a href="../">← Trang chủ</a><b>Tiến Lên miền Nam</b><span class="net muted" id="net"></span></div>
+  <div id="app" class="stack"></div>
+</main>
+<script type="module" src="main.js"></script>
+</body>
+</html>
