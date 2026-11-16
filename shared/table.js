@@ -142,7 +142,7 @@ export async function runTable({
       const v = screen.view;
       const stuck = (v.turn ? [v.turn] : v.waitingOn || []).filter((id) => id !== me && !online(id));
       const skip = engine.forceSkip && isHost && stuck.length
-        ? el('button', { class: 'btn', onclick: () => { state && setState(engine.forceSkip(state)); } },
+        ? el('button', { class: 'btn', onclick: () => { state && setState(engine.forceSkip(state, stuck)); } },
           v.turn ? `Bỏ lượt hộ ${nameOf(v.turn)} (đang offline)` : `Bỏ qua người đang offline (${stuck.map(nameOf).join(', ')})`)
         : null;
       // Lối thoát khi người chơi bỏ đi hẳn (vd Cờ tướng không có bỏ lượt hộ): huỷ ván, không tính điểm.

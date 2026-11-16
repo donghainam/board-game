@@ -536,7 +536,7 @@ Chủ bàn có nút "Bỏ lượt hộ": tự gieo xúc xắc và đi cho ngư�
 
 ## Thiết kế đợt 4 – phần 2: Loạn Đả Viễn Tây
 
-Mã phòng bắt đầu bằng `W` · 4–7 người · không có nhân vật kỹ năng riêng, chỉ có vai trò
+Mã phòng bắt đầu bằng `W` · 4–7 người · có vai trò bí mật + chức năng (nhân vật) công khai
 
 ### Vai trò
 | Số người | Cảnh sát trưởng | Phó cảnh sát | Băng cướp | Kẻ phản bội |
@@ -547,12 +547,37 @@ Mã phòng bắt đầu bằng `W` · 4–7 người · không có nhân vật k
 | 7 | 1 | 2 | 3 | 1 |
 
 - **Cảnh sát trưởng** lộ mặt ngay từ đầu và đi trước. Các vai khác được giữ bí mật; ai chết thì lật vai.
-- **Máu:** 4, riêng Cảnh sát trưởng có 5. Máu cũng là số lá tối đa được giữ trên tay khi kết thúc lượt.
+- **Máu:** theo chức năng (3 hoặc 4), Cảnh sát trưởng +1. Máu cũng là số lá tối đa được giữ trên tay khi kết thúc lượt.
 - **Thắng:**
   - **Phe Luật** (Cảnh sát trưởng và Phó) thắng khi toàn bộ Băng cướp và Kẻ phản bội đã chết.
   - **Băng cướp** thắng khi Cảnh sát trưởng chết, trừ trường hợp Kẻ phản bội là người duy nhất còn sống.
   - **Kẻ phản bội** thắng khi chỉ còn một mình mình sống.
 - **Không có thưởng/phạt** khi hạ gục người khác (đã chốt).
+
+### Chức năng (cập nhật theo yêu cầu ANam)
+- Đầu ván mỗi người được chia **2 lá chức năng** ngẫu nhiên (không trùng nhau), chọn bí mật giữ 1.
+- Khi **cả bàn chọn xong** thì chức năng được công khai, rồi mới chia bài và bắt đầu lượt Cảnh sát trưởng.
+- Người chưa chọn mà offline: chủ bàn bấm bỏ qua, máy chọn lá đầu.
+- 6 kỹ năng do ANam chọn (đặt tên riêng) + 10 kỹ năng tự thiết kế:
+
+| Chức năng | Máu | Kỹ năng |
+|---|---|---|
+| Gã gặp thời | 4 | Bốc đầu lượt: lật lá thứ 2 cho cả bàn xem, ra ♥/♦ thì bốc thêm 1 lá |
+| Cô nàng hai súng | 4 | Dùng Bắn thay Né và Né thay Bắn |
+| Kẻ móc túi | 4 | Lá bốc đầu tiên mỗi lượt được rút ngẫu nhiên từ tay một người tự chọn |
+| Ông lang vườn | 4 | Bỏ 2 lá bất kỳ để hồi 1 máu, lúc nào cũng được (máy tự dùng khi sắp gục) |
+| Tay súng thép | 4 | Muốn né Bắn của người này phải 2 lần Né (Thùng gỗ tính 1 lần) |
+| Kẻ lang thang | 4 | Hết bài trên tay thì bốc ngay 1 lá |
+| Tay súng lão luyện | 3 | Mỗi lượt được đánh 2 lá Bắn |
+| Kẻ liều mạng | 4 | Khi chỉ còn 1 máu: bắn không giới hạn |
+| Thợ rèn súng | 4 | Tầm bắn +1 (cộng với súng) |
+| Bác sĩ làng | 4 | Băng bó hồi 2 máu |
+| Chủ quán rượu | 4 | Đầu lượt: nếu đang mất máu thì hồi 1 máu thay cho lá bốc thứ 2 |
+| Cao bồi nhanh tay | 4 | Né thành công thì bốc 1 lá |
+| Kẻ trộm ngựa | 3 | Cướp được người ở khoảng cách 2 |
+| Phu xe ngựa | 4 | Tiếp tế và Tiếp tế lớn bốc thêm 1 lá |
+| Thầy bói | 4 | Miễn nhiễm Thuốc nổ: lật ra ♠ cũng không nổ, chỉ chuyền tiếp |
+| Người thép | 4 | Không mất máu vì Bắn loạt và Phục kích |
 
 ### Lượt chơi
 1. **Đầu lượt:**
