@@ -40,9 +40,11 @@
 .rt-side-head { display:flex; justify-content:space-between; align-items:center; gap:8px; }
 .rt-side h3 { margin:0 0 6px; font-size:15px; color: var(--muted); }
 @media (max-width: 1023px) {
-  .rt-side { position:fixed; top:0; bottom:0; width:min(86vw,330px); z-index:40; border-radius:0; transition: transform .22s; }
+  /* Đóng thì ẩn hẳn (visibility), để bảng không bao giờ đè nhận chạm dù hiệu ứng trượt có bị khựng */
+  .rt-side { position:fixed; top:0; bottom:0; width:min(86vw,330px); z-index:40; border-radius:0; transition: transform .22s, visibility .22s; visibility:hidden; }
   .rt-side.left { left:0; transform: translateX(-105%); } .rt-side.right { right:0; transform: translateX(105%); }
-  .rt-side.open { transform:none; }
+  .rt-side:not(.open) { pointer-events:none; } /* đổi tức thì, không chờ hiệu ứng */
+  .rt-side.open { transform:none; visibility:visible; }
   .rt-scrim { position:fixed; inset:0; background:#0008; z-index:35; display:none; } .rt-scrim.on { display:block; }
 }
 .rt-toggles { display:flex; justify-content:space-between; gap:8px; }
