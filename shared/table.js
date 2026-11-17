@@ -49,9 +49,9 @@ export async function runTable({
       lastWinner = ws[0];
     }
     state = next;
-    sync();
     schedule();
-    driveBots();
+    driveBots(); // hẹn giờ bot trước khi vẽ: nếu vẽ lỗi thì ván vẫn chạy tiếp, không đứng hình
+    sync();
   }
 
   // Bot: host tự đánh thay các ghế bot, mỗi bước cách nhau một chút cho người thật kịp nhìn.
@@ -168,7 +168,12 @@ export async function runTable({
     rerender: () => render(),
   };
 
+  // Lỗi khi vẽ không được chặn vòng chơi (host còn phải gửi trạng thái, chạy bot): báo lỗi rồi bỏ qua lần vẽ này.
   function render() {
+    try { draw(); } catch (e) { console.error(e); toast('Lỗi hiển thị: ' + e.message); }
+  }
+
+  function draw() {
     let parts;
     if (screen.t === 'wait') {
       parts = [el('div', { class: 'card-tile' }, el('p', {}, 'Ván đang diễn ra. Bạn sẽ được vào chơi từ ván sau 🙌')),
