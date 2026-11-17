@@ -215,11 +215,11 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
 
   // Chợ phiên: lá lật giữa bàn, ai tới lượt thì chạm 1 lá để lấy
   if (v.store) {
-    const mine = v.store.turn === me;
+    const myPick = v.store.turn === me;
     pops.push(el('div', { class: 'card-tile stack', style: 'align-items:center' },
-      el('b', {}, mine ? '🏪 Chợ phiên: chạm 1 lá để lấy' : `🏪 Chợ phiên: đang chờ ${who(v.store.turn)} chọn`),
+      el('b', {}, myPick ? '🏪 Chợ phiên: chạm 1 lá để lấy' : `🏪 Chợ phiên: đang chờ ${who(v.store.turn)} chọn`),
       el('div', { class: 'row', style: 'gap:6px;justify-content:center;flex-wrap:wrap' },
-        mine ? v.store.cards.map((c) => acard(c, { disabled: pending, onclick: () => send({ type: 'store', card: c.id }) }))
+        myPick ? v.store.cards.map((c) => acard(c, { disabled: pending, onclick: () => send({ type: 'store', card: c.id }) }))
           : Array.from({ length: v.store.count }, () => el('div', { class: 'ac back', 'aria-label': 'Lá úp' })))));
   }
 
@@ -252,13 +252,13 @@ function renderTable(v, { me, nameOf, online, send, pending, rerender }) {
     const need = pd.kind === 'duel' ? 'ban' : pd.need;
     const noNe = need === 'ne' && mine('khonglo'); // Gã khổng lồ không dùng được lá Né
     const swap = mine('haisung') && !mine('khonglo') ? { ne: 'ban', ban: 'ne' }[need] : null;
-    const mine = noNe ? null : hand.find((c) => c.t === need) || (need === 'ne' ? hand.find((c) => c.t === 'lach') : null) || hand.find((c) => c.t === swap);
+    const resp = noNe ? null : hand.find((c) => c.t === need) || (need === 'ne' ? hand.find((c) => c.t === 'lach') : null) || hand.find((c) => c.t === swap);
     const hat = need === 'ne' ? myEq.find((c) => DODGE_EQ.includes(c.t)) : null; // trang bị né 1 phát (Mũ, Tấm thép, Bùa…)
     pops.push(el('div', { class: 'card-tile stack', style: 'border-color:var(--danger)' }, el('b', {}, `⚠️ ${msg}`),
       noNe ? el('div', { class: 'muted' }, 'Gã khổng lồ không dùng được lá Né.') : null,
       pd.left > 1 ? el('div', {}, `Đòn của Tay súng thép: cần ${pd.left} lá Né nữa`) : null,
       el('div', { class: 'actions' },
-        el('button', { class: 'btn btn-primary', disabled: !mine || pending, onclick: () => send({ type: 'respond', card: mine.id }) }, mine ? `Đánh ${CARD[mine.t][0]}` : `Không có lá ${CARD[need][0]}`),
+        el('button', { class: 'btn btn-primary', disabled: !resp || pending, onclick: () => send({ type: 'respond', card: resp.id }) }, resp ? `Đánh ${CARD[resp.t][0]}` : `Không có lá ${CARD[need][0]}`),
         hat ? el('button', { class: 'btn', disabled: pending, onclick: () => send({ type: 'respond', card: hat.id }) }, `🎩 ${CARD[hat.t][0]}`) : null,
         el('button', { class: 'btn', disabled: pending, onclick: () => send({ type: 'respond' }) }, 'Chịu mất 1 máu'))));
   }
