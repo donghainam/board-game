@@ -4,26 +4,26 @@ import { shuffle, fail } from '../shared/util.js';
 
 const K = 1000, M = 1_000_000;
 const L = (name, g, price) => ({ t: 'land', name, g, price });
-const AIR = (name) => ({ t: 'air', name, price: 2 * M });
-const UTIL = (name) => ({ t: 'util', name, price: 1.5 * M });
-const EV = { t: 'event', name: 'Sự kiện' };
+const BEACH = (name) => ({ t: 'beach', name, price: 2 * M });
+const EV = { t: 'event', name: 'Cơ hội' };
 
+// 32 ô, 4 góc: Xuất phát (0), Nhà tù (8), Lễ hội (16), Sân bay (24).
 export const BOARD = [
-  { t: 'start', name: 'Xuất phát' }, L('Hà Giang', 1, 600 * K), EV, L('Cao Bằng', 1, 600 * K),
-  { t: 'tax', name: 'Thuế thu nhập', amount: 2 * M }, AIR('Sân bay Nội Bài'),
-  L('Lạng Sơn', 2, 1 * M), EV, L('Điện Biên', 2, 1 * M), L('Sơn La', 2, 1.2 * M),
-  { t: 'jail', name: 'Nhà tù' }, L('Thanh Hoá', 3, 1.4 * M), UTIL('Điện lực'), L('Nghệ An', 3, 1.4 * M), L('Hà Tĩnh', 3, 1.6 * M),
-  AIR('Sân bay Đà Nẵng'), L('Huế', 4, 1.8 * M), EV, L('Quảng Nam', 4, 1.8 * M), L('Quảng Ngãi', 4, 2 * M),
-  { t: 'festival', name: 'Lễ hội' }, L('Bình Định', 5, 2.2 * M), EV, L('Khánh Hoà', 5, 2.2 * M), L('Lâm Đồng', 5, 2.4 * M),
-  AIR('Sân bay Cam Ranh'), L('An Giang', 6, 2.6 * M), L('Kiên Giang', 6, 2.6 * M), UTIL('Cấp nước'), L('Cần Thơ', 6, 2.8 * M),
-  { t: 'gojail', name: 'Vào tù' }, L('Quảng Ninh', 7, 3 * M), L('Hải Phòng', 7, 3 * M), EV, L('Bình Dương', 7, 3.2 * M),
-  AIR('Sân bay Tân Sơn Nhất'), EV, L('Hà Nội', 8, 3.5 * M), { t: 'tax', name: 'Thuế xa xỉ', amount: 1 * M }, L('TP. Hồ Chí Minh', 8, 4 * M),
+  { t: 'start', name: 'Xuất phát' }, L('Hà Giang', 1, 600 * K), L('Cao Bằng', 1, 600 * K), L('Lạng Sơn', 1, 700 * K),
+  BEACH('Biển Trà Cổ'), L('Điện Biên', 2, 1 * M), L('Sơn La', 2, 1 * M), L('Ninh Bình', 2, 1.2 * M),
+  { t: 'jail', name: 'Nhà tù' }, L('Thanh Hoá', 3, 1.4 * M), L('Nghệ An', 3, 1.4 * M), L('Huế', 3, 1.6 * M),
+  EV, L('Quảng Nam', 4, 1.8 * M), BEACH('Biển Mỹ Khê'), L('Quảng Ngãi', 4, 2 * M),
+  { t: 'festival', name: 'Lễ hội' }, L('Bình Định', 5, 2.2 * M), BEACH('Biển Mũi Né'), L('Khánh Hoà', 5, 2.4 * M),
+  EV, L('Lâm Đồng', 6, 2.6 * M), L('An Giang', 6, 2.6 * M), L('Cần Thơ', 6, 2.8 * M),
+  { t: 'travel', name: 'Sân bay' }, BEACH('Biển Phú Quốc'), L('Quảng Ninh', 7, 3 * M), L('Hải Phòng', 7, 3.2 * M),
+  EV, L('Hà Nội', 8, 3.5 * M), { t: 'tax', name: 'Thuế', amount: 2 * M }, L('TP. Hồ Chí Minh', 8, 4 * M),
 ];
+const N = BOARD.length, JAIL = 8, HOTEL = 5;
 
 export const EVENTS = [
   { text: 'Trúng vé số! Nhận 2.000.000đ', cash: 2 * M },
   { text: 'Bão lũ: sửa nhà 250.000đ mỗi nhà, 1.000.000đ mỗi Công trình', repair: [250 * K, 1 * M] },
-  { text: 'Đi du lịch: bay tới sân bay gần nhất phía trước', nextAir: true },
+  { text: 'Đi nghỉ mát: tới bãi biển gần nhất phía trước', nextBeach: true },
   { text: 'Bị bắt quả tang trốn thuế: vào tù!', jail: true },
   { text: 'Thẻ được tại ngoại: giữ lại để ra tù miễn phí', jailCard: true },
   { text: 'Đi lạc đường: lùi lại 3 ô', back: 3 },
@@ -32,24 +32,27 @@ export const EVENTS = [
   { text: 'Phạt vi phạm giao thông 300.000đ', cash: -300 * K },
   { text: 'Nhận thưởng Tết 1.000.000đ', cash: 1 * M },
   { text: 'Về ô Xuất phát', moveTo: 0 },
-  { text: 'Bay ra Hà Nội', moveTo: 37 },
+  { text: 'Bay ra Hà Nội', moveTo: 29 },
   { text: 'Đóng học phí 1.000.000đ', cash: -1 * M },
   { text: 'Bán hàng online có lãi: nhận 500.000đ', cash: 500 * K },
   { text: 'Đi khám bệnh: trả 500.000đ', cash: -500 * K },
-  { text: 'Đi xem Lễ hội', moveTo: 20 },
+  { text: 'Đi xem Lễ hội', moveTo: 16 },
+  { text: 'Nâng cấp miễn phí: chọn 1 ô đất của bạn để lên thêm 1 cấp', upgrade: true },
 ];
 
 const GO = 2 * M, JAIL_FINE = 500 * K, START_CASH = 15 * M;
-const ownable = (pos) => ['land', 'air', 'util'].includes(BOARD[pos]?.t);
+const ownable = (pos) => ['land', 'beach'].includes(BOARD[pos]?.t);
 const groupOf = (g) => BOARD.map((b, i) => (b.g === g ? i : -1)).filter((i) => i >= 0);
-const AIRS = [5, 15, 25, 35];
-const SIDES = [0, 1, 2, 3].map((k) => BOARD.map((b, i) => i).filter((i) => i > 10 * k && i < 10 * k + 10 && ['land', 'air'].includes(BOARD[i].t)));
+const BEACHES = [4, 14, 18, 25];
+const SIDES = [0, 1, 2, 3].map((k) => BOARD.map((b, i) => i).filter((i) => i > 8 * k && i < 8 * k + 8 && ownable(i)));
+// Cấp cao nhất được xây: vòng đầu (chưa qua Xuất phát) tối đa 3 nhà, sau đó 4 nhà. Khách sạn có luật riêng.
+const houseCap = (p) => (p.laps ? 4 : 3);
 
 export function start(ids, { config, lastWinner } = {}, rng = Math.random, now = Date.now()) {
   const minutes = [30, 45, 60].includes(config?.minutes) ? config.minutes : 0;
   return {
-    players: ids.map((id) => ({ id, cash: START_CASH, pos: 0, jail: 0, jailCard: false, out: false })),
-    own: {}, turn: Math.max(0, ids.indexOf(lastWinner)), phase: 'roll', dice: null, doubles: 0,
+    players: ids.map((id) => ({ id, cash: START_CASH, pos: 0, jail: 0, jailCard: false, out: false, laps: 0, fly: false })),
+    own: {}, turn: Math.max(0, ids.indexOf(lastWinner)), phase: 'roll', dice: null, rolls: 0, doubles: 0,
     offer: {}, debt: null, festival: null, deck: shuffle([...EVENTS.keys()], rng), lastEvent: null,
     log: [], endsAt: minutes ? now + minutes * 60000 : null, winner: null, winReason: null,
   };
@@ -57,7 +60,7 @@ export function start(ids, { config, lastWinner } = {}, rng = Math.random, now =
 
 // ---------- Giá trị & tiền thuê ----------
 const houseCost = (pos) => BOARD[pos].price / 2;
-export const buildCost = (pos, level) => (level === 4 ? BOARD[pos].price : houseCost(pos)); // giá để lên cấp `level`
+export const buildCost = (pos, level) => (level === HOTEL ? BOARD[pos].price : houseCost(pos)); // giá để lên cấp `level`
 function buildingsValue(pos, level) {
   let v = 0;
   for (let l = 1; l <= level; l++) v += buildCost(pos, l);
@@ -66,13 +69,13 @@ function buildingsValue(pos, level) {
 export const squareValue = (s, pos) => BOARD[pos].price + buildingsValue(pos, s.own[pos]?.level || 0);
 const ownsAll = (s, id, list) => list.every((p) => s.own[p]?.owner === id);
 
-export function rentOf(s, pos, diceSum) {
+export const RENT = [0.1, 0.4, 1, 2, 3.5, 6]; // × giá đất: đất trống, 1–4 nhà, Khách sạn
+export function rentOf(s, pos) {
   const o = s.own[pos];
   if (!o || o.mort) return 0;
   const b = BOARD[pos];
-  if (b.t === 'air') return [0, 250 * K, 500 * K, 1 * M, 2 * M][AIRS.filter((p) => s.own[p]?.owner === o.owner).length];
-  if (b.t === 'util') return diceSum * (ownsAll(s, o.owner, [12, 28]) ? 100 * K : 40 * K);
-  let r = b.price * [0.1, 0.5, 1.5, 3, 5][o.level];
+  if (b.t === 'beach') return [0, 250 * K, 500 * K, 1 * M, 2 * M][BEACHES.filter((p) => s.own[p]?.owner === o.owner).length];
+  let r = b.price * RENT[o.level];
   if (o.level === 0 && ownsAll(s, o.owner, groupOf(b.g))) r *= 2;
   if (s.festival === pos) r *= 2;
   return Math.round(r);
@@ -97,7 +100,7 @@ const log = (s, text) => { s.log = [...s.log.slice(-5), text]; };
 function checkMonopoly(s, id) {
   if (s.winner) return;
   const groups = [1, 2, 3, 4, 5, 6, 7, 8].filter((g) => ownsAll(s, id, groupOf(g))).length;
-  if (groups >= 3 || SIDES.some((side) => ownsAll(s, id, side)) || ownsAll(s, id, AIRS)) {
+  if (groups >= 4 || SIDES.some((side) => ownsAll(s, id, side)) || ownsAll(s, id, BEACHES)) {
     s.winner = id; s.winReason = 'doc-quyen'; s.phase = 'end';
   }
 }
@@ -127,7 +130,7 @@ function settleDebt(s) {
 }
 
 function goJail(s, p) {
-  p.pos = 10; p.jail = 1; s.doubles = 0;
+  p.pos = JAIL; p.jail = 1; p.fly = false; s.doubles = 0;
   log(s, `${p.id} vào tù`);
   nextTurn(s);
 }
@@ -140,35 +143,45 @@ function nextTurn(s) {
     const j = (s.turn + k) % n;
     if (!s.players[j].out) { s.turn = j; break; }
   }
-  s.phase = 'roll';
+  s.phase = cur(s).fly ? 'fly' : 'roll';
 }
 
-function moveTo(s, p, pos, rng, diceSum) {
-  if (pos < p.pos || pos === 0) { if (pos !== p.pos) p.cash += GO; }
+function moveTo(s, p, pos, rng) {
+  if ((pos < p.pos || pos === 0) && pos !== p.pos) { p.cash += GO; p.laps++; }
   p.pos = pos;
-  land(s, p, rng, diceSum);
+  land(s, p, rng);
 }
 
-function land(s, p, rng, diceSum) {
+// Ô cho phép xây ở lượt này: cấp tối đa `max` (Khách sạn chỉ khi đã đủ 4 nhà từ trước và quay lại đúng ô).
+function offerBuild(s, p, pos) {
+  const o = s.own[pos];
+  const max = o.level === 4 ? HOTEL : houseCap(p);
+  if (BOARD[pos].t === 'land' && !o.mort && o.level < max) s.offer = { build: pos, max };
+}
+
+function land(s, p, rng) {
   s.offer = {};
   s.phase = 'act';
   const b = BOARD[p.pos];
   if (ownable(p.pos)) {
     const o = s.own[p.pos];
     if (!o) { if (p.cash >= b.price) s.offer.buy = p.pos; return; }
-    if (o.owner === p.id) { if (b.t === 'land' && o.level < 4 && !o.mort) s.offer.build = p.pos; return; }
-    const rent = rentOf(s, p.pos, diceSum);
-    if (b.t === 'land' && o.level < 4 && !o.mort) s.offer.rebuy = p.pos;
+    if (o.owner === p.id) return offerBuild(s, p, p.pos);
+    const rent = rentOf(s, p.pos);
+    if (b.t === 'land' && o.level < HOTEL && !o.mort) s.offer.rebuy = p.pos;
     charge(s, p, rent, o.owner);
     return;
   }
   if (b.t === 'tax') return charge(s, p, b.amount, null);
-  if (b.t === 'gojail') return goJail(s, p);
+  if (b.t === 'jail') return goJail(s, p);
+  if (b.t === 'travel') { p.fly = true; s.doubles = 0; return; } // bay ở lượt sau, hết quyền gieo tiếp
   if (b.t === 'festival') { if (Object.entries(s.own).some(([pos, o]) => o.owner === p.id && !o.mort && BOARD[pos].t === 'land')) s.phase = 'festival'; return; }
-  if (b.t === 'event') return drawEvent(s, p, rng, diceSum);
+  if (b.t === 'event') return drawEvent(s, p, rng);
 }
 
-function drawEvent(s, p, rng, diceSum) {
+const upgradable = (s, p, pos) => s.own[pos]?.owner === p.id && BOARD[pos].t === 'land' && !s.own[pos].mort && s.own[pos].level < (p.laps ? HOTEL : 3);
+
+function drawEvent(s, p, rng) {
   if (!s.deck.length) s.deck = shuffle([...EVENTS.keys()], rng);
   const id = s.deck.shift();
   const e = EVENTS[id];
@@ -178,16 +191,17 @@ function drawEvent(s, p, rng, diceSum) {
   else if (e.cash < 0) charge(s, p, -e.cash, null);
   else if (e.repair) {
     let cost = 0;
-    Object.values(s.own).forEach((o) => { if (o.owner === p.id) cost += o.level === 4 ? e.repair[1] : o.level * e.repair[0]; });
+    Object.values(s.own).forEach((o) => { if (o.owner === p.id) cost += o.level === HOTEL ? e.repair[1] : o.level * e.repair[0]; });
     charge(s, p, cost, null);
-  } else if (e.nextAir) moveTo(s, p, AIRS.find((a) => a > p.pos) ?? AIRS[0], rng, diceSum);
+  } else if (e.nextBeach) moveTo(s, p, BEACHES.find((a) => a > p.pos) ?? BEACHES[0], rng);
   else if (e.jail) goJail(s, p);
   else if (e.jailCard) p.jailCard = true;
-  else if (e.back) { p.pos = (p.pos + 40 - e.back) % 40; land(s, p, rng, diceSum); }
+  else if (e.back) { p.pos = (p.pos + N - e.back) % N; land(s, p, rng); }
   // Người khác không đủ tiền thì chỉ tặng phần đang có: không đẩy người ngoài lượt vào trạng thái nợ.
   else if (e.fromEach) s.players.filter((o) => !o.out && o !== p).forEach((o) => { const x = Math.min(o.cash, e.fromEach); o.cash -= x; p.cash += x; });
   else if (e.toEach) charge(s, p, e.toEach * s.players.filter((o) => !o.out && o !== p).length, 'each');
-  else if (e.moveTo !== undefined) moveTo(s, p, e.moveTo, rng, diceSum);
+  else if (e.moveTo !== undefined) moveTo(s, p, e.moveTo, rng);
+  else if (e.upgrade && Object.keys(s.own).some((pos) => upgradable(s, p, Number(pos)))) s.phase = 'upgrade';
 }
 
 function bankrupt(s, p) {
@@ -209,24 +223,24 @@ function bankrupt(s, p) {
 }
 
 // ---------- Hành động ----------
-const isPos = (x) => Number.isInteger(x) && x >= 0 && x < 40;
+const isPos = (x) => Number.isInteger(x) && x >= 0 && x < N;
 
 function roll(s, p, rng) {
   const d = [1 + Math.floor(rng() * 6), 1 + Math.floor(rng() * 6)];
   const dbl = d[0] === d[1];
-  s.dice = d;
+  s.dice = d; s.rolls++;
   const sum = d[0] + d[1];
   if (p.jail) {
-    if (dbl) { p.jail = 0; s.doubles = 0; return moveTo(s, p, (p.pos + sum) % 40, rng, sum); }
+    if (dbl) { p.jail = 0; s.doubles = 0; return moveTo(s, p, (p.pos + sum) % N, rng); }
     if (p.jail < 3) { p.jail++; log(s, `${p.id} ở tù thêm lượt`); return nextTurn(s); }
     p.jail = 0;
     charge(s, p, JAIL_FINE, null);
     if (s.phase === 'debt') { s.debt.resume = 'act'; return; } // shortcut: nợ tiền ra tù thì trả xong là hết lượt, lượt sau đi bình thường
-    return moveTo(s, p, (p.pos + sum) % 40, rng, sum);
+    return moveTo(s, p, (p.pos + sum) % N, rng);
   }
   s.doubles = dbl ? s.doubles + 1 : 0;
   if (s.doubles === 3) return goJail(s, p);
-  moveTo(s, p, (p.pos + sum) % 40, rng, sum);
+  moveTo(s, p, (p.pos + sum) % N, rng);
 }
 
 export function apply(state, id, action, rng = Math.random, now = Date.now()) {
@@ -251,7 +265,7 @@ export function apply(state, id, action, rng = Math.random, now = Date.now()) {
       if (o.mort || o.level) return fail(o.level ? 'Bán hết nhà trước khi thế chấp.' : 'Đã thế chấp rồi.');
       o.mort = true; p.cash += BOARD[pos].price / 2;
       if (s.festival === pos) s.festival = null;
-      if (s.offer.build === pos) delete s.offer.build;
+      if (s.offer.build === pos) s.offer = {};
     } else {
       if (!o.mort || s.phase === 'debt') return fail('Không chuộc được lúc này.');
       const cost = Math.round(BOARD[pos].price * 0.55);
@@ -282,9 +296,28 @@ export function apply(state, id, action, rng = Math.random, now = Date.now()) {
     return fail('Hãy gieo xúc xắc.');
   }
 
+  if (s.phase === 'fly') {
+    if (type !== 'fly') return fail('Hãy chọn ô để bay tới.');
+    if (!isPos(action.pos) || action.pos === p.pos) return fail('Chọn 1 ô khác trên bàn cờ.');
+    p.fly = false;
+    s.dice = null;
+    log(s, `${id} bay tới ${BOARD[action.pos].name}`);
+    moveTo(s, p, action.pos, rng);
+    return { ok: true, state: s };
+  }
+
+  if (s.phase === 'upgrade') {
+    if (type !== 'upgrade') return fail('Hãy chọn 1 ô đất để nâng cấp.');
+    if (!isPos(action.pos) || !upgradable(s, p, action.pos)) return fail('Ô này không nâng cấp được.');
+    s.own[action.pos].level++;
+    log(s, `${id} nâng cấp ${BOARD[action.pos].name}`);
+    s.phase = 'act';
+    return { ok: true, state: s };
+  }
+
   if (s.phase === 'festival') {
     if (type !== 'festival') return fail('Hãy chọn đất để tổ chức Lễ hội.');
-    if (action.pos !== null && (!mine(action.pos) || s.own[action.pos].mort || BOARD[action.pos].t !== 'land')) return fail('Chọn 1 ô đất (không phải sân bay/tiện ích) của bạn.');
+    if (action.pos !== null && (!mine(action.pos) || s.own[action.pos].mort || BOARD[action.pos].t !== 'land')) return fail('Chọn 1 ô đất (không phải bãi biển) của bạn.');
     s.festival = action.pos ?? s.festival;
     s.phase = 'act';
     return { ok: true, state: s };
@@ -297,7 +330,8 @@ export function apply(state, id, action, rng = Math.random, now = Date.now()) {
     if (p.cash < BOARD[pos].price) return fail('Không đủ tiền.');
     p.cash -= BOARD[pos].price;
     s.own[pos] = { owner: id, level: 0, mort: false };
-    s.offer = BOARD[pos].t === 'land' ? { build: pos } : {};
+    s.offer = {};
+    offerBuild(s, p, pos);
     log(s, `${id} mua ${BOARD[pos].name}`);
     checkMonopoly(s, id);
     return { ok: true, state: s };
@@ -321,12 +355,12 @@ export function apply(state, id, action, rng = Math.random, now = Date.now()) {
     if (pos === undefined) return fail('Không xây được ở đây.');
     const o = s.own[pos];
     if (o.mort) return fail('Ô đang thế chấp, chuộc lại trước khi xây.');
-    if (!Number.isInteger(n) || n < 1 || o.level + n > 4) return fail('Số cấp xây không hợp lệ.');
+    if (!Number.isInteger(n) || n < 1 || o.level + n > s.offer.max) return fail('Số cấp xây không hợp lệ.');
     let cost = 0;
     for (let l = o.level + 1; l <= o.level + n; l++) cost += buildCost(pos, l);
     if (p.cash < cost) return fail('Không đủ tiền xây.');
     p.cash -= cost; o.level += n;
-    s.offer = o.level < 4 ? { build: pos } : {};
+    if (o.level >= s.offer.max) s.offer = {};
     return { ok: true, state: s };
   }
   if (type === 'end') {
@@ -362,6 +396,8 @@ export function forceSkip(state, rng = Math.random, now = Date.now()) {
       a = built ? { type: 'sell', pos: Number(built[0]) } : plain ? { type: 'mortgage', pos: Number(plain[0]) } : { type: 'bankrupt' };
     } else if (s.phase === 'roll') a = { type: 'roll' };
     else if (s.phase === 'festival') a = { type: 'festival', pos: null };
+    else if (s.phase === 'fly') a = { type: 'fly', pos: 0 };
+    else if (s.phase === 'upgrade') a = { type: 'upgrade', pos: Number(Object.keys(s.own).find((pos) => upgradable(s, p, Number(pos)))) };
     else a = { type: 'end' };
     const r = apply(s, p.id, a, rng, now);
     if (!r.ok) break;

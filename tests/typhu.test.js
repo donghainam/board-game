@@ -1,11 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { BOARD, start, apply, viewFor, forceSkip, nextTimer, onTimer, rentOf, assets } from '../typhu/engine.js';
+import { BOARD, EVENTS, start, apply, viewFor, forceSkip, nextTimer, onTimer, rentOf, assets } from '../typhu/engine.js';
 
 const T = 1_000_000;
 // rng cho ra lần lượt các mặt xúc xắc trong mảng (mỗi phần tử là 1 mặt 1..6).
 const dice = (...faces) => { let i = 0; return () => (faces[i++ % faces.length] - 1) / 6 + 0.01; };
-const mk = (n = 2, extra = {}) => ({ ...start(Array.from({ length: n }, (_, i) => 'ABCDEF'[i]), { config: { minutes: 0 } }, () => 0, T), ...extra });
+const mk = (n = 2, extra = {}) => ({ ...start(Array.from({ length: n }, (_, i) => 'ABCD'[i]), { config: { minutes: 0 } }, () => 0, T), ...extra });
 const A = (s, id, action, rng = () => 0) => {
   const r = apply(s, id, action, rng, T);
   assert.equal(r.ok, true, `${id} ${JSON.stringify(action)}: ${r.error}`);
@@ -14,21 +14,30 @@ const A = (s, id, action, rng = () => 0) => {
 const NO = (s, id, action, rng = () => 0) => assert.equal(apply(s, id, action, rng, T).ok, false, `${JSON.stringify(action)} phải bị từ chối`);
 const own = (s, pos, owner, level = 0, mort = false) => { s.own[pos] = { owner, level, mort }; return s; };
 const cash = (s, id) => s.players.find((p) => p.id === id).cash;
+const UPGRADE = EVENTS.findIndex((e) => e.upgrade);
 
-test('bàn cờ 40 ô: 22 đất, 4 sân bay, 2 tiện ích, 6 sự kiện', () => {
-  assert.equal(BOARD.length, 40);
+test('bàn cờ 32 ô: 20 tỉnh (4 nhóm 3 + 4 nhóm 2), 4 biển, 3 cơ hội, 1 thuế, 4 góc', () => {
+  assert.equal(BOARD.length, 32);
   const c = (t) => BOARD.filter((b) => b.t === t).length;
-  assert.deepEqual([c('land'), c('air'), c('util'), c('event'), c('tax')], [22, 4, 2, 6, 2]);
+  assert.deepEqual([c('land'), c('beach'), c('event'), c('tax')], [20, 4, 3, 1]);
+  assert.deepEqual([0, 8, 16, 24].map((i) => BOARD[i].t), ['start', 'jail', 'festival', 'travel']);
+  assert.deepEqual(BOARD.map((b, i) => (b.t === 'beach' ? i : -1)).filter((i) => i >= 0), [4, 14, 18, 25]);
+  assert.deepEqual(BOARD.map((b, i) => (b.t === 'event' ? i : -1)).filter((i) => i >= 0), [12, 20, 28]);
+  const sizes = [1, 2, 3, 4, 5, 6, 7, 8].map((g) => BOARD.filter((b) => b.g === g).length);
+  assert.deepEqual(sizes.sort(), [2, 2, 2, 2, 3, 3, 3, 3]);
+  assert.ok(BOARD.some((b) => b.name === 'Ninh Bình'));
   const s = mk(3);
   assert.deepEqual(s.players.map((p) => p.cash), [15_000_000, 15_000_000, 15_000_000]);
   assert.equal(s.phase, 'roll');
 });
 
-test('gieo, đi, qua Xuất phát +2tr, mua đất', () => {
+test('gieo, đi, qua Xuất phát +2tr và tính 1 vòng, mua đất', () => {
   let s = mk();
-  s.players[0].pos = 38;
-  s = A(s, 'A', { type: 'roll' }, dice(1, 2)); // 38 → 1 (Hà Giang), qua Xuất phát
+  s.players[0].pos = 30;
+  s = A(s, 'A', { type: 'roll' }, dice(1, 2)); // 30 → 1 (Hà Giang), qua Xuất phát
   assert.equal(s.players[0].pos, 1);
+  assert.equal(s.players[0].laps, 1);
+  assert.equal(s.rolls, 1);
   assert.equal(cash(s, 'A'), 17_000_000);
   assert.equal(s.offer.buy, 1);
   s = A(s, 'A', { type: 'buy' });
@@ -39,33 +48,29 @@ test('gieo, đi, qua Xuất phát +2tr, mua đất', () => {
   assert.equal(s.players[s.turn].id, 'B');
 });
 
-test('tiền thuê: nhà, đủ bộ màu, lễ hội, sân bay, tiện ích', () => {
+test('tiền thuê: nhà, khách sạn, đủ bộ màu, lễ hội, bãi biển', () => {
   const s = mk();
   own(s, 1, 'A');
-  assert.equal(rentOf(s, 1, 7), 60_000);
-  own(s, 3, 'A');
-  assert.equal(rentOf(s, 1, 7), 120_000, 'đủ nhóm → ×2 khi chưa có nhà');
+  assert.equal(rentOf(s, 1), 60_000);
+  own(s, 2, 'A'); own(s, 3, 'A');
+  assert.equal(rentOf(s, 1), 120_000, 'đủ nhóm → ×2 khi chưa có nhà');
   own(s, 1, 'A', 2);
-  assert.equal(rentOf(s, 1, 7), 900_000);
-  own(s, 1, 'A', 4);
-  assert.equal(rentOf(s, 1, 7), 3_000_000);
+  assert.equal(rentOf(s, 1), 600_000);
+  own(s, 1, 'A', 5);
+  assert.equal(rentOf(s, 1), 3_600_000);
   s.festival = 1;
-  assert.equal(rentOf(s, 1, 7), 6_000_000);
-  own(s, 5, 'B'); own(s, 15, 'B');
-  assert.equal(rentOf(s, 5, 7), 500_000);
-  own(s, 12, 'B');
-  assert.equal(rentOf(s, 12, 7), 280_000);
-  own(s, 28, 'B');
-  assert.equal(rentOf(s, 12, 7), 700_000);
+  assert.equal(rentOf(s, 1), 7_200_000);
+  own(s, 4, 'B'); own(s, 14, 'B');
+  assert.equal(rentOf(s, 4), 500_000);
   own(s, 1, 'A', 0, true);
-  assert.equal(rentOf(s, 1, 7), 0, 'thế chấp không thu');
+  assert.equal(rentOf(s, 1), 0, 'thế chấp không thu');
 });
 
-test('dừng đất người khác: trả thuê rồi được mua lại gấp đôi; Công trình không mua lại được', () => {
+test('dừng đất người khác: trả thuê rồi được mua lại gấp đôi; Khách sạn không mua lại được', () => {
   let s = own(mk(), 6, 'B', 1);
   s = A(s, 'A', { type: 'roll' }, dice(2, 4));
   assert.equal(s.players[0].pos, 6);
-  const rent = 500_000;
+  const rent = 400_000;
   assert.equal(cash(s, 'A'), 15_000_000 - rent);
   assert.equal(cash(s, 'B'), 15_000_000 + rent);
   const value = 1_000_000 + 500_000;
@@ -73,37 +78,71 @@ test('dừng đất người khác: trả thuê rồi được mua lại gấp �
   assert.equal(s.own[6].owner, 'A');
   assert.equal(s.own[6].level, 1);
   assert.equal(cash(s, 'B'), 15_000_000 + rent + 2 * value);
-  let t = own(mk(), 6, 'B', 4);
+  let t = own(mk(), 6, 'B', 5);
   t = A(t, 'A', { type: 'roll' }, dice(2, 4));
   NO(t, 'A', { type: 'rebuy' });
 });
 
-test('xây nhà trên đất mình: nhiều cấp một lúc, đủ tiền mới xây', () => {
-  let s = own(mk(), 6, 'A');
-  s = A(s, 'A', { type: 'roll' }, dice(2, 4));
-  assert.equal(s.offer.build, 6);
-  NO(s, 'A', { type: 'build', levels: 5 });
-  s = A(s, 'A', { type: 'build', levels: 4 }); // 3 nhà + Công trình = 1.5tr + 1tr
-  assert.equal(s.own[6].level, 4);
-  assert.equal(cash(s, 'A'), 15_000_000 - 2_500_000);
+test('vòng đầu tối đa 3 nhà; qua Xuất phát được nhà 4; Khách sạn chỉ khi quay lại ô đã đủ 4 nhà', () => {
+  // vòng đầu: mua xong xây ngay tối đa 3 nhà
+  let s = A(mk(), 'A', { type: 'roll' }, dice(2, 4));
+  s = A(s, 'A', { type: 'buy' });
+  assert.equal(s.offer.max, 3);
+  NO(s, 'A', { type: 'build', levels: 4 });
+  s = A(s, 'A', { type: 'build', levels: 3 });
+  assert.equal(s.own[6].level, 3);
+  assert.deepEqual(s.offer, {});
+  assert.equal(cash(s, 'A'), 15_000_000 - 1_000_000 - 3 * 500_000);
+
+  // vòng đầu, quay lại ô 3 nhà: không có gì để xây
+  const r = own(mk(), 6, 'A', 3);
+  assert.equal(A(r, 'A', { type: 'roll' }, dice(2, 4)).offer.build, undefined);
+
+  // đã qua Xuất phát: lên được 4 nhà, nhưng chưa lên Khách sạn trong cùng lượt
+  const t0 = own(mk(), 6, 'A', 0);
+  t0.players[0].laps = 1;
+  let t = A(t0, 'A', { type: 'roll' }, dice(2, 4));
+  assert.equal(t.offer.max, 4);
+  NO(t, 'A', { type: 'build', levels: 5 });
+  t = A(t, 'A', { type: 'build', levels: 4 });
+  assert.equal(t.own[6].level, 4);
+  assert.deepEqual(t.offer, {});
+
+  // quay lại ô đã có 4 nhà → được lên Khách sạn (giá = giá đất)
+  const h0 = own(mk(), 6, 'A', 4);
+  h0.players[0].laps = 1;
+  let h = A(h0, 'A', { type: 'roll' }, dice(2, 4));
+  assert.equal(h.offer.max, 5);
+  h = A(h, 'A', { type: 'build', levels: 1 });
+  assert.equal(h.own[6].level, 5);
+  assert.equal(cash(h, 'A'), 15_000_000 - 1_000_000);
 });
 
 test('đổ đôi được đi tiếp; 3 lần đôi vào tù', () => {
   let s = mk();
-  s.deck = [0]; // vé số: không di chuyển
-  s = A(s, 'A', { type: 'roll' }, dice(1, 1)); // ô 2: sự kiện
+  s = A(s, 'A', { type: 'roll' }, dice(1, 1));
   s = A(s, 'A', { type: 'end' });
   assert.equal(s.players[s.turn].id, 'A', 'đôi → gieo tiếp');
   let j = { ...mk(), doubles: 2 };
   j = A(j, 'A', { type: 'roll' }, dice(3, 3));
-  assert.equal(j.players[0].pos, 10);
+  assert.equal(j.players[0].pos, 8);
+  assert.equal(j.players[0].jail, 1);
+  assert.equal(j.players[j.turn].id, 'B');
+});
+
+test('bước vào ô Nhà tù là vào tù', () => {
+  const s = mk();
+  s.players[0].pos = 5;
+  const j = A(s, 'A', { type: 'roll' }, dice(1, 2));
+  assert.equal(j.players[0].pos, 8);
   assert.equal(j.players[0].jail, 1);
   assert.equal(j.players[j.turn].id, 'B');
 });
 
 test('nhà tù: trả 500k, đổ đôi để ra, lượt 3 bắt buộc trả', () => {
-  let s = mk();
-  Object.assign(s.players[0], { pos: 10, jail: 1 });
+  const s = mk();
+  s.deck = [0];
+  Object.assign(s.players[0], { pos: 8, jail: 1 });
   const paid = A(s, 'A', { type: 'pay-jail' });
   assert.equal(paid.players[0].jail, 0);
   assert.equal(cash(paid, 'A'), 14_500_000);
@@ -112,19 +151,60 @@ test('nhà tù: trả 500k, đổ đôi để ra, lượt 3 bắt buộc trả',
   assert.equal(fail.players[fail.turn].id, 'B');
   const out = A(s, 'A', { type: 'roll' }, dice(2, 2));
   assert.equal(out.players[0].jail, 0);
-  assert.equal(out.players[0].pos, 14);
+  assert.equal(out.players[0].pos, 12);
   Object.assign(s.players[0], { jail: 3 });
   const forced = A(s, 'A', { type: 'roll' }, dice(1, 2));
   assert.equal(forced.players[0].jail, 0);
-  assert.equal(forced.players[0].pos, 13);
+  assert.equal(forced.players[0].pos, 11);
   assert.equal(cash(forced, 'A') <= 14_500_000, true);
 });
 
+test('Sân bay: lượt sau chọn bay tới ô bất kỳ, bay qua Xuất phát được lương', () => {
+  let s = mk();
+  s.players[0].pos = 21;
+  s = A(s, 'A', { type: 'roll' }, dice(1, 2)); // 21 → 24
+  assert.equal(s.players[0].fly, true);
+  s = A(s, 'A', { type: 'end' });
+  s = A(s, 'B', { type: 'roll' }, dice(1, 2));
+  s = A(s, 'B', { type: 'end' });
+  assert.equal(s.players[s.turn].id, 'A');
+  assert.equal(s.phase, 'fly');
+  NO(s, 'A', { type: 'roll' });
+  NO(s, 'A', { type: 'fly', pos: 24 });
+  NO(s, 'A', { type: 'fly', pos: 32 });
+  const f = A(s, 'A', { type: 'fly', pos: 5 });
+  assert.equal(f.players[0].pos, 5);
+  assert.equal(f.players[0].fly, false);
+  assert.equal(f.players[0].laps, 1);
+  assert.equal(cash(f, 'A'), 17_000_000);
+  assert.equal(f.offer.buy, 5);
+  const g = A(s, 'A', { type: 'fly', pos: 29 });
+  assert.equal(cash(g, 'A'), 15_000_000, 'không qua Xuất phát');
+});
+
+test('thẻ Cơ hội nâng cấp: +1 cấp miễn phí, vòng đầu tối đa 3 nhà', () => {
+  const base = (level, laps) => {
+    const s = own(mk(), 6, 'A', level);
+    s.deck = [UPGRADE];
+    Object.assign(s.players[0], { pos: 9, laps });
+    return A(s, 'A', { type: 'roll' }, dice(1, 2)); // 9 → 12 (Cơ hội)
+  };
+  assert.equal(base(3, 0).phase, 'act', 'vòng đầu, đã 3 nhà → thẻ không có tác dụng');
+  const u = base(2, 0);
+  assert.equal(u.phase, 'upgrade');
+  NO(u, 'A', { type: 'upgrade', pos: 5 });
+  NO(u, 'A', { type: 'end' });
+  assert.equal(A(u, 'A', { type: 'upgrade', pos: 6 }).own[6].level, 3);
+  const h = A(base(4, 1), 'A', { type: 'upgrade', pos: 6 });
+  assert.equal(h.own[6].level, 5, '4 nhà → Khách sạn');
+  assert.equal(cash(h, 'A'), 15_000_000);
+});
+
 test('nợ: thế chấp để trả; không đủ thì phá sản, tài sản về chủ nợ', () => {
-  let s = own(own(mk(3), 39, 'B', 4), 1, 'A');
+  let s = own(own(mk(3), 31, 'B', 5), 1, 'A');
   s.players[0].cash = 1_000_000;
-  s.players[0].pos = 37;
-  s = A(s, 'A', { type: 'roll' }, dice(1, 1)); // tới 39, thuê 20tr
+  s.players[0].pos = 29;
+  s = A(s, 'A', { type: 'roll' }, dice(1, 1)); // tới 31, thuê 24tr
   assert.equal(s.phase, 'debt');
   NO(s, 'A', { type: 'end' });
   s = A(s, 'A', { type: 'mortgage', pos: 1 });
@@ -135,65 +215,70 @@ test('nợ: thế chấp để trả; không đủ thì phá sản, tài sản v
   assert.equal(s.own[1].mort, true);
   assert.equal(cash(s, 'B'), 15_000_000 + 1_300_000);
   assert.equal(s.players[s.turn].id, 'B');
-  // đủ tiền sau khi bán nhà → tự trả, quay lại lượt
-  let t = own(own(mk(), 39, 'B', 1), 6, 'A', 2);
+  let t = own(own(mk(), 31, 'B', 1), 6, 'A', 2);
   t.players[0].cash = 100_000;
-  t.players[0].pos = 37;
-  t = A(t, 'A', { type: 'roll' }, dice(1, 1)); // thuê 2tr
+  t.players[0].pos = 29;
+  t = A(t, 'A', { type: 'roll' }, dice(1, 1)); // thuê 1.6tr
   t = A(t, 'A', { type: 'sell', pos: 6 });
   t = A(t, 'A', { type: 'sell', pos: 6 });
   t = A(t, 'A', { type: 'mortgage', pos: 6 });
   assert.equal(t.phase, 'debt');
 });
 
-test('độc quyền: 3 nhóm màu / trọn 1 cạnh / 4 sân bay', () => {
+test('độc quyền: 4 nhóm màu / trọn 1 cạnh / 4 bãi biển', () => {
   const s = mk();
-  for (const p of [1, 3, 6, 8, 9]) own(s, p, 'A');
-  [11, 13].forEach((p) => own(s, p, 'A'));
-  s.players[0].pos = 12; // mua Hà Tĩnh (14) sau khi gieo 1+1
-  let w = A(s, 'A', { type: 'roll' }, dice(1, 1));
+  [1, 2, 3, 13, 15, 17, 19, 26].forEach((p) => own(s, p, 'A'));
+  s.players[0].pos = 25;
+  let w = A(s, 'A', { type: 'roll' }, dice(1, 1)); // 27 Hải Phòng
+  assert.equal(w.winner, null);
   w = A(w, 'A', { type: 'buy' });
   assert.equal(w.winner, 'A');
   assert.equal(w.winReason, 'doc-quyen');
-  const air = mk();
-  [5, 15, 25].forEach((p) => own(air, p, 'B'));
-  air.turn = 1; air.players[1].pos = 32;
-  let a = A(air, 'B', { type: 'roll' }, dice(1, 2));
+  const sea = mk();
+  [4, 14, 18].forEach((p) => own(sea, p, 'B'));
+  sea.turn = 1; sea.players[1].pos = 23;
+  let a = A(sea, 'B', { type: 'roll' }, dice(1, 1));
   a = A(a, 'B', { type: 'buy' });
   assert.equal(a.winner, 'B');
+  const side = mk();
+  [25, 26, 27, 29].forEach((p) => own(side, p, 'A'));
+  side.players[0].pos = 28;
+  let c = A(side, 'A', { type: 'roll' }, dice(1, 2));
+  c = A(c, 'A', { type: 'buy' });
+  assert.equal(c.winner, 'A');
 });
 
 test('hết giờ: tổng tài sản cao nhất thắng', () => {
   let s = start(['A', 'B'], { config: { minutes: 30 } }, () => 0, T);
   assert.equal(nextTimer(s), T + 30 * 60000);
-  own(s, 39, 'B', 1);
+  own(s, 31, 'B', 1);
   assert.equal(assets(s, 'B'), 15_000_000 + 4_000_000 + 2_000_000);
   s = onTimer(s, T + 30 * 60000);
   assert.equal(s.winner, 'B');
   assert.equal(s.winReason, 'het-gio');
 });
 
-test('sự kiện: vé số, vào tù, sinh nhật; viewFor không lộ chồng thẻ', () => {
+test('cơ hội: vé số, vào tù, sinh nhật; viewFor không lộ chồng thẻ', () => {
   const s = mk(3);
   s.deck = [0, 3, 6];
-  s.players[0].pos = 0;
-  const a = A(s, 'A', { type: 'roll' }, dice(1, 1)); // ô 2: sự kiện → thẻ 0 vé số
+  s.players[0].pos = 9;
+  const a = A(s, 'A', { type: 'roll' }, dice(1, 2)); // ô 12: Cơ hội → thẻ 0 vé số
   assert.equal(a.lastEvent.id, 0);
   assert.equal(cash(a, 'A'), 15_000_000 + 2_000_000);
   assert.equal(JSON.stringify(viewFor(a, 'B')).includes('"deck"'), false);
   const b = { ...structuredClone(s), deck: [3] };
-  const j = A(b, 'A', { type: 'roll' }, dice(1, 1));
-  assert.equal(j.players[0].pos, 10);
+  const j = A(b, 'A', { type: 'roll' }, dice(1, 2));
+  assert.equal(j.players[0].pos, 8);
   assert.equal(j.players[0].jail, 1);
   const c = { ...structuredClone(s), deck: [6] };
-  const g = A(c, 'A', { type: 'roll' }, dice(1, 1));
+  const g = A(c, 'A', { type: 'roll' }, dice(1, 2));
   assert.equal(cash(g, 'A'), 15_400_000);
   assert.equal(cash(g, 'B'), 14_800_000);
 });
 
 test('lễ hội: chọn đất của mình', () => {
   let s = own(mk(), 21, 'A');
-  s.players[0].pos = 17;
+  s.players[0].pos = 13;
   s = A(s, 'A', { type: 'roll' }, dice(1, 2));
   assert.equal(s.phase, 'festival');
   NO(s, 'A', { type: 'festival', pos: 23 });
@@ -202,43 +287,49 @@ test('lễ hội: chọn đất của mình', () => {
   assert.equal(s.phase, 'act');
 });
 
-test('forceSkip chuyển lượt; đầu vào rác bị từ chối', () => {
+test('forceSkip chuyển lượt (kể cả khi đang chờ bay); đầu vào rác bị từ chối', () => {
   const s = mk();
   const f = forceSkip(s, dice(1, 2));
   assert.equal(f.players[f.turn].id, 'B');
-  for (const a of [null, {}, { type: 'buy' }, { type: 'build', levels: 'x' }, { type: 'mortgage', pos: 99 }, { type: 'festival', pos: -1 }]) NO(s, 'A', a);
+  const fl = { ...mk(), phase: 'fly' };
+  Object.assign(fl.players[0], { fly: true, pos: 24 });
+  const ff = forceSkip(fl, dice(1, 2));
+  assert.equal(ff.players[ff.turn].id, 'B');
+  for (const a of [null, {}, { type: 'buy' }, { type: 'build', levels: 'x' }, { type: 'mortgage', pos: 99 }, { type: 'festival', pos: -1 }, { type: 'fly', pos: 3 }, { type: 'upgrade', pos: 1 }]) NO(s, 'A', a);
   NO(s, 'Z', { type: 'roll' });
 });
 
 test('sinh nhật: người không đủ tiền chỉ tặng phần đang có, không làm kẹt ván', () => {
   const s = mk(3);
   s.deck = [6];
+  s.players[0].pos = 9;
   s.players[1].cash = 50_000;
-  const g = A(s, 'A', { type: 'roll' }, dice(1, 1));
+  const g = A(s, 'A', { type: 'roll' }, dice(1, 2));
   assert.equal(g.phase, 'act');
   assert.equal(cash(g, 'B'), 0);
   assert.equal(cash(g, 'A'), 15_000_000 + 50_000 + 200_000);
 });
 
 test('review: không xây trên ô thế chấp; chuộc ra số nguyên; thẻ bão lũ đúng giá; lễ hội chỉ trên ô đất', () => {
-  let s = A(mk(), 'A', { type: 'roll' }, dice(3, 3)); // Lạng Sơn
+  let s = A(mk(), 'A', { type: 'roll' }, dice(3, 3)); // Sơn La
   s = A(s, 'A', { type: 'buy' });
   s = A(s, 'A', { type: 'mortgage', pos: 6 });
   NO(s, 'A', { type: 'build', levels: 1 });
   const u = own(mk(), 11, 'A', 0, true);
   const r = A(u, 'A', { type: 'unmortgage', pos: 11 });
   assert.equal(Number.isInteger(cash(r, 'A')), true);
-  assert.equal(cash(r, 'A'), 15_000_000 - 770_000);
-  const b = own(own(mk(), 6, 'A', 4), 8, 'A', 2);
+  assert.equal(cash(r, 'A'), 15_000_000 - 880_000);
+  const b = own(own(mk(), 6, 'A', 5), 7, 'A', 2);
   b.deck = [1];
-  const g = A(b, 'A', { type: 'roll' }, dice(1, 1));
+  b.players[0].pos = 9;
+  const g = A(b, 'A', { type: 'roll' }, dice(1, 2));
   assert.equal(cash(g, 'A'), 15_000_000 - 1_000_000 - 2 * 250_000);
-  const f = own(mk(), 5, 'A');
-  f.players[0].pos = 17;
+  const f = own(mk(), 4, 'A');
+  f.players[0].pos = 13;
   const ff = A(f, 'A', { type: 'roll' }, dice(1, 2));
-  assert.equal(ff.phase, 'act', 'chỉ có sân bay → không vào chọn lễ hội');
-  const f2 = own(own(mk(), 5, 'A'), 21, 'A');
-  f2.players[0].pos = 17;
+  assert.equal(ff.phase, 'act', 'chỉ có bãi biển → không vào chọn lễ hội');
+  const f2 = own(own(mk(), 4, 'A'), 21, 'A');
+  f2.players[0].pos = 13;
   const fe = A(f2, 'A', { type: 'roll' }, dice(1, 2));
-  NO(fe, 'A', { type: 'festival', pos: 5 });
+  NO(fe, 'A', { type: 'festival', pos: 4 });
 });
