@@ -23,7 +23,9 @@ export async function runTable({
         hostMenu.open = false;
         if (state && confirm('Huỷ ván này? Không ai được tính thắng.')) { state = null; sync(); }
       } }, 'Huỷ ván'))) : null;
-  if (hostMenu) { const right = el('span', { class: 'row', style: 'gap:6px;flex-wrap:nowrap' }); net.replaceWith(right); right.append(net, hostMenu); }
+  // Mã phòng thu gọn ở góc phải thanh tiêu đề: chạm 🔑 mới hiện, để mời thêm người giữa ván mà không chiếm chỗ.
+  const roomCode = el('details', { class: 'room-code' }, el('summary', { title: 'Mã phòng', 'aria-label': 'Xem mã phòng' }, '🔑'), el('b', {}, session.code));
+  if (net) { const right = el('span', { class: 'row', style: 'gap:6px;flex-wrap:nowrap' }); net.replaceWith(right); right.append(...[net, roomCode, hostMenu].filter(Boolean)); }
 
   let screen = { t: 'lobby', scores: {} };
   let pending = false; // đã gửi nước đi, chờ host trả lời → chặn bấm 2 lần

@@ -1,16 +1,18 @@
 import { el } from '../shared/lobby.js';
 import { runTable } from '../shared/table.js';
-import { BOARD, RENT, start, apply, viewFor, forceSkip, nextTimer, onTimer, rentOf, buildCost, squareValue } from './engine.js';
+import { BOARD, RENT, BEACH_RENT, JAIL_FINE, start, apply, viewFor, forceSkip, nextTimer, onTimer, rentOf, buildCost, squareValue } from './engine.js';
 
-const CORNER_ICON = { start: '🏁', jail: '🚔', festival: '🎉', travel: '✈️' };
-const ICON = { beach: '🏖️', event: '❓', tax: '💸' };
-const fmt = (n) => (n >= 1e6 ? `${+(n / 1e6).toFixed(2)}tr` : `${Math.round(n / 1000)}k`);
+const ICON = { beach: '🏖️', tax: '💸' };
+// Hình đứng trên 4 ô góc (Xuất phát vẽ bằng vạch kẻ ô, không cần hình).
+const CORNER_ART = { jail: '🌴', festival: '🎪', travel: '✈️' };
+const fmt = (n) => (n >= 1e6 ? `${+(n / 1e6).toFixed(2)}M$` : `${+(n / 1000).toFixed(1)}K$`);
+const money = (n) => `${n.toLocaleString('vi-VN')}$`;
 const shortName = (b) => b.name.replace('Biển ', '').replace('TP. Hồ Chí Minh', 'TP.HCM');
 const LEVEL_NAME = ['', '1 nhà', '2 nhà', '3 nhà', '4 nhà', 'Khách sạn'];
 const PIPS = [[], [4], [0, 8], [0, 4, 8], [0, 2, 6, 8], [0, 2, 4, 6, 8], [0, 2, 3, 5, 6, 8]];
-const ROLL_MS = 800;
+const ROLL_MS = 800, SPIN_MS = 1200;
 
-// Vị trí ô trên lưới 9×9: 0 ở góc dưới phải; bàn xoay 45° nên ô 0 nằm dưới cùng, Nhà tù bên trái, Sân bay bên phải.
+// Vị trí ô trên lưới 9×9: 0 ở góc dưới phải; bàn xoay 45° nên ô 0 nằm dưới cùng, Đảo hoang bên trái, Sân bay bên phải.
 function cellOf(i) {
   if (i <= 8) return [8, 8 - i];
   if (i <= 16) return [16 - i, 0];
@@ -18,12 +20,13 @@ function cellOf(i) {
   return [i - 24, 8];
 }
 
-const die = (n, rolling) => el('div', { class: 'die' + (rolling ? ' rolling' : ''), 'aria-label': `Xúc xắc ${n}` },
+const die = (n, rolling, delay) => el('div', { class: 'die' + (rolling ? ' rolling' : ''), style: rolling ? `animation-delay:${delay}ms` : null, 'aria-label': `Xúc xắc ${n}` },
   [...Array(9).keys()].map((k) => el('i', { class: PIPS[n].includes(k) ? 'pip' : '' })));
 
-let selected = null;
+let selected = null, logOpen = false;
 let hostNow = () => Date.now();
-let seenRolls = null, rollUntil = 0;
+// Hiệu ứng: xúc xắc lăn khi có lần gieo mới, sau đó vòng quay Cơ hội nếu có lá mới. Vẽ lại giữa chừng thì chạy tiếp (delay âm).
+let seenRolls = null, rollAt = 0, seenEvent = null, spinAt = 0;
 setInterval(() => {
   const e = document.getElementById('clock');
   if (e) {
@@ -43,31 +46,41 @@ function renderTable(v, api) {
   const meP = v.players.find((p) => p.id === me);
   const can = myTurn && !pending;
 
-  // Lần gieo mới → cho xúc xắc lăn một lúc rồi mới hiện mặt thật.
-  if (seenRolls !== null && v.rolls !== seenRolls && v.dice) { rollUntil = Date.now() + ROLL_MS; setTimeout(rerender, ROLL_MS); }
+  const now = Date.now();
+  if (seenRolls !== null && v.rolls !== seenRolls && v.dice) { rollAt = now; setTimeout(rerender, ROLL_MS); }
   seenRolls = v.rolls;
-  const rolling = Date.now() < rollUntil;
+  const evN = v.lastEvent?.n ?? 0;
+  if (seenEvent !== null && evN !== seenEvent) { spinAt = Math.max(now, rollAt + ROLL_MS); setTimeout(rerender, spinAt + SPIN_MS - now); }
+  seenEvent = evN;
+  const rolling = now < rollAt + ROLL_MS;
+  const spinning = !rolling && now < spinAt + SPIN_MS;
 
-  // ----- Bàn cờ nghiêng: lớp ô phẳng (bấm được) + lớp nhà/quân đứng (chỉ để nhìn) -----
+  // ----- Bàn cờ nghiêng: lớp ô phẳng (bấm được) + lớp nhà/quân/cờ đứng (chỉ để nhìn) -----
   const tiles = [], standing = [];
   BOARD.forEach((b, i) => {
     const [r, c] = cellOf(i);
     const at = `grid-row:${r + 1};grid-column:${c + 1}`;
     const o = v.own[i];
     const corner = i % 8 === 0;
+    const side = 1 + Math.floor(i / 8); // 1..4; cạnh 2 và 4 xoay chữ dọc theo cạnh bàn
+    const hot = v.hot?.includes(i);
     tiles.push(el('button', {
-      class: `sq${corner ? ' corner' : ''}${o?.mort ? ' mort' : ''}${selected === i ? ' sel' : ''}`,
-      style: at + (o ? `;--own:${color(o.owner)}` : ''), 'aria-label': b.name + (o ? `, chủ ${who(o.owner)}` : ''),
+      class: `sq ${corner ? `corner k-${b.t}` : `s${side}`}${o?.mort ? ' mort' : ''}${hot ? ' hot' : ''}${selected === i ? ' sel' : ''}`,
+      style: at + (o ? `;--own:${color(o.owner)}` : ''), 'aria-label': b.name + (hot ? ', tiền thuê ×1.5' : '') + (o ? `, chủ ${who(o.owner)}` : ''),
       onclick: () => { selected = selected === i ? null : i; rerender(); },
     },
     b.t === 'land' ? el('span', { class: `bar g${b.g}` }) : null,
-    corner || ICON[b.t] ? el('span', { class: corner ? 'ic big' : 'ic' }, corner ? CORNER_ICON[b.t] : ICON[b.t]) : null,
-    el('span', { class: 'nm' }, shortName(b)),
-    o && !o.mort ? el('span', { class: 'rent' }, fmt(rentOf(v, i))) : null));
+    el('span', { class: 'in' },
+      b.t === 'event' ? el('span', { class: 'wheel' }) : ICON[b.t] ? el('span', { class: 'ic' }, ICON[b.t]) : null,
+      b.t === 'start' ? el('span', { class: 'go' }, 'XUẤT PHÁT') : el('span', { class: 'nm' }, shortName(b)),
+      o && !o.mort ? el('span', { class: 'rent' }, fmt(rentOf(v, i))) : null)));
     const toks = v.players.filter((p) => !p.out && p.pos === i);
     const bld = o?.level ? (o.level === 5 ? '🏨' : '🏠'.repeat(o.level)) : '';
-    if (bld || toks.length || v.festival === i) {
+    const art = CORNER_ART[b.t];
+    if (bld || toks.length || v.festival === i || hot || art) {
       standing.push(el('div', { class: 'stand', style: at, 'aria-hidden': 'true' }, el('div', { class: 'up' },
+        art ? el('span', { class: 'art' }, art) : null,
+        hot ? el('span', { class: 'banner' }, '×1.5') : null,
         v.festival === i ? el('span', { class: 'flag' }, '🎉') : null,
         bld ? el('span', { class: 'bld' + (o.level === 5 ? ' hotel' : '') }, bld) : null,
         toks.length ? el('span', { class: 'toks' }, toks.map((p) => el('span', { class: 'pawn' + (p.id === v.turn ? ' now' : ''), style: `--c:${color(p.id)}` }))) : null)));
@@ -78,13 +91,22 @@ function renderTable(v, api) {
   // ----- Thẻ người chơi ở 4 góc -----
   const cards = v.players.map((p, k) => el('div', { class: `pcard c${k}${p.id === v.turn ? ' turn' : ''}${p.out ? ' out' : ''}`, style: `--c:${color(p.id)}` },
     el('span', { class: 'ava' }, (nameOf(p.id) || '?').trim().charAt(0).toUpperCase()),
-    el('span', { class: 'pinfo' }, el('b', {}, who(p.id), p.jail ? ' 🚔' : '', p.fly ? ' ✈️' : '', p.jailCard ? ' 🎫' : ''), el('span', {}, fmt(p.cash)))));
+    el('span', { class: 'pinfo' }, el('b', {}, who(p.id), p.jail ? ' 🏝️' : '', p.fly ? ' ✈️' : '', p.jailCard ? ' 🛟' : ''), el('span', {}, money(p.cash)))));
+
+  // ----- Nhật ký: nút giữa cạnh trên, bấm xổ xuống (giống Loạn Đả) -----
+  const lines = v.log.map((t) => v.players.reduce((x, p) => x.split(p.id).join(who(p.id)), t));
+  const logBox = el('div', { class: 'logbox' + (logOpen ? ' open' : '') },
+    el('button', { class: 'log-btn', 'aria-expanded': String(logOpen), onclick: () => { logOpen = !logOpen; rerender(); } }, `📜 Nhật ký ${logOpen ? '▴' : '▾'}`),
+    logOpen ? el('ul', {}, lines.length ? lines.map((t) => el('li', {}, t)) : el('li', { class: 'muted' }, 'Chưa có gì.')) : null);
 
   const center = el('div', { class: 'center' },
-    el('div', { class: 'dice' }, v.dice ? v.dice.map((d) => die(d, rolling)) : [die(6), die(6)]),
+    spinning
+      ? el('div', { class: 'spinner', 'aria-label': 'Đang quay Cơ hội' }, el('span', { class: 'wheel big', style: `animation-delay:${spinAt - now}ms` }), el('span', { class: 'pointer' }))
+      : el('div', { class: 'dice' }, v.dice ? v.dice.map((d) => die(d, rolling, rollAt - now)) : [die(6), die(6)]),
+    v.dice && !rolling && !spinning ? el('span', { class: 'who-rolled' }, `${who(v.diceBy)} gieo ${v.dice[0]}-${v.dice[1]}`) : null,
     el('b', { class: 'whose' }, myTurn ? 'Lượt của bạn' : `Lượt của ${nameOf(v.turn)}`),
-    v.lastEvent && !rolling ? el('div', { class: 'bubble' }, `❓ ${who(v.lastEvent.by)}: ${v.lastEvent.text}`) : null);
-  const stage = el('div', { class: 'stage' }, board, cards, center);
+    v.lastEvent && !rolling && !spinning ? el('div', { class: 'bubble' }, `🎡 ${who(v.lastEvent.by)}: ${v.lastEvent.text}`) : null);
+  const stage = el('div', { class: 'stage' }, board, cards, logBox, center);
 
   // ----- Hành động -----
   const actions = el('div', { class: 'actions' });
@@ -92,9 +114,9 @@ function renderTable(v, api) {
   let status = myTurn ? '' : `Đang chờ ${nameOf(v.turn)}…`;
   if (myTurn) {
     if (v.phase === 'roll') {
-      status = meP.jail ? `Bạn đang ở tù (lượt ${meP.jail}/3). Gieo ra đôi để ra tù.` : 'Gieo xúc xắc!';
+      status = meP.jail ? `Bạn đang ở Đảo hoang (lượt ${meP.jail}/3). Gieo ra đôi để rời đảo.` : 'Gieo xúc xắc!';
       actions.append(btn('Gieo 🎲', { type: 'roll' }, true));
-      if (meP.jail) actions.append(btn('Nộp phạt 500k', { type: 'pay-jail' }), meP.jailCard ? btn('Dùng thẻ tại ngoại', { type: 'use-card' }) : '');
+      if (meP.jail) actions.append(btn(`Thuê thuyền ${fmt(JAIL_FINE)}`, { type: 'pay-jail' }), meP.jailCard ? btn('Dùng thẻ cứu hộ', { type: 'use-card' }) : '');
     } else if (v.phase === 'festival') {
       status = '🎉 Chọn 1 ô đất của bạn để tổ chức Lễ hội (tiền thuê ×2). Chạm ô rồi bấm chọn.';
       const ok = selected !== null && v.own[selected]?.owner === me && !v.own[selected].mort;
@@ -150,7 +172,8 @@ function renderTable(v, api) {
     const rows = [el('h3', {}, b.name)];
     if (b.price) rows.push(el('div', {}, `Giá: ${fmt(b.price)}`));
     if (b.t === 'land') rows.push(el('div', { class: 'muted' }, `Thuê: ${RENT.map((k) => fmt(b.price * k)).join(' / ')} (đất / 1–4 nhà / Khách sạn)`));
-    if (b.t === 'beach') rows.push(el('div', { class: 'muted' }, 'Thuê theo số bãi biển cùng chủ: 250k / 500k / 1tr / 2tr'));
+    if (b.t === 'beach') rows.push(el('div', { class: 'muted' }, `Thuê theo số bãi biển cùng chủ: ${BEACH_RENT.slice(1).map(fmt).join(' / ')}`));
+    if (v.hot?.includes(selected)) rows.push(el('div', {}, '🚩 Ô tăng giá ván này: tiền thuê ×1.5'));
     if (o) {
       rows.push(el('div', {}, `Chủ: ${who(o.owner)}${o.mort ? ' · đang thế chấp' : ''}${o.level ? ` · ${LEVEL_NAME[o.level]}` : ''}`),
         o.mort ? null : el('div', {}, `Tiền thuê hiện tại: ${fmt(rentOf(v, selected))}`));
@@ -168,7 +191,6 @@ function renderTable(v, api) {
   return [
     v.endsAt ? el('div', { class: 'clock', id: 'clock', 'data-end': v.endsAt }, '⏱') : null,
     stage, el('div', { class: 'status' + (myTurn ? ' me' : ''), role: 'status' }, status), actions, detail,
-    v.log.length ? el('details', {}, el('summary', { class: 'muted' }, 'Nhật ký'), el('ul', {}, v.log.map((t) => el('li', {}, t.replace(/^[^:\s]+/, (id) => (v.players.some((p) => p.id === id) ? who(id) : id)))))) : null,
   ];
 }
 

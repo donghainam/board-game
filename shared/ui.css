@@ -68,3 +68,8 @@ h1, h2, h3 { line-height: 1.2; margin: 0 0 8px; }
 .status.me { color: var(--accent); }
 .scores li { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed var(--line); }
 .result h2 { color: var(--accent); }
+.room-code { display:inline-flex; align-items:center; gap:4px; }
+.room-code > summary { list-style:none; cursor:pointer; font-size:15px; line-height:1; padding:4px 6px; border-radius:8px; user-select:none; }
+.room-code > summary::-webkit-details-marker { display:none; }
+.room-code[open] > summary { background: var(--surface-2); }
+.room-code b { font: 700 14px ui-monospace, Menlo, Consolas, monospace; letter-spacing:2px; }

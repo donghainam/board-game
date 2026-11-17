@@ -1,49 +1,51 @@
-// Luật Cờ Tỷ Phú — thuần logic. Tiền tính bằng đồng (VNĐ ảo). Xúc xắc và thẻ sự kiện chỉ host gieo/rút.
+// Luật Cờ Tỷ Phú — thuần logic. Tiền tính bằng $ ảo. Xúc xắc, thẻ Cơ hội và 3 ô tăng giá chỉ host gieo/rút.
 
 import { shuffle, fail } from '../shared/util.js';
 
-const K = 1000, M = 1_000_000;
-const L = (name, g, price) => ({ t: 'land', name, g, price });
-const BEACH = (name) => ({ t: 'beach', name, price: 2 * M });
+const K = 1000;
+const L = (name, g, price) => ({ t: 'land', name, g, price: price * K });
+const BEACH = (name) => ({ t: 'beach', name, price: 265 * K });
 const EV = { t: 'event', name: 'Cơ hội' };
 
-// 32 ô, 4 góc: Xuất phát (0), Nhà tù (8), Lễ hội (16), Sân bay (24).
+// 32 ô, 4 góc: Xuất phát (0), Đảo hoang (8), Lễ hội (16), Sân bay (24).
 export const BOARD = [
-  { t: 'start', name: 'Xuất phát' }, L('Hà Giang', 1, 600 * K), L('Cao Bằng', 1, 600 * K), L('Lạng Sơn', 1, 700 * K),
-  BEACH('Biển Trà Cổ'), L('Điện Biên', 2, 1 * M), L('Sơn La', 2, 1 * M), L('Ninh Bình', 2, 1.2 * M),
-  { t: 'jail', name: 'Nhà tù' }, L('Thanh Hoá', 3, 1.4 * M), L('Nghệ An', 3, 1.4 * M), L('Huế', 3, 1.6 * M),
-  EV, L('Quảng Nam', 4, 1.8 * M), BEACH('Biển Mỹ Khê'), L('Quảng Ngãi', 4, 2 * M),
-  { t: 'festival', name: 'Lễ hội' }, L('Bình Định', 5, 2.2 * M), BEACH('Biển Mũi Né'), L('Khánh Hoà', 5, 2.4 * M),
-  EV, L('Lâm Đồng', 6, 2.6 * M), L('An Giang', 6, 2.6 * M), L('Cần Thơ', 6, 2.8 * M),
-  { t: 'travel', name: 'Sân bay' }, BEACH('Biển Phú Quốc'), L('Quảng Ninh', 7, 3 * M), L('Hải Phòng', 7, 3.2 * M),
-  EV, L('Hà Nội', 8, 3.5 * M), { t: 'tax', name: 'Thuế', amount: 2 * M }, L('TP. Hồ Chí Minh', 8, 4 * M),
+  { t: 'start', name: 'Xuất phát' }, L('Hà Giang', 1, 80), L('Cao Bằng', 1, 80), L('Lạng Sơn', 1, 95),
+  BEACH('Biển Trà Cổ'), L('Điện Biên', 2, 135), L('Sơn La', 2, 135), L('Ninh Bình', 2, 160),
+  { t: 'jail', name: 'Đảo hoang' }, L('Thanh Hoá', 3, 185), L('Nghệ An', 3, 185), L('Huế', 3, 215),
+  EV, L('Quảng Nam', 4, 240), BEACH('Biển Mỹ Khê'), L('Quảng Ngãi', 4, 265),
+  { t: 'festival', name: 'Lễ hội' }, L('Bình Định', 5, 295), BEACH('Biển Mũi Né'), L('Khánh Hoà', 5, 320),
+  EV, L('Lâm Đồng', 6, 345), L('An Giang', 6, 345), L('Cần Thơ', 6, 375),
+  { t: 'travel', name: 'Sân bay' }, BEACH('Biển Phú Quốc'), L('Quảng Ninh', 7, 400), L('Hải Phòng', 7, 425),
+  EV, L('Hà Nội', 8, 465), { t: 'tax', name: 'Thuế', amount: 265 * K }, L('TP. Hồ Chí Minh', 8, 535),
 ];
 const N = BOARD.length, JAIL = 8, HOTEL = 5;
 
 export const EVENTS = [
-  { text: 'Trúng vé số! Nhận 2.000.000đ', cash: 2 * M },
-  { text: 'Bão lũ: sửa nhà 250.000đ mỗi nhà, 1.000.000đ mỗi Công trình', repair: [250 * K, 1 * M] },
+  { text: 'Trúng vé số! Nhận 265.000$', cash: 265 * K },
+  { text: 'Bão lũ: sửa nhà 35.000$ mỗi nhà, 135.000$ mỗi Khách sạn', repair: [35 * K, 135 * K] },
   { text: 'Đi nghỉ mát: tới bãi biển gần nhất phía trước', nextBeach: true },
-  { text: 'Bị bắt quả tang trốn thuế: vào tù!', jail: true },
-  { text: 'Thẻ được tại ngoại: giữ lại để ra tù miễn phí', jailCard: true },
+  { text: 'Bị bắt quả tang trốn thuế: ra Đảo hoang!', jail: true },
+  { text: 'Thẻ cứu hộ: giữ lại để rời Đảo hoang miễn phí', jailCard: true },
   { text: 'Đi lạc đường: lùi lại 3 ô', back: 3 },
-  { text: 'Sinh nhật bạn: mỗi người tặng bạn 200.000đ', fromEach: 200 * K },
-  { text: 'Mời cả bàn ăn phở: trả mỗi người 200.000đ', toEach: 200 * K },
-  { text: 'Phạt vi phạm giao thông 300.000đ', cash: -300 * K },
-  { text: 'Nhận thưởng Tết 1.000.000đ', cash: 1 * M },
+  { text: 'Sinh nhật bạn: mỗi người tặng bạn 25.000$', fromEach: 25 * K },
+  { text: 'Mời cả bàn ăn phở: trả mỗi người 25.000$', toEach: 25 * K },
+  { text: 'Phạt vi phạm giao thông 40.000$', cash: -40 * K },
+  { text: 'Nhận thưởng Tết 135.000$', cash: 135 * K },
   { text: 'Về ô Xuất phát', moveTo: 0 },
   { text: 'Bay ra Hà Nội', moveTo: 29 },
-  { text: 'Đóng học phí 1.000.000đ', cash: -1 * M },
-  { text: 'Bán hàng online có lãi: nhận 500.000đ', cash: 500 * K },
-  { text: 'Đi khám bệnh: trả 500.000đ', cash: -500 * K },
+  { text: 'Đóng học phí 135.000$', cash: -135 * K },
+  { text: 'Bán hàng online có lãi: nhận 65.000$', cash: 65 * K },
+  { text: 'Đi khám bệnh: trả 65.000$', cash: -65 * K },
   { text: 'Đi xem Lễ hội', moveTo: 16 },
   { text: 'Nâng cấp miễn phí: chọn 1 ô đất của bạn để lên thêm 1 cấp', upgrade: true },
 ];
 
-const GO = 2 * M, JAIL_FINE = 500 * K, START_CASH = 15 * M;
+export const GO = 265 * K, JAIL_FINE = 65 * K, START_CASH = 2_000 * K;
+export const BEACH_RENT = [0, 35 * K, 65 * K, 135 * K, 265 * K]; // theo số bãi biển cùng chủ
 const ownable = (pos) => ['land', 'beach'].includes(BOARD[pos]?.t);
 const groupOf = (g) => BOARD.map((b, i) => (b.g === g ? i : -1)).filter((i) => i >= 0);
 const BEACHES = [4, 14, 18, 25];
+const OWNABLE = BOARD.map((b, i) => i).filter(ownable);
 const SIDES = [0, 1, 2, 3].map((k) => BOARD.map((b, i) => i).filter((i) => i > 8 * k && i < 8 * k + 8 && ownable(i)));
 // Cấp cao nhất được xây: vòng đầu (chưa qua Xuất phát) tối đa 3 nhà, sau đó 4 nhà. Khách sạn có luật riêng.
 const houseCap = (p) => (p.laps ? 4 : 3);
@@ -52,7 +54,8 @@ export function start(ids, { config, lastWinner } = {}, rng = Math.random, now =
   const minutes = [30, 45, 60].includes(config?.minutes) ? config.minutes : 0;
   return {
     players: ids.map((id) => ({ id, cash: START_CASH, pos: 0, jail: 0, jailCard: false, out: false, laps: 0, fly: false })),
-    own: {}, turn: Math.max(0, ids.indexOf(lastWinner)), phase: 'roll', dice: null, rolls: 0, doubles: 0,
+    own: {}, turn: Math.max(0, ids.indexOf(lastWinner)), phase: 'roll', dice: null, diceBy: null, rolls: 0, doubles: 0,
+    hot: shuffle([...OWNABLE], rng).slice(0, 3), // 3 ô được tăng sẵn tiền thuê ×1.5 trong ván này
     offer: {}, debt: null, festival: null, deck: shuffle([...EVENTS.keys()], rng), lastEvent: null,
     log: [], endsAt: minutes ? now + minutes * 60000 : null, winner: null, winReason: null,
   };
@@ -74,9 +77,9 @@ export function rentOf(s, pos) {
   const o = s.own[pos];
   if (!o || o.mort) return 0;
   const b = BOARD[pos];
-  if (b.t === 'beach') return [0, 250 * K, 500 * K, 1 * M, 2 * M][BEACHES.filter((p) => s.own[p]?.owner === o.owner).length];
-  let r = b.price * RENT[o.level];
-  if (o.level === 0 && ownsAll(s, o.owner, groupOf(b.g))) r *= 2;
+  let r = b.t === 'beach' ? BEACH_RENT[BEACHES.filter((p) => s.own[p]?.owner === o.owner).length] : b.price * RENT[o.level];
+  if (b.t === 'land' && o.level === 0 && ownsAll(s, o.owner, groupOf(b.g))) r *= 2;
+  if (s.hot?.includes(pos)) r *= 1.5;
   if (s.festival === pos) r *= 2;
   return Math.round(r);
 }
@@ -95,7 +98,7 @@ export function assets(s, id) {
 // ---------- Tiện ích trạng thái (mutate s) ----------
 const cur = (s) => s.players[s.turn];
 const P = (s, id) => s.players.find((p) => p.id === id);
-const log = (s, text) => { s.log = [...s.log.slice(-5), text]; };
+const log = (s, text) => { s.log = [...s.log.slice(-11), text]; };
 
 function checkMonopoly(s, id) {
   if (s.winner) return;
@@ -131,12 +134,12 @@ function settleDebt(s) {
 
 function goJail(s, p) {
   p.pos = JAIL; p.jail = 1; p.fly = false; s.doubles = 0;
-  log(s, `${p.id} vào tù`);
+  log(s, `${p.id} ra Đảo hoang`);
   nextTurn(s);
 }
 
 function nextTurn(s) {
-  s.offer = {}; s.dice = null; s.doubles = 0;
+  s.offer = {}; s.doubles = 0;
   if (s.winner) return;
   const n = s.players.length;
   for (let k = 1; k <= n; k++) {
@@ -185,7 +188,7 @@ function drawEvent(s, p, rng) {
   if (!s.deck.length) s.deck = shuffle([...EVENTS.keys()], rng);
   const id = s.deck.shift();
   const e = EVENTS[id];
-  s.lastEvent = { id, by: p.id, text: e.text };
+  s.lastEvent = { id, by: p.id, text: e.text, n: (s.lastEvent?.n || 0) + 1 }; // n: để máy khách biết có lá mới (cho vòng quay)
   log(s, `${p.id}: ${e.text}`);
   if (e.cash > 0) p.cash += e.cash;
   else if (e.cash < 0) charge(s, p, -e.cash, null);
@@ -228,18 +231,19 @@ const isPos = (x) => Number.isInteger(x) && x >= 0 && x < N;
 function roll(s, p, rng) {
   const d = [1 + Math.floor(rng() * 6), 1 + Math.floor(rng() * 6)];
   const dbl = d[0] === d[1];
-  s.dice = d; s.rolls++;
+  s.dice = d; s.diceBy = p.id; s.rolls++;
   const sum = d[0] + d[1];
   if (p.jail) {
-    if (dbl) { p.jail = 0; s.doubles = 0; return moveTo(s, p, (p.pos + sum) % N, rng); }
-    if (p.jail < 3) { p.jail++; log(s, `${p.id} ở tù thêm lượt`); return nextTurn(s); }
+    if (dbl) { p.jail = 0; s.doubles = 0; log(s, `${p.id} gieo đôi ${d[0]}-${d[1]}, rời Đảo hoang`); return moveTo(s, p, (p.pos + sum) % N, rng); }
+    if (p.jail < 3) { p.jail++; log(s, `${p.id} gieo ${d[0]}-${d[1]}, ở lại Đảo hoang`); return nextTurn(s); }
     p.jail = 0;
     charge(s, p, JAIL_FINE, null);
     if (s.phase === 'debt') { s.debt.resume = 'act'; return; } // shortcut: nợ tiền ra tù thì trả xong là hết lượt, lượt sau đi bình thường
     return moveTo(s, p, (p.pos + sum) % N, rng);
   }
   s.doubles = dbl ? s.doubles + 1 : 0;
-  if (s.doubles === 3) return goJail(s, p);
+  if (s.doubles === 3) { log(s, `${p.id} gieo ${d[0]}-${d[1]}: đôi 3 lần liên tiếp`); return goJail(s, p); }
+  log(s, `${p.id} gieo ${d[0]}-${d[1]} → ${BOARD[(p.pos + sum) % N].name}`);
   moveTo(s, p, (p.pos + sum) % N, rng);
 }
 
@@ -285,9 +289,9 @@ export function apply(state, id, action, rng = Math.random, now = Date.now()) {
   if (s.phase === 'roll') {
     if (type === 'roll') { roll(s, p, rng); return { ok: true, state: s }; }
     if (type === 'pay-jail' || type === 'use-card') {
-      if (!p.jail) return fail('Bạn không ở tù.');
-      if (type === 'use-card') { if (!p.jailCard) return fail('Bạn không có thẻ tại ngoại.'); p.jailCard = false; } else {
-        if (p.cash < JAIL_FINE) return fail('Không đủ tiền nộp phạt.');
+      if (!p.jail) return fail('Bạn không ở Đảo hoang.');
+      if (type === 'use-card') { if (!p.jailCard) return fail('Bạn không có thẻ cứu hộ.'); p.jailCard = false; } else {
+        if (p.cash < JAIL_FINE) return fail('Không đủ tiền thuê thuyền.');
         p.cash -= JAIL_FINE;
       }
       p.jail = 0;
@@ -300,7 +304,6 @@ export function apply(state, id, action, rng = Math.random, now = Date.now()) {
     if (type !== 'fly') return fail('Hãy chọn ô để bay tới.');
     if (!isPos(action.pos) || action.pos === p.pos) return fail('Chọn 1 ô khác trên bàn cờ.');
     p.fly = false;
-    s.dice = null;
     log(s, `${id} bay tới ${BOARD[action.pos].name}`);
     moveTo(s, p, action.pos, rng);
     return { ok: true, state: s };

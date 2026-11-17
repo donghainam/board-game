@@ -24,13 +24,34 @@
   .sq[style*="--own"] { background:color-mix(in srgb, var(--own) 22%, var(--tile)); box-shadow:inset 0 0 0 .25cqw var(--own); }
   .sq.mort { background:repeating-linear-gradient(45deg,var(--tile) 0 4px,#e2d6c4 4px 8px); }
   .sq.sel { outline:.5cqw solid var(--accent); z-index:1; }
-  .sq.corner { background:#f2e6d0; font-size:clamp(6px,1.3cqw,12px); }
-  .sq .bar { position:absolute; inset:0 0 auto 0; height:18%; }
+  .sq.corner { font-size:clamp(6px,1.3cqw,12px); }
+  /* Thanh màu nhóm nằm ở mép trong của ô (giáp sân cỏ); chữ ở cạnh 2 và 4 xoay để chạy dọc theo cạnh bàn. */
+  .sq .bar { position:absolute; }
+  .s1 .bar { inset:0 0 auto 0; height:18%; } .s3 .bar { inset:auto 0 0 0; height:18%; }
+  .s2 .bar { inset:0 0 0 auto; width:18%; } .s4 .bar { inset:0 auto 0 0; width:18%; }
+  .sq .in { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.15cqw; padding:.3cqw; }
+  .s2 .in, .s4 .in { transform:rotate(-90deg); }
+  .s1 .in { padding-top:1.3cqw; } .s3 .in { padding-bottom:1.3cqw; }
+  .s2 .in { padding-bottom:1.3cqw; } .s4 .in { padding-top:1.3cqw; }
   .sq .ic { font-size:clamp(7px,1.8cqw,16px); line-height:1; }
-  .sq .ic.big { font-size:clamp(10px,3cqw,28px); }
-  .sq .nm { word-break:break-word; margin-top:12%; }
-  .sq .ic + .nm, .corner .nm { margin-top:0; }
-  .sq .rent { font-weight:800; color:#fff; background:var(--own); border-radius:.4cqw; padding:0 .3cqw; }
+  .sq .nm { word-break:break-word; }
+  .sq.hot { box-shadow:inset 0 0 0 .3cqw #ff922b; }
+  /* Ô Cơ hội: vòng quay nhiều màu */
+  .wheel { display:block; width:clamp(9px,2.6cqw,24px); aspect-ratio:1; border-radius:50%; border:.25cqw solid #fff; box-shadow:0 0 0 .1cqw rgb(0 0 0 / .2);
+           background:conic-gradient(#e03131 0 60deg,#fab005 0 120deg,#40c057 0 180deg,#15aabf 0 240deg,#7950f2 0 300deg,#f783ac 0); }
+  .wheel.big { width:clamp(64px,15cqw,140px); border-width:clamp(3px,.6cqw,6px); box-shadow:0 .8cqw 1.2cqw rgb(0 0 0 / .3); animation:spin 1.2s cubic-bezier(.2,.7,.3,1) both; }
+  @keyframes spin { from { transform:rotate(0); } to { transform:rotate(1440deg); } }
+  .spinner { position:relative; display:grid; place-items:center; }
+  .pointer { position:absolute; top:-1cqw; width:0; height:0; border:clamp(6px,1.2cqw,11px) solid transparent; border-top:clamp(10px,2cqw,18px) solid #2a2118; border-bottom:0; }
+  /* 4 ô góc */
+  .k-start { background:linear-gradient(90deg, transparent 38%, #222 38% 40%, transparent 40%),
+             repeating-conic-gradient(#222 0 25%, #fff 0 50%) 0 0 / 1.1cqw 1.1cqw; }
+  .k-start .in { background:linear-gradient(transparent 30%, rgb(255 255 255 / .9) 30% 70%, transparent 70%); }
+  .k-start .go { font-weight:900; font-size:clamp(6px,1.4cqw,13px); color:#e03131; letter-spacing:.05em; }
+  .k-jail { background:radial-gradient(ellipse 42% 36% at 50% 58%, #f6d98b 0 92%, #e3bf6a 100%, transparent 101%), linear-gradient(135deg,#4dabf7,#1c7ed6); }
+  .k-jail .nm, .k-festival .nm, .k-travel .nm { background:rgb(255 255 255 / .85); border-radius:.4cqw; padding:0 .4cqw; margin-top:auto; margin-bottom:.4cqw; }
+  .k-festival { background:radial-gradient(circle at 50% 40%, #ffe066 0 18%, transparent 19%), repeating-conic-gradient(from 0deg at 50% 40%, #845ef7 0 15deg, #be4bdb 0 30deg); }
+  .k-travel { background:repeating-linear-gradient(0deg, #fff 0 .6cqw, transparent .6cqw 1.3cqw) center / 6% 84% no-repeat, #868e96; } /* đường băng */
   .g1{background:#8d6e63}.g2{background:#4fc3f7}.g3{background:#f06292}.g4{background:#ffb74d}
   .g5{background:#e53935}.g6{background:#fdd835}.g7{background:#43a047}.g8{background:#1e3a8a}
   /* Nhà và quân cờ "đứng" trên ô: xoay ngược lại phép nghiêng của bàn nên luôn quay mặt về người xem. */
@@ -39,6 +60,11 @@
   .bld { font-size:clamp(9px,2.6cqw,24px); letter-spacing:-.4em; padding-right:.4em; filter:drop-shadow(0 .2cqw 0 rgb(0 0 0 / .25)); }
   .bld.hotel { font-size:clamp(12px,3.4cqw,32px); letter-spacing:0; padding:0; }
   .flag { font-size:clamp(8px,2cqw,18px); }
+  .art { font-size:clamp(16px,4.6cqw,44px); line-height:1; filter:drop-shadow(0 .4cqw .2cqw rgb(0 0 0 / .3)); margin-bottom:1cqw; }
+  /* Cờ đuôi én màu cam cắm trên ô tăng giá */
+  .banner { position:relative; margin-left:1.6cqw; padding:.2cqw .9cqw .2cqw .5cqw; background:#ff922b; color:#fff; font:800 clamp(6px,1.2cqw,11px)/1.2 system-ui, sans-serif;
+            clip-path:polygon(0 0,100% 0,82% 50%,100% 100%,0 100%); }
+  .banner::before { content:''; position:absolute; left:-.25cqw; top:0; height:300%; border-left:.25cqw solid #5c3d1e; }
   .toks { display:flex; gap:.2cqw; }
   .pawn { width:clamp(7px,1.6cqw,14px); height:clamp(12px,2.8cqw,24px); background:var(--c); border:1.5px solid #fff; border-radius:50% 50% 30% 30% / 40% 40% 25% 25%;
           box-shadow:0 .3cqw .4cqw rgb(0 0 0 / .4); }
@@ -64,13 +90,23 @@
   .die.rolling { animation:tumble .8s ease-out; }
   .dice .die.rolling:nth-child(2) { animation-duration:.7s; }
   @keyframes tumble { 0% { transform:translateY(-120%) rotate(0); } 45% { transform:translateY(0) rotate(300deg); } 70% { transform:translateY(-25%) rotate(420deg); } 100% { transform:none; } }
+  .who-rolled { font-size:clamp(10px,1.7cqw,14px); font-weight:700; color:#1d3a12; }
   .whose { font-size:clamp(11px,2.2cqw,18px); color:#1d3a12; text-shadow:0 1px 0 rgb(255 255 255 / .6); }
   .bubble { background:#fff; color:#2a2118; border-radius:2cqw; padding:.6cqw 1.4cqw; font-size:clamp(10px,1.7cqw,14px); box-shadow:var(--shadow); }
+  /* Nhật ký: nút ở giữa cạnh trên sân khấu, bấm xổ danh sách (cùng kiểu Loạn Đả) */
+  .logbox { position:absolute; top:1.5cqw; left:50%; transform:translateX(-50%); z-index:3; width:min(36cqw, 300px); display:flex; flex-direction:column; align-items:center;
+            font-size:clamp(11px,1.6cqw,13px); line-height:1.35; }
+  .log-btn { font:inherit; font-weight:700; color:#fff; background:rgb(28 22 16 / .62); border:1px solid rgb(255 255 255 / .14); border-radius:999px; padding:4px 12px; cursor:pointer; min-height:32px; }
+  .logbox ul { margin:4px 0 0; padding:8px 10px 8px 24px; width:100%; max-height:min(40cqw, 260px); overflow:auto; color:#fff; background:rgb(28 22 16 / .78);
+               -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); border-radius:12px; }
+  .logbox li { margin:2px 0; }
   .actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
   .actions .btn { flex:1; min-width:120px; }
   .detail h3 { margin:0; }
   .clock { text-align:center; font: 700 16px ui-monospace, Menlo, Consolas, monospace; }
-  @media (prefers-reduced-motion: reduce) { .die.rolling, .pawn.now { animation:none; } }
+  /* Màn hẹp (điện thoại): sân khấu cao hơn, hạ bàn xuống để nút Nhật ký không đè ô Lễ hội. */
+  @media (max-width: 560px) { .stage { aspect-ratio:1.2; } .board3d { top:57%; } .center { top:53%; } }
+  @media (prefers-reduced-motion: reduce) { .die.rolling, .pawn.now, .wheel.big { animation:none; } }
 </style>
 </head>
 <body>
