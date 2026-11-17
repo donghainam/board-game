@@ -2,9 +2,10 @@ import { el } from '../shared/lobby.js';
 import { runTable } from '../shared/table.js';
 import { BOARD, RENT, BEACH_RENT, JAIL_FINE, start, apply, viewFor, forceSkip, nextTimer, onTimer, rentOf, buildCost, squareValue } from './engine.js';
 
-const ICON = { beach: '🏖️', tax: '💸' };
-// Hình đứng trên 4 ô góc (Xuất phát vẽ bằng vạch kẻ ô, không cần hình).
-const CORNER_ART = { jail: '🌴', festival: '🎪', travel: '✈️' };
+const ICON = { tax: '💸' };
+// Hình đứng trên ô (Xuất phát có biển hiệu riêng).
+const STAND_ART = { jail: '🌴', festival: '🎪', travel: '✈️', beach: '⛱️' };
+const TIER = ['', '🏠', '🏡', '🏘️', '🏢', '🏨']; // mỗi cấp một kiểu nhà, to dần
 const fmt = (n) => (n >= 1e6 ? `${+(n / 1e6).toFixed(2)}M$` : `${+(n / 1000).toFixed(1)}K$`);
 const money = (n) => `${n.toLocaleString('vi-VN')}$`;
 const shortName = (b) => b.name.replace('Biển ', '').replace('TP. Hồ Chí Minh', 'TP.HCM');
@@ -65,24 +66,25 @@ function renderTable(v, api) {
     const side = 1 + Math.floor(i / 8); // 1..4; cạnh 2 và 4 xoay chữ dọc theo cạnh bàn
     const hot = v.hot?.includes(i);
     tiles.push(el('button', {
-      class: `sq ${corner ? `corner k-${b.t}` : `s${side}`}${o?.mort ? ' mort' : ''}${hot ? ' hot' : ''}${selected === i ? ' sel' : ''}`,
+      class: `sq ${corner ? `corner k-${b.t}` : `s${side}`}${b.t === 'beach' ? ' beach' : ''}${o?.mort ? ' mort' : ''}${hot ? ' hot' : ''}${selected === i ? ' sel' : ''}`,
       style: at + (o ? `;--own:${color(o.owner)}` : ''), 'aria-label': b.name + (hot ? ', tiền thuê ×1.5' : '') + (o ? `, chủ ${who(o.owner)}` : ''),
       onclick: () => { selected = selected === i ? null : i; rerender(); },
     },
     b.t === 'land' ? el('span', { class: `bar g${b.g}` }) : null,
     el('span', { class: 'in' },
       b.t === 'event' ? el('span', { class: 'wheel' }) : ICON[b.t] ? el('span', { class: 'ic' }, ICON[b.t]) : null,
-      b.t === 'start' ? el('span', { class: 'go' }, 'XUẤT PHÁT') : el('span', { class: 'nm' }, shortName(b)),
+      b.t === 'start' ? null : el('span', { class: 'nm' }, shortName(b)),
       o && !o.mort ? el('span', { class: 'rent' }, fmt(rentOf(v, i))) : null)));
     const toks = v.players.filter((p) => !p.out && p.pos === i);
-    const bld = o?.level ? (o.level === 5 ? '🏨' : '🏠'.repeat(o.level)) : '';
-    const art = CORNER_ART[b.t];
-    if (bld || toks.length || v.festival === i || hot || art) {
+    const bld = o?.level ? TIER[o.level] : '';
+    const art = STAND_ART[b.t];
+    if (bld || toks.length || v.festival === i || hot || art || b.t === 'start') {
       standing.push(el('div', { class: 'stand', style: at, 'aria-hidden': 'true' }, el('div', { class: 'up' },
-        art ? el('span', { class: 'art' }, art) : null,
-        hot ? el('span', { class: 'banner' }, '×1.5') : null,
+        b.t === 'start' ? el('span', { class: 'sign' }, '🏁 XUẤT PHÁT 🏁') : null,
+        art ? el('span', { class: 'art' + (b.t === 'beach' ? ' small' : '') }, art) : null,
+        hot ? el('span', { class: 'banners' }, el('i'), el('i')) : null,
         v.festival === i ? el('span', { class: 'flag' }, '🎉') : null,
-        bld ? el('span', { class: 'bld' + (o.level === 5 ? ' hotel' : '') }, bld) : null,
+        bld ? el('span', { class: `bld lv${o.level}` }, bld) : null,
         toks.length ? el('span', { class: 'toks' }, toks.map((p) => el('span', { class: 'pawn' + (p.id === v.turn ? ' now' : ''), style: `--c:${color(p.id)}` }))) : null)));
     }
   });
@@ -173,7 +175,7 @@ function renderTable(v, api) {
     if (b.price) rows.push(el('div', {}, `Giá: ${fmt(b.price)}`));
     if (b.t === 'land') rows.push(el('div', { class: 'muted' }, `Thuê: ${RENT.map((k) => fmt(b.price * k)).join(' / ')} (đất / 1–4 nhà / Khách sạn)`));
     if (b.t === 'beach') rows.push(el('div', { class: 'muted' }, `Thuê theo số bãi biển cùng chủ: ${BEACH_RENT.slice(1).map(fmt).join(' / ')}`));
-    if (v.hot?.includes(selected)) rows.push(el('div', {}, '🚩 Ô tăng giá ván này: tiền thuê ×1.5'));
+    if (v.hot?.includes(selected)) rows.push(el('div', {}, '🎏 Ô tăng giá ván này: tiền thuê ×1.5'));
     if (o) {
       rows.push(el('div', {}, `Chủ: ${who(o.owner)}${o.mort ? ' · đang thế chấp' : ''}${o.level ? ` · ${LEVEL_NAME[o.level]}` : ''}`),
         o.mort ? null : el('div', {}, `Tiền thuê hiện tại: ${fmt(rentOf(v, selected))}`));

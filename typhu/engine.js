@@ -4,44 +4,44 @@ import { shuffle, fail } from '../shared/util.js';
 
 const K = 1000;
 const L = (name, g, price) => ({ t: 'land', name, g, price: price * K });
-const BEACH = (name) => ({ t: 'beach', name, price: 265 * K });
+const BEACH = (name) => ({ t: 'beach', name, price: 200 * K });
 const EV = { t: 'event', name: 'Cơ hội' };
 
 // 32 ô, 4 góc: Xuất phát (0), Đảo hoang (8), Lễ hội (16), Sân bay (24).
 export const BOARD = [
-  { t: 'start', name: 'Xuất phát' }, L('Hà Giang', 1, 80), L('Cao Bằng', 1, 80), L('Lạng Sơn', 1, 95),
-  BEACH('Biển Trà Cổ'), L('Điện Biên', 2, 135), L('Sơn La', 2, 135), L('Ninh Bình', 2, 160),
-  { t: 'jail', name: 'Đảo hoang' }, L('Thanh Hoá', 3, 185), L('Nghệ An', 3, 185), L('Huế', 3, 215),
-  EV, L('Quảng Nam', 4, 240), BEACH('Biển Mỹ Khê'), L('Quảng Ngãi', 4, 265),
-  { t: 'festival', name: 'Lễ hội' }, L('Bình Định', 5, 295), BEACH('Biển Mũi Né'), L('Khánh Hoà', 5, 320),
-  EV, L('Lâm Đồng', 6, 345), L('An Giang', 6, 345), L('Cần Thơ', 6, 375),
-  { t: 'travel', name: 'Sân bay' }, BEACH('Biển Phú Quốc'), L('Quảng Ninh', 7, 400), L('Hải Phòng', 7, 425),
-  EV, L('Hà Nội', 8, 465), { t: 'tax', name: 'Thuế', amount: 265 * K }, L('TP. Hồ Chí Minh', 8, 535),
+  { t: 'start', name: 'Xuất phát' }, L('Hà Giang', 1, 80), L('Cao Bằng', 1, 80), L('Lạng Sơn', 1, 100),
+  BEACH('Biển Trà Cổ'), L('Điện Biên', 2, 140), L('Sơn La', 2, 140), L('Ninh Bình', 2, 160),
+  { t: 'jail', name: 'Đảo hoang' }, L('Thanh Hoá', 3, 180), L('Nghệ An', 3, 180), L('Huế', 3, 220),
+  EV, L('Quảng Nam', 4, 240), BEACH('Biển Mỹ Khê'), L('Quảng Ngãi', 4, 260),
+  { t: 'festival', name: 'Lễ hội' }, L('Bình Định', 5, 300), BEACH('Biển Mũi Né'), L('Khánh Hoà', 5, 320),
+  EV, L('Lâm Đồng', 6, 340), L('An Giang', 6, 340), L('Cần Thơ', 6, 380),
+  { t: 'travel', name: 'Sân bay' }, BEACH('Biển Phú Quốc'), L('Quảng Ninh', 7, 400), L('Hải Phòng', 7, 420),
+  EV, L('Hà Nội', 8, 460), { t: 'tax', name: 'Thuế', amount: 200 * K }, L('TP. Hồ Chí Minh', 8, 540),
 ];
 const N = BOARD.length, JAIL = 8, HOTEL = 5;
 
 export const EVENTS = [
-  { text: 'Trúng vé số! Nhận 265.000$', cash: 265 * K },
-  { text: 'Bão lũ: sửa nhà 35.000$ mỗi nhà, 135.000$ mỗi Khách sạn', repair: [35 * K, 135 * K] },
+  { text: 'Trúng vé số! Nhận 250.000$', cash: 250 * K },
+  { text: 'Bão lũ: sửa nhà 40.000$ mỗi nhà, 150.000$ mỗi Khách sạn', repair: [40 * K, 150 * K] },
   { text: 'Đi nghỉ mát: tới bãi biển gần nhất phía trước', nextBeach: true },
   { text: 'Bị bắt quả tang trốn thuế: ra Đảo hoang!', jail: true },
   { text: 'Thẻ cứu hộ: giữ lại để rời Đảo hoang miễn phí', jailCard: true },
   { text: 'Đi lạc đường: lùi lại 3 ô', back: 3 },
-  { text: 'Sinh nhật bạn: mỗi người tặng bạn 25.000$', fromEach: 25 * K },
-  { text: 'Mời cả bàn ăn phở: trả mỗi người 25.000$', toEach: 25 * K },
-  { text: 'Phạt vi phạm giao thông 40.000$', cash: -40 * K },
-  { text: 'Nhận thưởng Tết 135.000$', cash: 135 * K },
+  { text: 'Sinh nhật bạn: mỗi người tặng bạn 30.000$', fromEach: 30 * K },
+  { text: 'Mời cả bàn ăn phở: trả mỗi người 30.000$', toEach: 30 * K },
+  { text: 'Phạt vi phạm giao thông 50.000$', cash: -50 * K },
+  { text: 'Nhận thưởng Tết 150.000$', cash: 150 * K },
   { text: 'Về ô Xuất phát', moveTo: 0 },
   { text: 'Bay ra Hà Nội', moveTo: 29 },
-  { text: 'Đóng học phí 135.000$', cash: -135 * K },
-  { text: 'Bán hàng online có lãi: nhận 65.000$', cash: 65 * K },
-  { text: 'Đi khám bệnh: trả 65.000$', cash: -65 * K },
+  { text: 'Đóng học phí 150.000$', cash: -150 * K },
+  { text: 'Bán hàng online có lãi: nhận 50.000$', cash: 50 * K },
+  { text: 'Đi khám bệnh: trả 50.000$', cash: -50 * K },
   { text: 'Đi xem Lễ hội', moveTo: 16 },
   { text: 'Nâng cấp miễn phí: chọn 1 ô đất của bạn để lên thêm 1 cấp', upgrade: true },
 ];
 
-export const GO = 265 * K, JAIL_FINE = 65 * K, START_CASH = 2_000 * K;
-export const BEACH_RENT = [0, 35 * K, 65 * K, 135 * K, 265 * K]; // theo số bãi biển cùng chủ
+export const GO = 300 * K, JAIL_FINE = 50 * K, START_CASH = 2_000 * K;
+export const BEACH_RENT = [0, 50 * K, 100 * K, 200 * K, 400 * K]; // theo số bãi biển cùng chủ, gấp đôi mỗi bãi thêm
 const ownable = (pos) => ['land', 'beach'].includes(BOARD[pos]?.t);
 const groupOf = (g) => BOARD.map((b, i) => (b.g === g ? i : -1)).filter((i) => i >= 0);
 const BEACHES = [4, 14, 18, 25];
